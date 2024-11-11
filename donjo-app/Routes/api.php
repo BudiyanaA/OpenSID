@@ -59,3 +59,8 @@ Route::group('external_api', ['namespace' => 'external_api'], static function ()
         Route::post('/sign_visible', 'Tte@sign_visible');
     });
 });
+
+Route::group('flutter_api', ['namespace' => 'flutter_api'], static function (): void {
+  // Wilayah
+  Route::get('first', 'First@index');
+});
