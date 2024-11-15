@@ -8,7 +8,7 @@ class Suplement extends MY_Controller
 {
     public function index()
     {
-        $suplement = SuplementModel::with('terdata');
+        $suplement = SuplementModel::with(['terdata']);
         $data = $suplement->get();
         return json([
           'status' => 200,
