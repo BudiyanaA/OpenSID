@@ -72,4 +72,5 @@ Route::group('flutter_api', ['namespace' => 'flutter_api'], static function (): 
   Route::get('keluarga', 'Keluarga@index');
   Route::get('rtm', 'Rtm@index');
   Route::get('kelompok', 'Kelompok@index');
+  Route::get('suplement', 'Suplement@index');
 });
