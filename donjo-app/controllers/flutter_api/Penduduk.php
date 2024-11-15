@@ -10,7 +10,6 @@ class Penduduk extends MY_Controller
     {
         $penduduk = PendudukModel::get();
 
-
         return json([
           'status' => 200,
           'data' => $penduduk
