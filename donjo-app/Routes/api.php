@@ -64,4 +64,5 @@ Route::group('flutter_api', ['namespace' => 'flutter_api'], static function (): 
   // Wilayah
   Route::get('first', 'First@index');
   Route::get('wilayah', 'Wilayah@index');
+  Route::get('identitas_desa', 'Identitas_desa@index');
 });
