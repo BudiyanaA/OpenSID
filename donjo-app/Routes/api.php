@@ -74,4 +74,5 @@ Route::group('flutter_api', ['namespace' => 'flutter_api'], static function (): 
   Route::get('kelompok', 'Kelompok@index');
   Route::get('suplement', 'Suplement@index');
   Route::get('dpt', 'Dpt@index');
+  Route::get('log_penduduk', 'LogPenduduk@index');
 });
