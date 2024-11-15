@@ -8,7 +8,8 @@ class Kelompok extends MY_Controller
 {
     public function index()
     {
-        $kelompok = KelompokModel::with(['ketua', 'kelompokMaster', 'kelompokAnggota']);
+        $kelompok = KelompokModel::with(['ketua', 'kelompokMaster', 'kelompokAnggota'])
+        ->where('tipe', 'kelompok');;
         $data = $kelompok->get();
         return json([
           'status' => 200,

@@ -1,12 +1,19 @@
 <?php
 
-defined('BASEPATH') || exit('No direct script access allowed');
+use App\Models\Kelompok as KelompokModel;
 
+defined('BASEPATH') || exit('No direct script access allowed');
 
 class Lembaga extends MY_Controller
 {
     public function index()
     {
-        
+        $kelompok = KelompokModel::with(['ketua', 'kelompokMaster', 'kelompokAnggota'])
+        ->where('tipe', 'lembaga');;
+        $data = $kelompok->get();
+        return json([
+          'status' => 200,
+          'data' => $data
+        ]);
     }
 }
