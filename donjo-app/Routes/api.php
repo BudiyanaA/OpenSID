@@ -78,4 +78,5 @@ Route::group('flutter_api', ['namespace' => 'flutter_api'], static function (): 
   Route::get('admin_pembangunan', 'Admin_pembangunan@index');
   Route::get('mailbox/2', 'Mailbox@index');
   Route::get('mandiri', 'Mandiri@index');
+  Route::get('permohonan_surat_admin', 'Permohonan_surat_admin@index');
 });
