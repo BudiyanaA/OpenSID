@@ -85,4 +85,5 @@ Route::group('flutter_api', ['namespace' => 'flutter_api'], static function (): 
   Route::post('siteman/auth', 'Siteman@auth');
   Route::post('mandiri/masuk', 'Mandiri@masuk');
   Route::post('wilayah/insert', 'Wilayah@insert');
+  Route::post('lembaga/insert', 'Lembaga@insert');
 });
