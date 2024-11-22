@@ -27,10 +27,22 @@ class Penduduk extends MY_Controller
       unset($data['file_foto'], $data['old_foto'], $data['nik_lama'], $data['dusun'], $data['rw']);
 
       DB::beginTransaction();
-
+      try {
+        $penduduk = PendudukModel::baru($data);
+        DB::commit();
       return json([
         'status' => 200,
         'data' => $data
       ]);
+    } catch (Exception $e) {
+      log_message('error', $e->getMessage());
+      DB::rollBack();
+      set_session('old_input', $originalInput);
+      return json([
+        'status' => 500,
+        'message' => 'Rumah Tangga gagal disimpan',
+        'error' => $e->getMessage() 
+    ], 500);
+  }
     }
 }
