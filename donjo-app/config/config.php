@@ -607,7 +607,7 @@ $config['proxy_ips'] = '';
 | - Youtube OpenDesa
 |
 */
-$config['nama_aplikasi']  = 'OpenSID';
+$config['nama_aplikasi']  = 'Simdesa';
 $config['nama_lembaga']   = 'OpenDesa';
 $config['fb_opendesa']    = 'https://www.facebook.com/groups/komunitasopendesa';
 $config['tg_opendesa']    = 'https://t.me/komunitasopensidstop';
