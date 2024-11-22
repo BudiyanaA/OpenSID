@@ -3,10 +3,18 @@
 use App\Models\Kelompok as KelompokModel;
 use App\Models\KelompokAnggota as KelompokAnggota;
 
+
 defined('BASEPATH') || exit('No direct script access allowed');
 
 class Kelompok extends MY_Controller
 {
+    protected $tipe              = 'kelompok';
+    public function __construct()
+    {
+        parent::__construct();
+        $this->load->model(['kelompok_model', 'pamong_model']);
+        $this->kelompok_model->set_tipe($this->tipe);
+    }
     public function index()
     {
         $kelompok = KelompokModel::with(['ketua', 'kelompokMaster', 'kelompokAnggota'])
@@ -24,7 +32,7 @@ class Kelompok extends MY_Controller
     $getKelompok = KelompokModel::tipe($this->tipe)->where('kode', $data['kode'])->exists();
 
     if ($getKelompok) {
-        return response()->json([
+        return json([
             'status'  => 400,
             'message' => "Kode ini {$data['kode']} tidak bisa digunakan. Silahkan gunakan kode yang lain!"
         ], 400);
@@ -44,13 +52,10 @@ class Kelompok extends MY_Controller
     ]);
     $kelompokAnggota->save();
 
-    return response()->json([
-        'status'  => 200,
-        'data'    => [
-            'kelompok'        => $kelompok,
-            'kelompokAnggota' => $kelompokAnggota
-        ]
-    ], 200);
+    return json([
+        'status' => 200,
+        'data' => $data
+      ]);
 }
 
 protected function validate($request = [], $id = null)
