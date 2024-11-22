@@ -24,10 +24,6 @@ class Penduduk extends MY_Controller
       $data['tgl_peristiwa']   = $data['tgl_peristiwa'] ? rev_tgl($data['tgl_peristiwa']) : rev_tgl($data['tanggallahir']);
       $data['jenis_peristiwa'] = $peristiwa;
       $validasiPenduduk        = PendudukModel::validasi($data);
-      if (! $validasiPenduduk['status']) {
-          set_session('old_input', $originalInput);
-          redirect_with('error', $validasiPenduduk['messages'], ci_route('penduduk.form_peristiwa', $data['jenis_peristiwa']));
-      }
       unset($data['file_foto'], $data['old_foto'], $data['nik_lama'], $data['dusun'], $data['rw']);
 
       DB::beginTransaction();
