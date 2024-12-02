@@ -97,4 +97,5 @@ Route::group('flutter_api', ['namespace' => 'flutter_api'], static function (): 
   Route::post('keuangan/insert', 'Keuangan@simpan_anggaran');
   Route::post('bantuan/insert', 'Bantuan@insert');
   Route::post('pendaftaran_kerjasama/insert', 'PendaftaranKerjasama@insert');
+  Route::post('web/insert/{cat}', 'web@insert');
 });
