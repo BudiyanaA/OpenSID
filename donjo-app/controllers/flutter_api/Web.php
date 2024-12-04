@@ -24,25 +24,25 @@ class Web extends MY_Controller
         $data['tampilan'] = (int) $data['tampilan'];
 
         $fp          = time();
-        $list_gambar = ['gambar', 'gambar1', 'gambar2', 'gambar3'];
+        // $list_gambar = ['gambar', 'gambar1', 'gambar2', 'gambar3'];
 
-        foreach ($list_gambar as $gambar) {
-            $lokasi_file = $_FILES[$gambar]['tmp_name'];
-            $nama_file   = $fp . '_' . $_FILES[$gambar]['name'];
-            $nama_file   = trim(str_replace(' ', '_', $nama_file));
-            if (! empty($lokasi_file)) {
-                $tipe_file = TipeFile($_FILES[$gambar]);
-                $hasil     = UploadArtikel($nama_file, $gambar);
-                if ($hasil) {
-                    $data[$gambar] = $nama_file;
-                } else {
-                    return json([
-                        'status' => 400,
-                        'message' => 'Upload gambar gagal'
-                    ], 400);
-                }
-            }
-        }
+        // foreach ($list_gambar as $gambar) {
+        //     $lokasi_file = $_FILES[$gambar]['tmp_name'];
+        //     $nama_file   = $fp . '_' . $_FILES[$gambar]['name'];
+        //     $nama_file   = trim(str_replace(' ', '_', $nama_file));
+        //     if (! empty($lokasi_file)) {
+        //         $tipe_file = TipeFile($_FILES[$gambar]);
+        //         $hasil     = UploadArtikel($nama_file, $gambar);
+        //         if ($hasil) {
+        //             $data[$gambar] = $nama_file;
+        //         } else {
+        //             return json([
+        //                 'status' => 400,
+        //                 'message' => 'Upload gambar gagal'
+        //             ], 400);
+        //         }
+        //     }
+        // }
         $data['id_kategori'] = in_array($cat, Artikel::TIPE_NOT_IN_ARTIKEL) ? null : $cat;
         $data['tipe']        = in_array($cat, Artikel::TIPE_NOT_IN_ARTIKEL) ? $cat : 'dinamis';
         $data['id_user']     = auth()->id;
@@ -57,27 +57,27 @@ class Web extends MY_Controller
         }
 
         // Upload dokumen lampiran
-        $lokasi_file = $_FILES['dokumen']['tmp_name'];
-        $tipe_file   = TipeFile($_FILES['dokumen']);
-        $nama_file   = $_FILES['dokumen']['name'];
-        $ext         = get_extension($nama_file);
-        $nama_file   = time() . random_int(10000, 999999) . $ext;
+        // $lokasi_file = $_FILES['dokumen']['tmp_name'];
+        // $tipe_file   = TipeFile($_FILES['dokumen']);
+        // $nama_file   = $_FILES['dokumen']['name'];
+        // $ext         = get_extension($nama_file);
+        // $nama_file   = time() . random_int(10000, 999999) . $ext;
 
-        if ($nama_file && ! empty($lokasi_file)) {
-            if (! in_array($tipe_file, unserialize(MIME_TYPE_DOKUMEN), true) || ! in_array($ext, unserialize(EXT_DOKUMEN))) {
-                unset($data['link_dokumen']);
-                return $this->response([
-                    'status' => 400,
-                    'message' => 'Jenis file salah: ' . $tipe_file
-                ], 400);
-            } else {
-                $data['dokumen'] = $nama_file;
-                if ($data['link_dokumen'] == '') {
-                    $data['link_dokumen'] = $data['judul'];
-                }
-                UploadDocument2($nama_file);
-            }
-        }
+        // if ($nama_file && ! empty($lokasi_file)) {
+        //     if (! in_array($tipe_file, unserialize(MIME_TYPE_DOKUMEN), true) || ! in_array($ext, unserialize(EXT_DOKUMEN))) {
+        //         unset($data['link_dokumen']);
+        //         return $this->response([
+        //             'status' => 400,
+        //             'message' => 'Jenis file salah: ' . $tipe_file
+        //         ], 400);
+        //     } else {
+        //         $data['dokumen'] = $nama_file;
+        //         if ($data['link_dokumen'] == '') {
+        //             $data['link_dokumen'] = $data['judul'];
+        //         }
+        //         UploadDocument2($nama_file);
+        //     }
+        // }
 
         foreach ($list_gambar as $gambar) {
             unset($data['old_' . $gambar]);
@@ -104,8 +104,6 @@ class Web extends MY_Controller
                 $agenda['id_artikel'] = $artikel->id;
                 Agenda::create($agenda);
             }
-
-            // Mengembalikan response API dalam format JSON jika berhasil
             return json([
                 'status' => 200,
                 'message' => 'Artikel berhasil ditambahkan',
