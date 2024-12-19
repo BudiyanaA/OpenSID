@@ -35,7 +35,6 @@
  *
  */
 
-defined('BASEPATH') || exit('No direct script access allowed');
 use App\Enums\AgamaEnum;
 use App\Enums\AsuransiEnum;
 use App\Enums\BahasaEnum;
@@ -67,6 +66,7 @@ use App\Models\Pendidikan;
 use App\Models\Penduduk as PendudukModel;
 use App\Models\PendudukMap;
 use App\Models\RentangUmur;
+use App\Models\StatusKtp;
 use App\Models\SyaratSurat;
 use App\Models\UserGrup;
 use App\Models\Wilayah;
@@ -74,6 +74,8 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use OpenSpout\Writer\Common\Creator\WriterEntityFactory;
+
+defined('BASEPATH') || exit('No direct script access allowed');
 
 class Penduduk extends Admin_Controller
 {
@@ -94,6 +96,18 @@ class Penduduk extends Admin_Controller
 
     public function index(): void
     {
+        if ($this->input->get('dusun')) {
+            $this->filterColumn['dusun'] = $this->input->get('dusun');
+        }
+        if ($this->input->get('rw')) {
+            $this->filterColumn['rw'] = $this->input->get('rw');
+        }
+        if ($this->input->get('rt')) {
+            $this->filterColumn['rt'] = $this->input->get('rt');
+        }
+        if ($this->input->get('sex')) {
+            $this->filterColumn['sex'] = $this->input->get('sex');
+        }
         $data['wilayah']              = Wilayah::treeAccess();
         $data['list_status_dasar']    = StatusDasarEnum::all();
         $data['list_status_penduduk'] = StatusPendudukEnum::all();
@@ -220,6 +234,14 @@ class Penduduk extends Admin_Controller
                 $sex     = $statistikFilter['sex'];
                 unset($statistikFilter);
             }
+
+            $dusun = $statistikFilter['dusun'] ?? null;
+            $rw    = $statistikFilter['rw'] ?? null;
+            $rt    = $statistikFilter['rt'] ?? null;
+            if ($rt) {
+                [$namaDusun,$namaRw] = explode('__', $rw);
+                $idCluster           = Wilayah::whereDusun($namaDusun)->whereRw($namaRw)->whereRt($rt)->select(['id'])->get()->pluck('id')->toArray();
+            }
         }
 
         if (empty($idCluster) && ! empty($rw)) {
@@ -239,15 +261,20 @@ class Penduduk extends Admin_Controller
             ->when($kumpulanNIK, static fn ($q) => $q->whereIn('nik', $kumpulanNIK))
             ->when($statistikFilter, static function ($q) use ($statistikFilter) {
                 if (isset($statistikFilter['umurx'])) {
-                    $rentangUmur                 = RentangUmur::find($statistikFilter['umurx']);
-                    $statistikFilter['umur_min'] = $rentangUmur->dari;
-                    $statistikFilter['umur_max'] = $rentangUmur->sampai;
+                    if ($statistikFilter['umurx'] == BELUM_MENGISI) {
+                        $statistikFilter['umur_min'] = -1;
+                        $statistikFilter['umur_max'] = -1;
+                    } else {
+                        $rentangUmur                 = RentangUmur::find($statistikFilter['umurx']);
+                        $statistikFilter['umur_min'] = $rentangUmur->dari;
+                        $statistikFilter['umur_max'] = $rentangUmur->sampai;
+                    }
                 }
 
                 $umurMin           = $statistikFilter['umur_min'];
                 $umurMax           = $statistikFilter['umur_max'];
                 $umurObj['satuan'] = 'tahun';
-                if ($umurMin) {
+                if (null !== $umurMin) {
                     $umurObj['min'] = $umurMin;
                 }
                 if (null !== $umurMax) {
@@ -284,11 +311,18 @@ class Penduduk extends Admin_Controller
                     if ($val != '') {
                         if (isset($map[$key])) {
                             if ($map[$key] == 'ktp_el') {
+                                $q->wajibKtp();
                                 if ($val == BELUM_MENGISI) {
                                     $q->where(static fn ($r) => $r->whereNull('ktp_el')->orWhere('ktp_el', 0)->orWhere('status_rekam', 0)->orWhereNull('status_rekam'));
                                 } else {
-                                    $statusKTP = $statusKTP::find($val);
-                                    $q->where('ktp_el', $statusKTP->ktp_el)->where('status_rekam', $statusKTP->status_rekam);
+                                    if ($val == JUMLAH) {
+                                        $q->where(static fn ($r) => $r->whereNotNull('ktp_el')->whereNotIn('ktp_el', [0, 3]));
+                                    } else {
+                                        if ($val != TOTAL) {
+                                            $statusKTP = StatusKtp::find($val);
+                                            $q->where('ktp_el', '!=', 3)->where('status_rekam', $statusKTP->status_rekam);
+                                        }
+                                    }
                                 }
                             } elseif ($map[$key] == 'kia') {
                                 $umurObj['min'] = 0;
@@ -296,19 +330,39 @@ class Penduduk extends Admin_Controller
                                 if ($val == BELUM_MENGISI) {
                                     $q->where(static fn ($r) => $r->whereNull('ktp_el')->orWhere('ktp_el', 0)->orWhere('status_rekam', 0)->orWhereNull('status_rekam'));
                                 } else {
-                                    $statusKTP = $statusKTP::find($val);
-                                    $q->where('ktp_el', $statusKTP->ktp_el)->where('status_rekam', $statusKTP->status_rekam);
+                                    if ($val == JUMLAH) {
+                                        $q->where('ktp_el', 3);
+                                    } else {
+                                        if ($val != TOTAL) {
+                                            $statusKTP = statusKTP::find($val);
+                                            $q->where('ktp_el', 3)->where('status_rekam', $statusKTP->status_rekam);
+                                        }
+                                    }
                                 }
                             } elseif ($map[$key] == 'akta_perkawinan') {
                                 $q->where('status_kawin', '!=', StatusKawinEnum::BELUMKAWIN);
                                 if ($val == BELUM_MENGISI) {
                                     $q->where(static fn ($r) => $r->where('akta_perkawinan', '=', '')->orWhereNull('akta_perkawinan'));
                                 }
+                            } elseif ($map[$key] == 'cacat_id') {
+                                if ($val == CacatEnum::TIDAK_CACAT) {
+                                    $q->where(static fn ($r) => $r->where('cacat_id', '=', CacatEnum::TIDAK_CACAT)->orWhereNull('cacat_id'));
+                                } else {
+                                    if ($val == JUMLAH) {
+                                        $q->where(static fn ($r) => $r->where('cacat_id', '!=', CacatEnum::TIDAK_CACAT)->whereNotNull('cacat_id'));
+                                    } else {
+                                        $q->where($map[$key], $val);
+                                    }
+                                }
                             } else {
                                 if ($val == BELUM_MENGISI) {
-                                    $q->whereNull($map[$key]);
+                                    $q->where(static fn ($r) => $r->whereNull($map[$key])->orWhere($map[$key], ''));
                                 } else {
-                                    $q->where($map[$key], $val);
+                                    if ($val == JUMLAH) {
+                                        $q->whereNotNull($map[$key])->where($map[$key], '!=', '');
+                                    } else {
+                                        $q->where($map[$key], $val);
+                                    }
                                 }
                             }
                         }
@@ -321,10 +375,10 @@ class Penduduk extends Admin_Controller
                 $umurMin           = $advanceSearch['umur_min'];
                 $umurMax           = $advanceSearch['umur_max'];
                 $umurObj['satuan'] = $advanceSearch['umur'];
-                if ($umurMin) {
+                if ($umurMin !== null) {
                     $umurObj['min'] = $umurMin;
                 }
-                if ($umurMax) {
+                if ($umurMax !== null) {
                     $umurObj['max'] = $umurMax;
                 }
                 $map = [
@@ -1068,21 +1122,21 @@ class Penduduk extends Admin_Controller
     public function statistik($tipe = '0', $nomor = 0, $sex = null): void
     {
         $this->statistikFilter['status_dasar'] = StatusDasarEnum::HIDUP;
+        $dusun                                 = $this->input->get('dusun') ?? null;
+        $rw                                    = $this->input->get('rw') ?? null;
+        $rt                                    = $this->input->get('rt') ?? null;
+        if (! empty($dusun)) {
+            $this->statistikFilter['dusun'] = $dusun;
+        }
+        if (! empty($rw)) {
+            $this->statistikFilter['rw'] = $dusun . '__' . $rw;
+        }
+        if (! empty($rt)) {
+            $this->statistikFilter['rt'] = $rt;
+        }
         if (! empty($sex)) {
             $this->statistikFilter['sex'] = $sex;
         }
-
-        // Untuk tautan TOTAL di laporan statistik, di mana arg-2 = sex dan arg-3 kosong
-        // kecuali untuk laporan wajib KTP
-        // if ($sex == null && $tipe != 18) {
-        //     if ($nomor != 0) {
-        //         $this->statistikFilter['sex'] = $nomor;
-        //     }
-
-        //     $this->index();
-
-        //     return;
-        // }
 
         switch ($tipe) {
             case '0':
@@ -1166,7 +1220,8 @@ class Penduduk extends Admin_Controller
                 break;
 
             case 'bpjs-tenagakerja':
-                $session  = ($nomor == BELUM_MENGISI || $nomor == JUMLAH) ? 'bpjs_ketenagakerjaan' : 'pekerjaan_id';
+                // $session  = ($nomor == BELUM_MENGISI || $nomor == JUMLAH) ? 'bpjs_ketenagakerjaan' : 'pekerjaan_id';
+                $session  = 'bpjs_ketenagakerjaan';
                 $kategori = 'BPJS Ketenagakerjaan : ';
                 // $this->session->bpjs_ketenagakerjaan = $nomor != TOTAL;
                 break;
@@ -1242,6 +1297,10 @@ class Penduduk extends Admin_Controller
         if ($tipe != 18 && $nomor != TOTAL) {
             $this->statistikFilter[$session] = rawurldecode($nomor);
         }
+        // pengecualian untuk kia dan 18
+        if (in_array($tipe, ['18', 'kia'])) {
+            $this->statistikFilter[$session] = rawurldecode($nomor);
+        }
 
         $judul = $this->get_judul_statistik($tipe, $nomor, $sex);
         // Laporan wajib KTP berbeda - menampilkan sebagian dari penduduk, jadi selalu perlu judul
@@ -1304,8 +1363,8 @@ class Penduduk extends Admin_Controller
 
             case 8:
                 $this->statistikFilter['umur_min'] = '61';
-
-                $pre = 'BERUMUR >60';
+                $this->statistikFilter['umur_max'] = '9999';
+                $pre                               = 'BERUMUR >60';
                 break;
 
             case 91:
@@ -1388,7 +1447,7 @@ class Penduduk extends Admin_Controller
             redirect($this->controller);
         }
 
-        isCan('h');
+        isCan('u');
 
         $data = [
             'form_action'          => ci_route('penduduk.proses_impor'),
@@ -1404,9 +1463,10 @@ class Penduduk extends Admin_Controller
             redirect($this->controller);
         }
 
-        isCan('h');
+        isCan('u');
         $hapus = isset($_POST['hapus_data']);
         $this->impor_model->impor_excel($hapus);
+        shortcut_cache();
         redirect('penduduk/impor');
     }
 
@@ -1416,7 +1476,7 @@ class Penduduk extends Admin_Controller
             redirect($this->controller);
         }
 
-        isCan('h');
+        isCan('u');
 
         $data = [
             'form_action'          => ci_route('penduduk.proses_impor_bip'),
@@ -1432,7 +1492,7 @@ class Penduduk extends Admin_Controller
             redirect($this->controller);
         }
 
-        isCan('h');
+        isCan('u');
 
         // TODO: Sederhanakan query ini, pindahkan ke model
         if (PendudukModel::count() > 0) {
@@ -1440,6 +1500,7 @@ class Penduduk extends Admin_Controller
         }
 
         $this->impor_model->impor_bip($this->input->post('hapus_data'));
+        shortcut_cache();
         redirect('penduduk/impor_bip');
     }
 
@@ -1455,7 +1516,7 @@ class Penduduk extends Admin_Controller
             $paramDatatable = json_decode($this->input->get('params'), 1);
             $_GET           = $paramDatatable;
             // harusnya order by no_kk
-            $get = $this->sumberData()->join('tweb_keluarga', 'tweb_keluarga.id', '=', 'tweb_penduduk.id_kk')->with(['map'])->orderBy('tweb_keluarga.no_kk', 'asc')->orderBy('kk_level', 'asc')->get();
+            $get = $this->sumberData()->leftJoin('tweb_keluarga', 'tweb_keluarga.id', '=', 'tweb_penduduk.id_kk')->with(['map'])->orderBy('tweb_keluarga.no_kk', 'asc')->orderBy('kk_level', 'asc')->get();
 
             foreach ($get as $row) {
                 $penduduk                  = [];

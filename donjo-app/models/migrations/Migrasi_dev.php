@@ -35,44 +35,12 @@
  *
  */
 
-use Illuminate\Support\Facades\DB;
-
 defined('BASEPATH') || exit('No direct script access allowed');
 
 class Migrasi_dev extends MY_model
 {
     public function up()
     {
-        $hasil = true;
-
-        $hasil = $hasil && $this->migrasi_tabel($hasil);
-
-        return $hasil && $this->migrasi_data($hasil);
-    }
-
-    protected function migrasi_tabel($hasil)
-    {
-        return $hasil;
-    }
-
-    // Migrasi perubahan data
-    protected function migrasi_data($hasil)
-    {
-        // Migrasi berdasarkan config_id
-        // $config_id = DB::table('config')->pluck('id')->toArray();
-
-        // foreach ($config_id as $id) {
-        //     $hasil = $hasil && $this->migrasi_xxxx($hasil, $id);
-        // }
-
-        return $hasil && $this->migrasi_2024042751($hasil);
-    }
-
-    protected function migrasi_2024042751($hasil)
-    {
-        log_message('notice', 'Migrasi data 2024042751');
-        DB::table('menu')->where('enabled', 2)->update(['enabled' => 0]);
-
-        return $hasil;
+        return true;
     }
 }

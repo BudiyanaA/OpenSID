@@ -163,20 +163,7 @@ class Database_model extends MY_Model
         // Migrasi direkam di tabel migrasi
         if (Migrasi::where('versi_database', '=', VERSI_DATABASE)->doesntExist()) {
             $this->migrasi_db_cri($install);
-            // Kirim versi aplikasi ke layanan setelah migrasi selesai
-            kirim_versi_opensid();
         }
-    }
-
-    public function impor_data_awal_analisis(): void
-    {
-        $this->load->model('analisis_import_model');
-
-        // Tambahkan kembali Analisis DDK Profil Desa dan Analisis DAK Profil Desa
-        $file_analisis = FCPATH . 'assets/import/analisis_DDK_Profil_Desa.xlsx';
-        $this->analisis_import_model->impor_analisis($file_analisis, 'DDK02', 1);
-        $file_analisis = FCPATH . 'assets/import/analisis_DAK_Profil_Desa.xlsx';
-        $this->analisis_import_model->impor_analisis($file_analisis, 'DAK02', 1);
     }
 
     public function get_views()

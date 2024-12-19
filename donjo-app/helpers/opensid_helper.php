@@ -50,7 +50,7 @@ use voku\helper\AntiXSS;
  * Format => [dua digit tahun dan dua digit bulan].[nomor urut digit beta].[nomor urut digit bugfix]
  * Untuk rilis resmi (tgl 1 tiap bulan) dimulai dari 0 (beta) dan 0 (bugfix)
  */
-define('VERSION', '2411.0.0');
+define('VERSION', '2412.0.0');
 
 /**
  * PREMIUM
@@ -66,12 +66,12 @@ define('PREMIUM', false);
  * Versi database = [yyyymmdd][nomor urut dua digit]
  * [nomor urut dua digit] : 01 => rilis umum, 51 => rilis bugfix, 71 => rilis premium,
  */
-define('VERSI_DATABASE', '2024110101');
+define('VERSI_DATABASE', '2024120101');
 
 /**
  * Minimum versi OpenSID yang bisa melakukan migrasi, backup dan restore database ke versi ini
  */
-define('MINIMUM_VERSI', '2312');
+define('MINIMUM_VERSI', '2407');
 
 // Kode laporan statistik
 define('JUMLAH', 666);
@@ -904,10 +904,10 @@ function cekNama($str)
     return preg_match("/[^a-zA-Z '\\.,\\-]/", strip_tags($str));
 }
 
-// Nama hanya boleh berisi karakter alfanumerik, spasi dan strip
+// Nama hanya boleh berisi karakter alfanumerik, spasi, slash(/) dan strip
 function nama_terbatas($str)
 {
-    return preg_replace('/[^a-zA-Z0-9 \\-]/', '', $str);
+    return preg_replace('/[^a-zA-Z0-9 \\/\\-]/', '', $str);
 }
 
 // Judul hanya boleh berisi a-zA-Z0-9()[]&_:=°%'".,/ \-
@@ -1570,7 +1570,7 @@ function kasus_lain($kategori = null, $str = null)
 if (! function_exists('updateConfigFile')) {
     function updateConfigFile(string $key, string $value): void
     {
-        log_message('error', 'updateConfigFile ' . $key . ' - ' . $value);
+        // log_message('error', 'updateConfigFile ' . $key . ' - ' . $value);
 
         if ($key === 'password') {
             $file    = LOKASI_CONFIG_DESA . 'database.php';
@@ -1646,12 +1646,10 @@ if (! function_exists('super_admin')) {
 if (! function_exists('is_super_admin')) {
     /**
      * - Fungsi untuk mengecek apakah user adalah super admin.
-     *
-     * @return bool
      */
-    function is_super_admin()
+    function is_super_admin(): bool
     {
-        return (int) auth()->id === (int) super_admin();
+        return (int) auth()->id === super_admin();
     }
 }
 
@@ -2030,7 +2028,7 @@ if (! function_exists('terjemahkanTerbilang')) {
                 $suffix = ' rupiah';
             }
 
-            $ke = $prefix . trim(to_word((int) preg_replace('/[^0-9]/', '', $matches[2]))) . $suffix;
+            $ke = $prefix . trim(to_word(preg_replace('/[^0-9\.]/', '', $matches[2]))) . $suffix;
 
             return caseWord($matches[1], $ke);
         }, $teks);
@@ -2048,33 +2046,42 @@ if (! function_exists('caseWord')) {
      */
     function caseWord($condition, $teks)
     {
+        $suffix = $prefix = '';
+
+        // Gelar
+        if (in_array(strtolower($condition), ['nama_kepala_desa', 'nama_kepala_camat', 'nama_pamong'])) {
+            $pecah = pecah_nama_gelar($teks);
+
+            $teks = $pecah['nama'];
+
+            if ($pecah['gelar_depan']) {
+                $prefix = $pecah['gelar_depan'] . ' ';
+            }
+
+            if ($pecah['gelar_belakang']) {
+                $suffix = ', ' . $pecah['gelar_belakang'];
+            }
+        }
+
         // Normal
         if (ctype_upper($condition[0]) && ctype_upper($condition[strlen($condition) - 1])) {
-            return set_words($teks);
-        }
-
-        // Huruf kecil semua
-        if (ctype_lower($condition[0])) {
-            return set_words($teks, 'lower');
-        }
-
-        // Huruf besar semua
-        if (ctype_upper($condition[0]) && ctype_upper($condition[1])) {
-            return set_words($teks, 'upper');
-        }
-
-        // Huruf besar di awal kata
-        if (ctype_upper($condition[0]) && ctype_lower($condition[1])) {
-            return set_words($teks, 'ucwords');
-        }
-
-        // Huruf besar di awal kalimat
-        if (ctype_upper($condition[0])) {
-            return set_words($teks, 'ucfirst');
+            $teks = set_words($teks);
+        } elseif // Huruf kecil semua
+        (ctype_lower($condition[0])) {
+            $teks = set_words($teks, 'lower');
+        } elseif // Huruf besar semua
+        (ctype_upper($condition[0]) && ctype_upper($condition[1])) {
+            $teks = set_words($teks, 'upper');
+        } elseif // Huruf besar di awal kata
+        (ctype_upper($condition[0]) && ctype_lower($condition[1])) {
+            $teks = set_words($teks, 'ucwords');
+        } elseif // Huruf besar di awal kalimat
+        (ctype_upper($condition[0])) {
+            $teks = set_words($teks, 'ucfirst');
         }
 
         // Return teks asli jika tidak sesuai kondisi
-        return $teks;
+        return $prefix . $teks . $suffix;
     }
 }
 
@@ -2082,9 +2089,13 @@ if (! function_exists('caseHitung')) {
     function caseHitung($teks)
     {
         $pola = '/\[(hitung|HiTung|Hitung|HitunG|HItung)]\[(.+?)]/';
+        $teks = str_replace(['[Op+]', '[Op\\]', '[Op*]', '[Op-]'], ['+', '/', '*', '-'], $teks);
 
         return preg_replace_callback($pola, static function (array $matches) {
-            $onlyNumberAndOperator = preg_replace('/[^0-9\+\-\(\)]/', '', $matches[2]);
+            $onlyNumberAndOperator = preg_replace('/[^0-9\+\-\*\/\(\)]/', '', $matches[2]);
+            if (strpos($onlyNumberAndOperator, '/0') !== false) {
+            return '0';
+            }
 
             $operasi = eval("return {$onlyNumberAndOperator};");
 
@@ -2092,7 +2103,7 @@ if (! function_exists('caseHitung')) {
 
             if (preg_match('/[Rr][pP]/', $matches[2])) {
                 // jika hasil operasinya -, maka minus berada di depan Rp. contohnya - Rp. 100.000
-                return strpos($ke, '-') === 0 ? str_replace('-', '- Rp. ', $ke) : rupiah24($ke, 'Rp. ', 0);
+                return strpos($ke, '-') === 0 ? str_replace('-', '- Rp. ', rupiah24($ke, 'Rp. ', 0)) : rupiah24($ke, 'Rp. ', 0);
             }
 
             return $ke;

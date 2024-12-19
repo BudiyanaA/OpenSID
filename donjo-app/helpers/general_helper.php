@@ -35,17 +35,16 @@
  *
  */
 
-use Carbon\Carbon;
-use App\Models\Menu;
-use App\Models\User;
-use App\Models\Modul;
 use App\Models\Config;
-use App\Models\JamKerja;
-use App\Models\UserGrup;
 use App\Models\GrupAkses;
+use App\Models\JamKerja;
 use App\Models\Kehadiran;
+use App\Models\Menu;
+use App\Models\Modul;
+use App\Models\User;
+use App\Models\UserGrup;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Filesystem\Filesystem;
 
 if (! function_exists('asset')) {
     function asset($uri = '', $default = true)
@@ -94,10 +93,10 @@ if (! function_exists('can')) {
             return true;
         }
 
-        $grupId   = auth()->id_grup;
-        $slugGrup = UserGrup::find($grupId)->slug;
+        $grupId = auth()->id_grup;
 
-        $data = cache()->remember('akses_grup_' . $grupId, 604800, static function () use ($grupId, $slugGrup) {
+        $data = cache()->remember('akses_grup_' . $grupId, 604800, static function () use ($grupId) {
+            $slugGrup = UserGrup::find($grupId)->slug;
             if (in_array($grupId, UserGrup::getGrupSistem())) {
                 $grup = UserGrup::getAksesGrupBawaan()[$slugGrup];
 
@@ -472,11 +471,6 @@ if (! function_exists('folder_desa')) {
         write_file(DESAPATH . 'pengaturan/siteman/siteman_mandiri.css', config_item('siteman_mandiri_css'), 'x');
         write_file(DESAPATH . 'app_key', set_app_key(), 'x');
 
-        // copy fonts di vendor ke folder desa
-        (new Filesystem())->copyDirectory('vendor/tecnickcom/tcpdf/fonts', LOKASI_FONT_DESA);
-
-        config()->set('app.key', get_app_key());
-
         // set config app.key untuk proses intall
         config()->set('app.key', get_app_key());
 
@@ -552,13 +546,7 @@ if (! function_exists('case_replace')) {
 
         $result = preg_replace_callback('/(' . $dari . ')/i', $replacer, $str);
 
-        if (preg_match('/nama_kepala_camat/i', strtolower($dari))) {
-            $pecah_nama_gelar = pecah_nama_gelar($ke);
-            $gelar_depan      = $pecah_nama_gelar['gelar_depan'];
-            $gelar_belakang   = $pecah_nama_gelar['gelar_belakang'];
-
-            $result = str_ireplace([$gelar_depan, $gelar_belakang], [$gelar_depan, $gelar_belakang], $result);
-        } elseif (preg_match('/pendidikan/i', strtolower($dari))) {
+        if (preg_match('/pendidikan/i', strtolower($dari))) {
             $result = kasus_lain('pendidikan', $result);
         } elseif (preg_match('/pekerjaan/i', strtolower($dari))) {
             $result = kasus_lain('pekerjaan', $result);
@@ -1141,8 +1129,20 @@ if (! function_exists('shortcut_cache')) {
     function shortcut_cache()
     {
         User::pluck('id')->each(static function ($id) {
-            log_message('notice', 'Menghapus cache shortcut_' . $id . '...');
             cache()->forget('shortcut_' . $id);
         });
+    }
+}
+
+if (! function_exists('emptyData')) {
+    function emptyData($fields): array
+    {
+        $data = [];
+
+        foreach ($fields as $key => $value) {
+            $data[$value] = '';
+        }
+
+        return $data;
     }
 }

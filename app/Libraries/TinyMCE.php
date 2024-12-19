@@ -57,6 +57,7 @@ use App\Models\LogPenduduk;
 use App\Models\LogSurat;
 use App\Models\LogSuratDinas;
 use App\Models\Pamong;
+use App\Models\SettingAplikasi;
 use App\Models\SuratDinas;
 use CI_Controller;
 use Karriere\PdfMerge\PdfMerge;
@@ -137,6 +138,8 @@ class TinyMCE
      * @var PdfMerge
      */
     public $pdfMerge;
+
+    private $defaultFont;
 
     public function __construct()
     {
@@ -323,8 +326,11 @@ class TinyMCE
     {
         $isi = $this->generateMultiPage($isi);
 
-        $isi = implode("<div style=\"page-break-after: always;\">\u{a0}</div>", $isi);
-
+        $isi          = implode("<div style=\"page-break-after: always;\">\u{a0}</div>", $isi);
+        $font_surat   = SettingAplikasi::where(['key' => 'font_surat', 'kategori' => 'format_surat'])->first()->option ?? [];
+        $font_surat   = array_map('strtolower', $font_surat);
+        $replace_font = array_map(static fn ($item) => underscore(strtolower($item)), $font_surat);
+        $isi          = str_replace($font_surat, $replace_font, $isi);
         // Pisahkan isian surat
         $isi = str_replace('<p><!-- pagebreak --></p>', '', $isi);
         $isi = explode('<!-- pagebreak -->', $isi);
@@ -424,7 +430,7 @@ class TinyMCE
         $pisahkanFoto = [];
 
         foreach ($newKodeIsian as $key => $value) {
-            if (in_array(strtolower($key), array_map('strtolower', ['[terbilang]', '[hitung]']))) {
+            if (in_array(strtolower($key), ['[terbilang]', '[hitung]'])) {
                 continue;
             }
             if (preg_match('/(<img src=")(.*?)(">)/', $key)) {
@@ -433,7 +439,7 @@ class TinyMCE
                 continue;
             }
             // TODO:: Cek dari awal pembuatan, kodeisian [format_nomor_surat] tidak mengikuti aturan penulisan, selalu hasilnya huruf besar.
-            if (in_array(strtolower($key), array_map('strtolower', ['[format_nomor_surat]']))) {
+            if (in_array(strtolower($key), ['[format_nomor_surat]'])) {
                 $result = str_ireplace($key, strtoupper($value), $result);
             }
             if (preg_match('/pengikut_surat/i', $key)) {
@@ -501,7 +507,7 @@ class TinyMCE
                 'atas_nama'     => $atas_nama,
             ];
         }
-        session_error(', ' . setting('sebutan_kepala_desa') . ' belum ditentukan.');
+        set_session('error', setting('sebutan_kepala_desa') . ' belum ditentukan.');
         redirect('pengurus');
     }
 
@@ -547,16 +553,17 @@ class TinyMCE
      *
      * @param string $surat
      * @param array  $margins
+     * @param mixed  $defaultFont
      *
      * @return PdfMerge
      */
-    public function generateSurat($surat, array $data, $margins)
+    public function generateSurat($surat, array $data, $margins, $defaultFont)
     {
         $surat = str_replace(base_url(), FCPATH, $surat);
 
         (new Html2Pdf($data['surat']['orientasi'], $data['surat']['ukuran'], 'en', true, 'UTF-8', $margins))
             ->setTestTdInOnePage(true)
-            ->setDefaultFont(underscore(setting('font_surat'), true, true))
+            ->setDefaultFont($defaultFont)
             ->writeHTML($surat) // buat surat
             ->output($out = tempnam(sys_get_temp_dir(), '') . '.pdf', 'F');
 
@@ -651,7 +658,6 @@ class TinyMCE
 
         (new Html2Pdf($data['surat']['orientasi'], $data['surat']['ukuran'], 'en', true, 'UTF-8'))
             ->setTestTdInOnePage(true)
-            ->setDefaultFont(underscore(setting('font_surat'), true, true))
             ->writeHTML($lampiran) // buat lampiran
             ->output($out = tempnam(sys_get_temp_dir(), '') . '.pdf', 'F');
 
@@ -726,12 +732,14 @@ class TinyMCE
 
     public function cetak_surat($id)
     {
-        $surat = LogSurat::find($id);
+        $this->defaultFont = underscore(setting('font_surat'));
+        $surat             = LogSurat::find($id);
         $this->cetak_surat_tinymce($surat);
     }
 
     public function cetak_surat_dinas($id)
     {
+        $this->defaultFont  = underscore(setting('font_surat_dinas'));
         $surat              = LogSuratDinas::find($id);
         $surat->formatSurat = $surat->suratDinas;
         $this->cetak_surat_tinymce($surat);
@@ -759,7 +767,7 @@ class TinyMCE
 
         // convert in PDF
         try {
-            $this->generateSurat($isi_cetak, $cetak, $margin_cm_to_mm);
+            $this->generateSurat($isi_cetak, $cetak, $margin_cm_to_mm, $this->defaultFont);
             $this->generateLampiran($surat->id_pend, $cetak, $input);
 
             $this->pdfMerge->merge(FCPATH . LOKASI_ARSIP . $nama_surat, 'FI');

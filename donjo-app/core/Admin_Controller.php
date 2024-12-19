@@ -163,8 +163,6 @@ class Admin_Controller extends MY_Controller
 
     public function modal_penandatangan()
     {
-        $this->load->model('pamong_model');
-
         return [
             'pamong'         => Pamong::penandaTangan()->get(),
             'pamong_ttd'     => Pamong::sekretarisDesa()->first(),
