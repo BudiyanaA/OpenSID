@@ -15,4 +15,22 @@ class Suplement extends MY_Controller
           'data' => $data
         ]);
     }
+
+    public function insert()
+    {
+      $data = SuplementModel::create(static::validated($this->request));
+      return json([
+        'status' => 200,
+        'data' => $data
+      ]);
+    }
+
+    protected static function validated($request = [])
+    {
+        return [
+            'sasaran'    => $request['sasaran'],
+            'nama'       => nomor_surat_keputusan($request['nama']),
+            'keterangan' => strip_tags($request['keterangan']),
+        ];
+    }
 }

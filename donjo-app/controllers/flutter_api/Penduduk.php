@@ -24,17 +24,25 @@ class Penduduk extends MY_Controller
       $data['tgl_peristiwa']   = $data['tgl_peristiwa'] ? rev_tgl($data['tgl_peristiwa']) : rev_tgl($data['tanggallahir']);
       $data['jenis_peristiwa'] = $peristiwa;
       $validasiPenduduk        = PendudukModel::validasi($data);
-      if (! $validasiPenduduk['status']) {
-          set_session('old_input', $originalInput);
-          redirect_with('error', $validasiPenduduk['messages'], ci_route('penduduk.form_peristiwa', $data['jenis_peristiwa']));
-      }
       unset($data['file_foto'], $data['old_foto'], $data['nik_lama'], $data['dusun'], $data['rw']);
 
       DB::beginTransaction();
-
+      try {
+        $penduduk = PendudukModel::baru($data);
+        DB::commit();
       return json([
         'status' => 200,
         'data' => $data
       ]);
+    } catch (Exception $e) {
+      log_message('error', $e->getMessage());
+      DB::rollBack();
+      set_session('old_input', $originalInput);
+      return json([
+        'status' => 500,
+        'message' => 'Rumah Tangga gagal disimpan',
+        'error' => $e->getMessage() 
+    ], 500);
+  }
     }
 }

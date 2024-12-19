@@ -2,6 +2,7 @@
 
 use App\Models\Config;
 use App\Models\PendudukMandiri as PendudukMandiriModel;
+use App\Models\PendudukHidup as PendudukHidupModel;
 
 defined('BASEPATH') || exit('No direct script access allowed');
 
@@ -79,5 +80,24 @@ class Mandiri extends MY_Controller
         $this->db->group_end();
 
         return $this->db;
+    }
+
+    public function insert()
+    {
+      $mandiri = new PendudukMandiriModel();
+            $pin     = bilangan($this->request['pin'] ?: $mandiri->generate_pin());
+
+            $mandiri->pin     = hash_pin($pin); // Hash PIN
+            $mandiri->id_pend = $this->request['id_pend'];
+            $mandiri->save();
+
+            // Ambil data sementara untuk ditampilkan
+            $flash        = PendudukHidupModel::find($this->request['id_pend'])->toArray();
+            $flash['pin'] = $pin;
+            set_session('info', $flash);
+            return json([
+              'status' => 200,
+              'data' => $mandiri
+            ]);
     }
 }

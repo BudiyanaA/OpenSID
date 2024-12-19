@@ -35,6 +35,7 @@ class First extends MY_Controller
           'w_cos' => $this->web_widget_model->get_widget_aktif(),
           'stat_widget' => $this->laporan_penduduk_model->list_data(4),
           'komen' => $this->first_artikel_m->komentar_show(),
+          'artikel' => $this->first_artikel_m->artikel_show($data['paging']->offset, $data['paging']->per_page),
         ];
         return json([
           'status' => 200,

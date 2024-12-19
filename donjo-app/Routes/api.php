@@ -81,11 +81,21 @@ Route::group('flutter_api', ['namespace' => 'flutter_api'], static function (): 
   Route::get('permohonan_surat_admin', 'Permohonan_surat_admin@index');
   Route::get('keuangan', 'Keuangan@index');
   Route::get('bantuan', 'Bantuan@index');
+  Route::get('beranda', 'Beranda@index');
 
   Route::post('siteman/auth', 'Siteman@auth');
   Route::post('mandiri/masuk', 'Mandiri@masuk');
   Route::post('wilayah/insert', 'Wilayah@insert');
   Route::post('lembaga/insert', 'Lembaga@insert');
   Route::post('penduduk/insert/{peristiwa}', 'Penduduk@insert');
+  Route::post('keluarga/insert', 'Keluarga@insert');
   Route::post('rtm/insert', 'Rtm@insert');
+  Route::post('kelompok/insert', 'Kelompok@insert');
+  Route::post('suplement/insert', 'Suplement@insert');
+  Route::post('admin_pembangunan/insert', 'Admin_pembangunan@insert');
+  Route::post('mandiri/insert', 'Mandiri@insert');
+  Route::post('keuangan/insert', 'Keuangan@simpan_anggaran');
+  Route::post('bantuan/insert', 'Bantuan@insert');
+  Route::post('pendaftaran_kerjasama/insert', 'PendaftaranKerjasama@insert');
+  Route::post('web/insert/{cat}', 'web@insert');
 });
