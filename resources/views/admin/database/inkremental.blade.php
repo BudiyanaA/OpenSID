@@ -18,9 +18,7 @@
 
     <div class="box box-info">
         <div class="box-header with-border">
-            <a href="{{ ci_route('database') }}" class="btn btn-social btn-info btn-sm btn-sm visible-xs-block visible-sm-inline-block visible-md-inline-block visible-lg-inline-block">
-                <i class="fa fa-arrow-circle-left "></i>Kembali Pengaturan Database
-            </a>
+            @include('admin.layouts.components.tombol_kembali', ['url' => ci_route('database'), 'label' => 'Pengaturan Database'])
         </div>
         <div class="box-body">
             <div class="table-responsive">
@@ -28,6 +26,7 @@
                     <thead class="bg-gray disabled color-palette">
                         <tr>
                             <th>No</th>
+                            <th>Aksi</th>
                             <th>Ukuran (MB)</th>
                             <th>Tanggal Backup</th>
                             <th>Tanggal Terakhir Download</th>
@@ -37,6 +36,8 @@
             </div>
         </div>
     </div>
+
+    @include('admin.layouts.components.konfirmasi_hapus')
 @endsection
 
 @push('scripts')
@@ -56,6 +57,12 @@
                 },
                 'columns': [{
                         'data': 'DT_RowIndex',
+                        class: 'padat',
+                        searchable: false,
+                        orderable: false
+                    },
+                    {
+                        'data': 'aksi',
                         class: 'padat',
                         searchable: false,
                         orderable: false

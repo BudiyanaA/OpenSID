@@ -53,7 +53,7 @@
             });
 
             function ganti_tte() {
-                var tte_password = "{{ setting('tte_password') }}";
+                var tte_password = "{{ $list_setting->firstWhere('key', 'tte_password')?->value }}";
                 if ($('input[name="tte"]').filter(':checked').val() == 1) {
                     $('input[name="tte_api"]');
                     if (tte_password == "") {
@@ -82,6 +82,42 @@
                     $('#visual-tte-form').hide();
                 }
             }
+
+            $('#standar').click(function(event) {
+                Swal.fire({
+                    title: 'Informasi',
+                    icon: 'question',
+                    text: 'Apakah anda yakin ingin mengubah ke standar spesifikasi surat?',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ok',
+                    cancelButtonText: 'Batal',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Informasi',
+                            text: 'Sedang menyesuaikan...',
+                            icon: 'info',
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            showConfirmButton: false,
+
+                            didOpen: () => {
+                                Swal.showLoading()
+                            }
+                        });
+
+                        $('input[name="tinggi_header"]').val('{{ \App\Libraries\TinyMCE::TOP }}');
+                        $('input[name="tinggi_footer"]').val('{{ \App\Libraries\TinyMCE::BOTTOM }}');
+                        $('select[name="font_surat"]').val('{{ \App\Libraries\TinyMCE::DEFAULT_FONT }}').trigger('change');
+                        $('input[name="surat_margin[kiri]"]').val('{{ \App\Models\FormatSurat::MARGINS['kiri'] }}');
+                        $('input[name="surat_margin[kanan]"]').val('{{ \App\Models\FormatSurat::MARGINS['kanan'] }}');
+                        $('input[name="surat_margin[atas]"]').val('{{ \App\Models\FormatSurat::MARGINS['atas'] }}');
+                        $('input[name="surat_margin[bawah]"]').val('{{ \App\Models\FormatSurat::MARGINS['bawah'] }}');
+
+                        $('#validasi').submit();
+                    }
+                })
+            });
         });
     </script>
 @endpush

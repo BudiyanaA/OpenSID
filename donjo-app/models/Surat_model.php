@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -38,12 +38,13 @@
 defined('BASEPATH') || exit('No direct script access allowed');
 
 use App\Enums\SHDKEnum;
-use App\Models\FormatSurat;
 use App\Models\LogPenduduk;
 use App\Models\LogSurat;
 use App\Models\Pamong;
 use App\Models\Penduduk;
+use App\Models\Urls;
 
+// TODO: dihapus setelah modul covid dihapus, pelanggan kerjasama dipindahkan
 class Surat_model extends MY_Model
 {
     protected $awalan_qr = '89504e470d0a1a0a0000000d4948445200000084000000840802000000de';
@@ -51,7 +52,6 @@ class Surat_model extends MY_Model
     public function __construct()
     {
         parent::__construct();
-        $this->load->model(['penomoran_surat_model', 'url_shortener_model']);
     }
 
     private function list_penduduk_ajax_sql($cari = '', $filter = []): void
@@ -88,7 +88,8 @@ class Surat_model extends MY_Model
         if ($cari) {
             $this->db
                 ->group_start()
-                ->like('nik', $cari)
+                ->like('u.id', $cari)
+                ->or_like('nik', $cari)
                 ->or_like('nama', $cari)
                 ->or_like('tag_id_card', $cari)
                 ->group_end();
@@ -98,6 +99,8 @@ class Surat_model extends MY_Model
     // Mengambil semua data penduduk untuk pilihan di form surat
     public function list_penduduk_ajax($cari = '', $filter = [], $page = 1)
     {
+        $page = max(1, $page);
+
         // Hitung jumlah total
         $this->list_penduduk_ajax_sql($cari, $filter);
         $jml = $this->db
@@ -173,7 +176,7 @@ class Surat_model extends MY_Model
 
     public function get_alamat_wilayah($data)
     {
-        $alamat_wilayah = "{$data['alamat']} RT {$data['rt']} / RW {$data['rw']} " . set_ucwords($this->setting->sebutan_dusun) . ' ' . set_ucwords($data['dusun']);
+        $alamat_wilayah = "{$data['alamat']} RT {$data['rt']} / RW {$data['rw']} " . set_ucwords(setting('sebutan_dusun')) . ' ' . set_ucwords($data['dusun']);
 
         return trim($alamat_wilayah);
     }
@@ -560,31 +563,12 @@ class Surat_model extends MY_Model
         }
     }
 
-    public function get_last_nosurat_log($url)
-    {
-        $data = $this->penomoran_surat_model->get_surat_terakhir('log_surat', $url);
-        if ($this->setting->penomoran_surat == 2 && empty($data['nama'])) {
-            $surat        = FormatSurat::find($url);
-            $data['nama'] = $surat['nama'];
-        }
-        $ket = [
-            1 => 'Terakhir untuk semua surat layanan: ',
-            2 => "Terakhir untuk jenis surat {$data['nama']}: ",
-            3 => 'Terakhir untuk semua surat layanan, keluar dan masuk: ',
-        ];
-        $data['no_surat_berikutnya'] = $data['no_surat'] + 1;
-        $data['no_surat_berikutnya'] = str_pad((string) $data['no_surat_berikutnya'], (int) $this->setting->panjang_nomor_surat, '0', STR_PAD_LEFT);
-        $data['ket_nomor']           = $ket[$this->setting->penomoran_surat];
-
-        return $data;
-    }
-
     public function buatQrCode($nama_surat)
     {
         $log_surat = LogSurat::select(['id', 'urls_id'])->where('nama_surat', $nama_surat)->first();
 
         //redirect link tidak ke path aslinya dan encode ID surat
-        $urls = $this->url_shortener_model->url_pendek($log_surat);
+        $urls = Urls::urlPendek($log_surat);
 
         $qrCode = [
             'isiqr'   => $urls['isiqr'],
@@ -602,7 +586,7 @@ class Surat_model extends MY_Model
     public function getQrCode($id)
     {
         //redirect link tidak ke path aslinya dan encode ID surat
-        $urls = $this->url_shortener_model->getUrlById($id);
+        $urls = Urls::find($id);
 
         $qrCode = [
             'isiqr'  => site_url('v/' . $urls->alias),

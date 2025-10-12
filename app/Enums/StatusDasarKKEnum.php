@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -44,7 +44,6 @@ class StatusDasarKKEnum
     public const AKTIF              = 1;
     public const HILANG_MATI_PINDAH = 2;
     public const KOSONG             = 3;
-    public const SEMENTARA          = 4;
 
     /**
      * Override method all()
@@ -55,7 +54,6 @@ class StatusDasarKKEnum
             self::AKTIF              => 'KK Aktif',
             self::HILANG_MATI_PINDAH => 'KK Hilang/Pindah/Mati',
             self::KOSONG             => 'KK Kosong',
-            self::SEMENTARA          => 'No. KK Sementara',
         ];
     }
 }

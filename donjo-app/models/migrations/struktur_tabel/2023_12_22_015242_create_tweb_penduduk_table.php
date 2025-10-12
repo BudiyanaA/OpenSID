@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -100,10 +100,6 @@ return new class () extends Migration {
             $table->smallInteger('berat_lahir')->nullable();
             $table->string('panjang_lahir', 10)->nullable();
             $table->string('tag_id_card', 17)->nullable();
-            $table->timestamp('created_at')->nullable()->useCurrent();
-            $table->integer('created_by');
-            $table->timestamp('updated_at')->useCurrentOnUpdate()->nullable()->useCurrent();
-            $table->integer('updated_by')->nullable();
             $table->tinyInteger('id_asuransi')->nullable();
             $table->char('no_asuransi', 100)->nullable();
             $table->string('email', 100)->nullable();
@@ -122,6 +118,7 @@ return new class () extends Migration {
             $table->string('suku', 150)->nullable();
             $table->char('bpjs_ketenagakerjaan', 100)->nullable();
             $table->string('hubung_warga', 50)->nullable()->index('hubung_warga');
+            $table->timesWithUserstamps();
 
             $table->unique(['config_id', 'telegram_token'], 'telegram_token_config');
             $table->unique(['config_id', 'nik'], 'nik_config');

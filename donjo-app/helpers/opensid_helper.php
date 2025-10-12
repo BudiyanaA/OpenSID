@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,49 +29,45 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
  */
 
+use App\Enums\SasaranEnum;
 use App\Enums\Statistik\StatistikEnum;
+use App\Models\Artikel;
 use App\Models\Bantuan;
+use App\Models\FormatSurat;
+use App\Models\Kategori;
+use App\Models\Kelompok;
+use App\Models\Menu;
 use App\Models\RefJabatan;
 use App\Models\Suplemen;
+use App\Models\SuratDinas;
+use App\Models\User;
+use App\Models\Wilayah;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Modules\Kehadiran\Models\JamKerja;
+use Modules\Kehadiran\Models\Kehadiran;
 use voku\helper\AntiXSS;
 
 /**
- * VERSION
- * Format => [dua digit tahun dan dua digit bulan].[nomor urut digit beta].[nomor urut digit bugfix]
- * Untuk rilis resmi (tgl 1 tiap bulan) dimulai dari 0 (beta) dan 0 (bugfix)
+ * Versi OpenSID
  */
-define('VERSION', '2412.0.0');
-
-/**
- * PREMIUM
- *
- * Versi OpenSID Premium
- */
-define('PREMIUM', false);
+define('VERSION', '2510.0.0');
 
 /**
  * VERSI_DATABASE
- * Ubah setiap kali mengubah struktur database atau melakukan proses rilis (tgl 01)
- * Simpan nilai ini di tabel migrasi untuk menandakan sudah migrasi ke versi ini
- * Versi database = [yyyymmdd][nomor urut dua digit]
- * [nomor urut dua digit] : 01 => rilis umum, 51 => rilis bugfix, 71 => rilis premium,
+ *
+ * Varsi database jika premium = 2025061501, jika umum = 2024101651 (6 bulan setelah rilis premium, namun rilis beta)
  */
-define('VERSI_DATABASE', '2024120101');
-
-/**
- * Minimum versi OpenSID yang bisa melakukan migrasi, backup dan restore database ke versi ini
- */
-define('MINIMUM_VERSI', '2407');
+define('VERSI_DATABASE', '2025100101');
 
 // Kode laporan statistik
 define('JUMLAH', 666);
@@ -183,23 +179,6 @@ function currentVersion(): string
     return substr_replace(substr(VERSION, 0, 4), '.', 2, 0);
 }
 
-function set_app_key(): string
-{
-    return 'base64:' . base64_encode(random_bytes(32));
-}
-
-function get_app_key(): string
-{
-    $app_key = file_get_contents(DESAPATH . 'app_key');
-
-    if ($app_key === '' || $app_key === false) {
-        $app_key = set_app_key();
-        file_put_contents(DESAPATH . 'app_key', $app_key);
-    }
-
-    return $app_key;
-}
-
 /**
  * favico_desa
  *
@@ -209,10 +188,6 @@ function get_app_key(): string
  */
 function favico_desa($favico = 'favicon.ico'): string
 {
-    if (is_file(LOKASI_LOGO_DESA . $favico)) {
-        $favico = LOKASI_LOGO_DESA . $favico;
-    }
-
     return base_url($favico) . '?v' . md5_file($favico);
 }
 
@@ -386,8 +361,8 @@ function myErrorHandler($code, $message, $file, $line): void
 function fatalErrorShutdownHandler(): void
 {
     $last_error = error_get_last();
-    if ($last_error['type'] === E_ERROR) {
-        // fatal error
+
+    if ($last_error && isset($last_error['type'], $last_error['message'], $last_error['file'], $last_error['line']) && $last_error['type'] === E_ERROR) {
         myErrorHandler(E_ERROR, $last_error['message'], $last_error['file'], $last_error['line']);
     }
 }
@@ -580,102 +555,114 @@ function sql_in_list($list_array)
     return $list;
 }
 
-/*
- * ambilBerkas
- * Method untuk mengambil berkas
- * param :
- * nama_berkas : nama berkas yang ingin diambil (hanya nama, bukan lokasi berkas)
- * redirect_url : jika terjadi error, maka halaman akan dialihkan ke redirect_url
- * unique_id : diperlukan jika nama file asli tidak sama dengan nama didatabase
- * lokasi : lokasi folder berkas berada (contoh : desa/arsip)
- * tampil : true kalau berkas akan ditampilkan inline (tidak diunduh)
- */
-function ambilBerkas(?string $nama_berkas, $redirect_url = null, $unique_id = null, string $lokasi = LOKASI_ARSIP, $tampil = false)
-{
-    $CI = &get_instance();
-    $CI->load->helper('download');
+if (! function_exists('ambilBerkas')) {
+    /**
+     * Ambil berkas arsip
+     *
+     * Method untuk mengambil berkas dari server dan menampilkan, mengunduh, atau mengembalikan sebagai base64.
+     *
+     * @param string|null $nama_berkas    Nama berkas yang ingin diambil (hanya nama, bukan lokasi berkas)
+     * @param string|null $redirect_url   URL untuk dialihkan jika terjadi error (optional)
+     * @param string|null $unique_id      ID unik jika nama file asli tidak sama dengan nama di database (optional)
+     * @param string      $lokasi         Lokasi folder berkas berada (default: LOKASI_ARSIP)
+     * @param bool        $tampil         Jika true, berkas akan ditampilkan inline di browser (default: false)
+     * @param bool        $popup          Jika true, berkas akan ditampilkan di popup (default: false)
+     * @param bool        $base64         Jika true, mengembalikan konten berkas dalam format base64 (default: false)
+     * @param string      $default        Nama berkas default jika file tidak ditemukan (default: '')
+     * @param string      $lokasi_default Lokasi folder untuk berkas default jika file tidak ditemukan (default: '')
+     *
+     * @return string|void Jika $base64 true, mengembalikan konten base64 berkas, jika tidak, akan menampilkan atau mengunduh berkas.
+     */
+    function ambilBerkas(
+        ?string $nama_berkas,
+        $redirect_url = null,
+        $unique_id = null,
+        string $lokasi = LOKASI_ARSIP,
+        $tampil = false,
+        $popup = false,
+        $base64 = false,
+        string $default = '',
+        string $lokasi_default = ''
+    ) {
+        $CI = &get_instance();
+        $CI->load->helper('download');
 
-    if (! preg_match('/^(?:[a-z0-9_-]|\.(?!\.))+$/iD', $nama_berkas)) {
-        $pesan = 'Nama berkas tidak valid';
-        session_error($pesan);
-        set_session('error', $pesan);
+        // Validasi nama berkas
+        if (! preg_match('/^(?:[a-z0-9_-]|\.(?!\.))+$/iD', $nama_berkas)) {
+            $pesan = 'Nama berkas tidak valid';
+            if ($redirect_url) {
+                if ($popup) {
+                    echo $pesan;
 
-        if ($redirect_url) {
-            redirect($redirect_url);
-        } else {
-            show_404();
-        }
-    }
-
-    // Tentukan path berkas (absolut)
-    $pathBerkas = FCPATH . $lokasi . $nama_berkas;
-    $pathBerkas = str_replace('/', DIRECTORY_SEPARATOR, $pathBerkas);
-    // Redirect ke halaman surat masuk jika path berkas kosong atau berkasnya tidak ada
-    if (! file_exists($pathBerkas)) {
-        $pesan                 = 'Berkas tidak ditemukan';
-        $_SESSION['success']   = -1;
-        $_SESSION['error_msg'] = $pesan;
-        set_session('error', $pesan);
-        if ($redirect_url) {
-            redirect($redirect_url);
-        } else {
-            show_404();
-        }
-    }
-    // OK, berkas ada. Ambil konten berkasnya
-
-    if (null !== $unique_id) {
-        // Buang unique id pada nama berkas download
-        $nama_berkas  = explode($unique_id, $nama_berkas);
-        $namaFile     = $nama_berkas[0];
-        $ekstensiFile = explode('.', end($nama_berkas));
-        $ekstensiFile = end($ekstensiFile);
-        $nama_berkas  = $namaFile . '.' . $ekstensiFile;
-    }
-
-    // Kalau $tampil, tampilkan secara inline.
-    if ($tampil) {
-        // Set the default MIME type to send
-        switch (get_extension($nama_berkas)) {
-            case '.gif':
-                $mime = 'image/gif';
-                break;
-
-            case '.png':
-                $mime = 'image/png';
-                break;
-
-            case '.jpeg':
-
-            case '.jpg':
-                $mime = 'image/jpeg';
-                break;
-
-            case '.svg':
-                $mime = 'image/svg+xml';
-                break;
-
-            case '.pdf':
-                $mime = 'application/pdf';
-                break;
-
-            default:
-                $mime = 'application/octet-stream';
-                break;
+                    exit;
+                }
+                session_error($pesan);
+                set_session('error', $pesan);
+                redirect($redirect_url);
+            } else {
+                show_404();
+            }
         }
 
-        // Generate the server headers
-        header('Content-Type: ' . $mime);
-        header('Content-Disposition: inline; filename="' . $nama_berkas . '"');
-        header('Expires: 0');
-        header('Content-Transfer-Encoding: binary');
-        header('Content-Length: ' . filesize($pathBerkas));
-        header('Cache-Control: private, no-transform, no-store, must-revalidate');
+        // Tentukan path berkas utama
+        $pathBerkas = FCPATH . $lokasi . $nama_berkas;
+        $pathBerkas = str_replace('/', DIRECTORY_SEPARATOR, $pathBerkas);
 
-        return readfile($pathBerkas);
+        // Jika berkas tidak ditemukan, gunakan file default
+        if (! file_exists($pathBerkas) && ! empty($default)) {
+            $nama_berkas = $default;
+            $lokasi      = ! empty($lokasi_default) ? $lokasi_default : $lokasi;
+            $pathBerkas  = FCPATH . $lokasi . $default;
+            $pathBerkas  = str_replace('/', DIRECTORY_SEPARATOR, $pathBerkas);
+        }
+
+        // Jika tetap tidak ditemukan, tampilkan error
+        if (! file_exists($pathBerkas)) {
+            $pesan = 'Berkas tidak ditemukan';
+            if ($redirect_url) {
+                if ($popup) {
+                    echo $pesan;
+
+                    exit;
+                }
+                $_SESSION['success']   = -1;
+                $_SESSION['error_msg'] = $pesan;
+                set_session('error', $pesan);
+                redirect($redirect_url);
+            } else {
+                show_404();
+            }
+        }
+
+        // Jika unique_id diberikan, ubah nama file
+        if (null !== $unique_id) {
+            $nama_berkas_parts = explode($unique_id, $nama_berkas);
+            $namaFile          = $nama_berkas_parts[0];
+            $ekstensiFile      = explode('.', end($nama_berkas_parts));
+            $ekstensiFile      = end($ekstensiFile);
+            $nama_berkas       = $namaFile . '.' . $ekstensiFile;
+        }
+
+        // Kembalikan base64 jika $base64 true
+        if ($base64) {
+            return base64_encode(file_get_contents($pathBerkas));
+        }
+
+        // Tampilkan inline jika $tampil true
+        if ($tampil) {
+            header('Content-Type: ' . mime_content_type($pathBerkas));
+            header('Content-Disposition: inline; filename="' . $nama_berkas . '"');
+            header('Expires: 0');
+            header('Content-Transfer-Encoding: binary');
+            header('Content-Length: ' . filesize($pathBerkas));
+            header('Cache-Control: private, no-transform, no-store, must-revalidate');
+
+            return readfile($pathBerkas);
+        }
+
+        // Unduh berkas
+        force_download($nama_berkas, file_get_contents($pathBerkas));
     }
-
-    force_download($nama_berkas, file_get_contents($pathBerkas));
 }
 
 /**
@@ -849,7 +836,7 @@ function alfanumerik($str): ?string
 
 function alfanumerik_spasi($str): ?string
 {
-    return preg_replace('/[^a-zA-Z0-9\s]/', '', htmlentities($str));
+    return preg_replace('/[^a-zA-Z0-9\s\-]/', '', htmlentities($str));
 }
 
 function bilangan($str)
@@ -885,6 +872,11 @@ function alfanumerik_titik($str): ?string
 function nomor_surat_keputusan($str)
 {
     return preg_replace('/[^a-zA-Z0-9 \.\-\/,]/', '', $str);
+}
+
+function nama_peraturan_desa($str)
+{
+    return preg_replace('/[^a-zA-Z0-9 \.\-\/,()]/', '', $str);
 }
 
 // Nama hanya boleh berisi karakter alpha, spasi, titik, koma, tanda petik dan strip
@@ -941,7 +933,7 @@ function koordinat($str): ?string
 // Email hanya boleh berisi karakter alpha, numeric, titik, strip dan Tanda et,
 function email($str): ?string
 {
-    return preg_replace('/[^a-zA-Z0-9@\\.\\-]/', '', htmlentities($str));
+    return preg_replace('/[^a-zA-Z0-9@._\\-]/', '', htmlentities($str));
 }
 
 // website hanya boleh berisi karakter alpha, numeric, titik, titik dua dan garis miring
@@ -1324,107 +1316,130 @@ function getSizeDB()
 
 function idm($kode_desa, $tahun)
 {
-    $ci    = &get_instance();
-    $cache = "idm_{$tahun}_{$kode_desa}.json";
+    $ci         = &get_instance();
+    $cache      = "idm_{$tahun}_{$kode_desa}.json";
+    $cache_path = DESAPATH . "/cache/{$cache}";
 
-    // periksa apakah ada file idm dalam bentuk .json dan periksa ketika cache sudah kadaluarsa
-    if (file_exists(DESAPATH . "/cache/{$cache}")) {
-        // perbaharui cache yg sudah kadaluarsa
-        $data = unserialize(file_get_contents(DESAPATH . "cache/{$cache}"));
-        $ci->cache->save($cache, $data['data'], YEAR); // ubah ke satu tahun
+    // Periksa apakah file cache ada dan tidak kadaluarsa
+    if (file_exists($cache_path)) {
+        $data = unserialize(file_get_contents($cache_path));
+        $ci->cache->save($cache, $data['data'], YEAR); // Ubah ke satu tahun
     }
 
-    // ambil cache idm
+    // Ambil cache IDM
     if ($data = $ci->cache->get($cache)) {
         return $data;
     }
 
-    // periksa koneksi
+    // Periksa koneksi internet
     if (! cek_koneksi_internet()) {
         return (object) ['error_msg' => 'Periksa koneksi internet Anda.'];
     }
 
-    // ambil dari api idm
+    $url = config_item('api_idm') . "/{$kode_desa}/{$tahun}";
+
+    // Ambil dari API IDM
     try {
         $client   = new Client();
-        $response = $client->get(config_item('api_idm') . "/{$kode_desa}/{$tahun}", [
-            'headers' => [
-                'X-Requested-With' => 'XMLHttpRequest',
-            ],
-            'verify' => false,
+        $response = $client->get($url, [
+            'headers' => ['X-Requested-With' => 'XMLHttpRequest'],
+            'verify'  => false,
         ]);
 
         if ($response->getStatusCode() === 200) {
-            $ci->cache->save($cache, json_decode($response->getBody()->getContents(), null)->mapData, YEAR);
+            $body_content = $response->getBody()->getContents();
 
-            return $ci->cache->get($cache);
+            if (! empty($body_content)) {
+                $idm_data = json_decode($body_content, null)->mapData;
+                $ci->cache->save($cache, $idm_data, YEAR);
+
+                return $ci->cache->get($cache);
+            }
         }
     } catch (Exception $e) {
         log_message('error', $e->getMessage());
     }
 
-    return (object) ['error_msg' => 'Tidak dapat mengambil data IDM.'];
+    // Pesan error jika data gagal diambil
+    $pesan_error = 'Tidak dapat mengambil data IDM.<br>';
+    $pesan_error .= 'ID Desa ' . $kode_desa . ' pada tahun ' . $tahun . ' tidak dapat dimuat: ';
+    $pesan_error .= '<a href="' . $url . '" target="_blank">' . $url . '</a>';
+
+    return (object) ['error_msg' => $pesan_error];
 }
 
 function sdgs()
 {
-    $kode_desa = setting('kode_desa_bps');
-    $cache     = "sdgs_{$kode_desa}.json";
+    $ci         = &get_instance();
+    $kode_desa  = identitas()->kode_desa_bps;
+    $cache      = "sdgs_{$kode_desa}.json";
+    $cache_path = DESAPATH . "/cache/{$cache}";
 
     if (empty($kode_desa)) {
-        return (object) ['error_msg' => 'Kode Desa BPS belum ditentukan. Periksa pengaturan <a href="#" style="text-decoration:none;" data-remote="false" data-toggle="modal" data-target="#pengaturan"><strong>Kode Desa BPS&nbsp;(<i class="fa fa-gear"></i>)</a>'];
+        return (object) [
+            'error_msg' => 'Kode Desa BPS belum ditentukan. Periksa pengaturan <a href="#" style="text-decoration:none;" data-remote="false" data-toggle="modal" data-target="#pengaturan"><strong>Kode Desa BPS&nbsp;(<i class="fa fa-gear"></i>)</a>',
+        ];
     }
 
-    $ci = &get_instance();
-    // periksa apakah ada file sgds dalam bentuk .json dan periksa ketika cache sudah kadaluarsa
-    if (file_exists(DESAPATH . "/cache/{$cache}")) {
-        // perbaharui cache yg sudah kadaluarsa
-        $data = unserialize(file_get_contents(DESAPATH . "cache/{$cache}"));
-        $ci->cache->save($cache, $data['data'], YEAR); // ubah ke satu tahun
+    // Periksa apakah file cache ada dan perbaharui cache jika kadaluarsa
+    if (file_exists($cache_path)) {
+        $data = unserialize(file_get_contents($cache_path));
+        $ci->cache->save($cache, $data['data'], YEAR); // Ubah ke satu tahun
     }
 
-    // ambil cache sdgs
+    // Ambil cache SDGs
     if ($data = $ci->cache->get($cache)) {
         return $data;
     }
 
-    // periksa koneksi
+    // Periksa koneksi internet
     if (! cek_koneksi_internet()) {
         return (object) ['error_msg' => 'Periksa koneksi internet Anda.'];
     }
 
+    $url = config_item('api_sdgs') . $kode_desa;
+
+    // Ambil dari API SDGs
     try {
         $client   = new Client();
-        $response = $client->get(config_item('api_sdgs') . $kode_desa, [
-            'headers' => [
-                'X-Requested-With' => 'XMLHttpRequest',
-            ],
-            'verify' => false,
+        $response = $client->get($url, [
+            'headers' => ['X-Requested-With' => 'XMLHttpRequest'],
+            'verify'  => false,
         ]);
 
         if ($response->getStatusCode() === 200) {
-            $data = (object) collect(json_decode($response->getBody()->getContents(), null))
-                ->map(static function ($item, $key) {
-                    if ($key === 'data') {
-                        return collect($item)->map(static function ($item) {
-                            $item->image = last(explode('/', $item->image));
+            $body_content = $response->getBody()->getContents();
 
-                            return (object) $item;
-                        });
-                    }
+            if (! empty($body_content)) {
+                $data = (object) collect(json_decode($body_content, null))
+                    ->map(static function ($item, $key) {
+                        if ($key === 'data') {
+                            return collect($item)->map(static function ($item) {
+                                $item->image = last(explode('/', $item->image));
 
-                    return $item;
-                })->toArray();
+                                return (object) $item;
+                            });
+                        }
 
-            $ci->cache->save($cache, $data, YEAR);
+                        return $item;
+                    })
+                    ->toArray();
 
-            return $ci->cache->get($cache);
+                $ci->cache->save($cache, $data, YEAR);
+
+                return $ci->cache->get($cache);
+            }
         }
     } catch (Exception $e) {
         log_message('error', $e->getMessage());
     }
 
-    return (object) ['error_msg' => 'Tidak dapat mengambil data SDGS.<br>'];
+    // Pesan error jika data gagal diambil
+    $pesan_error = 'Tidak dapat mengambil data SDGS.<br>';
+    $pesan_error .= 'ID Desa ' . $kode_desa . ' tidak dapat dimuat: ';
+    $pesan_error .= '<a href="' . $url . '" target="_blank">' . $url . '</a>';
+
+    return (object) ['error_msg' => $pesan_error];
 }
 
 function google_recaptcha()
@@ -1456,78 +1471,91 @@ function google_recaptcha()
     return json_decode($response->getBody());
 }
 
-function menu_slug($url)
-{
-    $CI = &get_instance();
-    $CI->load->model('first_artikel_m');
+if (! function_exists('menu_slug')) {
+    /**
+     * Menghasilkan slug URL berdasarkan segmen path yang diberikan.
+     *
+     * @param string $url.
+     *
+     * @return string
+     */
+    function menu_slug($url)
+    {
+        $cut = explode('/', $url);
 
-    $cut = explode('/', $url);
+        switch ($cut[0]) {
+            case 'artikel':
+                $data = Artikel::selectRaw('slug, YEAR(tgl_upload) AS thn, MONTH(tgl_upload) AS bln, DAY(tgl_upload) AS hri, judul, tgl_upload')
+                    ->where('id', $cut[1])
+                    ->first()?->toArray();
+                $url = $data ? ($cut[0] . '/' . buat_slug($data)) : $url;
+                break;
 
-    switch ($cut[0]) {
-        case 'artikel':
-            $data = $CI->first_artikel_m->get_artikel_by_id($cut[1]);
-            $url  = ($data) ? ($cut[0] . '/' . buat_slug($data)) : ($url);
-            break;
+            case 'kategori':
+                $data = Kategori::where('id', $cut[1])
+                    ->orWhere('slug', $cut[1])
+                    ->first()?->toArray() ?? ['kategori' => "Artikel Kategori {$cut[1]}"];
+                $url = $data ? ('artikel/' . $cut[0] . '/' . $data['slug']) : $url;
+                break;
 
-        case 'kategori':
-            $data = $CI->first_artikel_m->get_kategori($cut[1]);
-            $url  = ($data) ? ('artikel/' . $cut[0] . '/' . $data['slug']) : ($url);
-            break;
+            case 'data-suplemen':
+                $suplemen    = Suplemen::withCount('terdata')->find($cut[1]);
+                $data        = $suplemen ? $suplemen?->toArray() : [];
+                $data['jml'] = $data['terdata_count'] ?? null;
+                $url         = $data ? ($cut[0] . '/' . ($data['slug'] ?? $cut[1])) : $url;
+                break;
 
-        case 'data-suplemen':
-            $suplemen    = Suplemen::withCount('terdata')->find($cut[1]);
-            $data        = $suplemen ? $suplemen->toArray() : [];
-            $data['jml'] = $data['terdata_count'];
-            $url         = ($data) ? ($cut[0] . '/' . ($data['slug'] ?? $cut[1])) : ($url);
-            break;
+            case 'data-kelompok':
+            case 'data-lembaga':
+                $data = Kelompok::with(['ketua', 'kelompokMaster'])->find($cut[1])?->toArray();
+                $url  = $data ? ($cut[0] . '/' . $data['slug']) : $url;
+                break;
 
-        case 'data-kelompok':
-        case 'data-lembaga':
-            $CI->load->model('kelompok_model');
-            $data = $CI->kelompok_model->get_kelompok($cut[1]);
-            $url  = ($data) ? ($cut[0] . '/' . $data['slug']) : ($url);
-            break;
+            case 'dpt':
+                $url = 'data-dpt';
+                break;
 
-        case 'statistik':
-            $cek = StatistikEnum::slugFromKey($cut[1]);
-            $url = $cek ? "data-statistik/{$cek}" : "first/{$url}";
+            case 'statistik':
+                $cek = StatistikEnum::slugFromKey($cut[1]);
+                $url = $cek ? "data-statistik/{$cek}" : "first/{$url}";
+                break;
 
-            break;
+            case 'informasi_publik':
+                $url = 'informasi-publik';
+                break;
 
-        case 'informasi_publik':
-            $url = 'informasi-publik';
-            break;
+            // TODO: Jika semua link pada tabel menu sudah tidak menggunakan first/ lagi ganti hapus case
+            // dibawah ini yang datanya diambil dari tabel menu dan ganti default adalah $url.
+            case 'arsip':
+            case 'data_analisis':
+            case 'ambil_data_covid':
+            case 'load_aparatur_desa':
+            case 'load_apbdes':
+            case 'load_aparatur_wilayah':
+            case 'peta':
+            case 'data-wilayah':
+            case 'status-idm':
+            case 'status-sdgs':
+            case 'lapak':
+            case 'pembangunan':
+            case 'galeri':
+            case 'pengaduan':
+            case 'data-vaksinasi':
+            case 'peraturan-desa':
+            case 'pemerintah':
+            case 'layanan-mandiri':
+            case 'inventaris':
+            case 'struktur-organisasi-dan-tata-kerja':
+            case 'data-kesehatan':
+                break;
 
-            /*
-                * TODO : Jika semua link pada tabel menu sudah tdk menggunakan first/ lagi
-                * Ganti hapus case dibawah ini yg datanya diambil dari tabel menu dan ganti default adalah $url;
-                */
-        case 'arsip':
-        case 'data_analisis':
-        case 'ambil_data_covid':
-        case 'load_aparatur_desa':
-        case 'load_apbdes':
-        case 'load_aparatur_wilayah':
-        case 'peta':
-        case 'data-wilayah':
-        case 'status-idm':
-        case 'status-sdgs':
-        case 'lapak':
-        case 'pembangunan':
-        case 'galeri':
-        case 'pengaduan':
-        case 'data-vaksinasi':
-        case 'peraturan-desa':
-        case 'pemerintah':
-        case 'layanan-mandiri':
-            break;
+            default:
+                $url = "first/{$url}";
+                break;
+        }
 
-        default:
-            $url = 'first/' . $url;
-            break;
+        return site_url($url);
     }
-
-    return site_url($url);
 }
 
 function gelar($gelar_depan = null, $nama = null, $gelar_belakang = null)
@@ -1547,7 +1575,15 @@ function gelar($gelar_depan = null, $nama = null, $gelar_belakang = null)
 
 function default_file($new_file = null, $default = null)
 {
-    return file_exists(FCPATH . $new_file) ? asset($new_file, false) : asset(str_replace('assets/', '', $default));
+    // jika $default ada kata Module/ maka diabaikan, maka langsung kembalikan $default
+    // contoh: http://opensid.test/Modules/Kehadiran/Views/assets/css/style.css
+    if (preg_match('/modules\//', $default)) {
+        $asset = $default;
+    } else {
+        $asset = asset(str_replace('assets/', '', $default));
+    }
+
+    return file_exists(FCPATH . $new_file) ? asset($new_file, false) : $asset;
 }
 
 // https://stackoverflow.com/questions/6824002/capitalize-last-letter-of-a-string
@@ -1558,6 +1594,29 @@ function uclast($str): string
 
 function kasus_lain($kategori = null, $str = null)
 {
+    $pendidikan = [
+        'Tk',
+        'Sd',
+        'Sltp',
+        'Slta',
+        'Slb',
+        'Iii/s',
+        'Iii',
+        'Ii',
+        'Iv',
+    ];
+
+    $pekerjaan = [
+        '(pns)',
+        '(tni)',
+        '(polri)',
+        ' Ri ',
+        'Dpr-ri',
+        'Dpd',
+        'Bpk',
+        'Dprd',
+    ];
+
     $daftar_ganti = ${$kategori};
 
     if (null === $kategori || count($daftar_ganti ?? []) <= 0) {
@@ -1597,10 +1656,11 @@ if (! function_exists('form_kode_isian')) {
      * - Fungsi untuk bersihkan kode isian.
      *
      * @param string $str
+     * @param string $prefix
      */
-    function form_kode_isian($str): string
+    function form_kode_isian($str, $prefix = ''): string
     {
-        return '[form_' . preg_replace('/\s+/', '_', preg_replace('/[^A-Za-z0-9& ]/', '', strtolower($str))) . ']';
+        return '[form_' . preg_replace('/\s+/', '_', preg_replace('/[^A-Za-z0-9& ]/', '', strtolower($str))) . $prefix . ']';
     }
 }
 
@@ -1636,10 +1696,7 @@ if (! function_exists('super_admin')) {
      */
     function super_admin()
     {
-        $ci = &get_instance();
-        $ci->load->model('user_model');
-
-        return $ci->user_model->get_super_admin();
+        return User::superAdmin()->id;
     }
 }
 
@@ -1649,7 +1706,7 @@ if (! function_exists('is_super_admin')) {
      */
     function is_super_admin(): bool
     {
-        return (int) auth()->id === super_admin();
+        return (int) ci_auth()->id === super_admin();
     }
 }
 
@@ -1663,7 +1720,16 @@ if (! function_exists('ref')) {
      */
     function ref($alias)
     {
-        return ci()->db->get($alias)->result();
+        return match ($alias) {
+            'tweb_wil_clusterdesa' => Wilayah::dusun()->get()->pluck('dusun', 'id')->map(static function ($item, $key) {
+                return (object) [
+                    'id'   => $key,
+                    'nama' => $item,
+                ];
+            })->values()->toArray(),
+
+            default => ci()->db->get($alias)->result(),
+        };
     }
 }
 
@@ -1851,14 +1917,6 @@ if (! function_exists('hapus_kab_kota')) {
     }
 }
 
-function artikel_get_id($id)
-{
-    $CI = &get_instance();
-    $CI->load->model('first_artikel_m');
-
-    return $CI->first_artikel_m->get_artikel_by_id($id);
-}
-
 /**
  * @param string
  *
@@ -1869,6 +1927,7 @@ if (! function_exists('bersihkan_xss')) {
     {
         $antiXSS = new AntiXSS();
         $antiXSS->removeEvilHtmlTags(['iframe']);
+        $antiXSS->addEvilAttributes(['http-equiv', 'content']);
 
         return $antiXSS->xss_clean($str);
     }
@@ -1934,6 +1993,96 @@ if (! function_exists('formatTanggal')) {
     }
 }
 
+/**
+ * Kode isian tanggal
+ *
+ * @param string|null $tanggal
+ * @param string      $format
+ *
+ * @return string
+ */
+if (! function_exists('kodeIsianTanggal')) {
+    function kodeIsianTanggal($tanggal = null, $format = '')
+    {
+        try {
+            $formatInput = 'd F Y';
+            $tanggal     = $tanggal ? Carbon::createFromFormat($formatInput, $tanggal) : Carbon::now();
+
+            return match ($format) {
+                'hari'        => $tanggal->translatedFormat('l'),
+                'tgl'         => $tanggal->format('d'),
+                'bulan'       => $tanggal->translatedFormat('F'),
+                'bulan_angka' => $tanggal->translatedFormat('m'),
+                'tahun'       => $tanggal->format('Y'),
+                default       => $tanggal->translatedFormat(setting('format_tanggal_surat')),
+            };
+        } catch (InvalidArgumentException $e) {
+            return $tanggal;
+        }
+    }
+}
+
+/**
+ * Menghasilkan kode isian tanggal dengan beberapa format
+ *
+ * @param string|null $tgl
+ * @param string      $prefix
+ *
+ * @return array
+ */
+if (! function_exists('tanggalLengkap')) {
+    function tanggalLengkap($tgl = null, $prefix = '')
+    {
+        $tgl = formatTanggal($tgl ?? Carbon::now());
+        if (! empty($prefix)) {
+            $prefix = '_' . $prefix;
+        }
+
+        return [
+            [
+                'judul' => 'Tanggal (Default)',
+                'isian' => 'tgl' . $prefix,
+                'data'  => $tgl,
+            ],
+            [
+                'judul' => 'Tanggal (Dengan Hari)',
+                'isian' => 'tgl_hari' . $prefix,
+                'data'  => kodeIsianTanggal($tgl, 'hari') . ', ' . $tgl,
+            ],
+            [
+                'case_sentence' => true,
+                'judul'         => 'Tanggal (Angka)',
+                'isian'         => 'tanggal' . $prefix,
+                'data'          => kodeIsianTanggal($tgl, 'tgl'),
+            ],
+            [
+                'case_sentence' => false,
+                'judul'         => 'Hari',
+                'isian'         => 'hari' . $prefix,
+                'data'          => kodeIsianTanggal($tgl, 'hari'),
+            ],
+            [
+                'case_sentence' => false,
+                'judul'         => 'Bulan',
+                'isian'         => 'bulan' . $prefix,
+                'data'          => kodeIsianTanggal($tgl, 'bulan'),
+            ],
+            [
+                'case_sentence' => true,
+                'judul'         => 'Bulan (Angka)',
+                'isian'         => 'bulan_angka' . $prefix,
+                'data'          => kodeIsianTanggal($tgl, 'bulan_angka'),
+            ],
+            [
+                'case_sentence' => true,
+                'judul'         => 'Tahun',
+                'isian'         => 'tahun' . $prefix,
+                'data'          => kodeIsianTanggal($tgl, 'tahun'),
+            ],
+        ];
+    }
+}
+
 if (! function_exists('daftar_statistik')) {
     function daftar_statistik()
     {
@@ -1969,7 +2118,7 @@ if (! function_exists('daftar_statistik')) {
                 'key'   => 'dpt',
                 'slug'  => 'dpt',
                 'label' => 'Calon Pemilih',
-                'url'   => 'first/dpt',
+                'url'   => 'data-dpt',
             ],
             [
                 'key'   => 'data-wilayah',
@@ -1980,6 +2129,13 @@ if (! function_exists('daftar_statistik')) {
         ];
 
         return $data;
+    }
+}
+
+if (! function_exists('menu_statistik_aktif')) {
+    function menu_statistik_aktif()
+    {
+        return Menu::where('link', 'like', 'statistik%')->orWhereIn('link', ['dpt', 'data-wilayah'])->active()->pluck('link', 'link');
     }
 }
 
@@ -2004,10 +2160,69 @@ if (! function_exists('isNestedArray')) {
 if (! function_exists('getSuratBawaanTinyMCE')) {
     function getSuratBawaanTinyMCE($url_surat = null)
     {
-        $list_data = file_get_contents('assets/import/template_surat_tinymce.json');
+        $list_data = file_get_contents(DEFAULT_LOKASI_IMPOR . 'template-surat-tinymce.json');
 
         return collect(json_decode($list_data, true))
-            ->when($url_surat, static fn ($collection) => $collection->where('url_surat', $url_surat))->map(static fn ($item) => collect($item)->except('id', 'config_id', 'url_surat', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at', 'judul_surat', 'margin_cm_to_mm', 'url_surat_sistem', 'url_surat_desa')->toArray());
+            ->when($url_surat, static fn ($collection) => $collection->where('url_surat', $url_surat))->map(static fn ($item) => collect($item)->except('id', 'config_id', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at', 'margin_cm_to_mm', 'url_surat_sistem', 'url_surat_desa', 'kunci')->toArray());
+    }
+}
+
+if (! function_exists('restoreSuratBawaanTinyMCE')) {
+    function restoreSuratBawaanTinyMCE($id = null)
+    {
+        $id ??= identitas('id');
+        $suratFormats = FormatSurat::withoutConfigId($id)
+            ->where('jenis', 3)
+            ->get()->keyBy('url_surat');
+
+        $suratBawaanTinyMCE = getSuratBawaanTinyMCE();
+
+        foreach ($suratBawaanTinyMCE as $defaultSurat) {
+            $defaultSurat['config_id']  = $id;
+            $defaultSurat['form_isian'] = $defaultSurat['form_isian'] ? json_encode($defaultSurat['form_isian']) : null;
+            $defaultSurat['kode_isian'] = $defaultSurat['kode_isian'] ? json_encode($defaultSurat['kode_isian']) : null;
+            $urlSurat                   = $defaultSurat['url_surat'];
+            if (isset($suratFormats[$urlSurat])) {
+                $defaultSurat['kunci']   = $suratFormats[$urlSurat]->kunci;
+                $defaultSurat['favorit'] = $suratFormats[$urlSurat]->favorit;
+            }
+            FormatSurat::withoutConfigId($id)->upsert($defaultSurat, ['url_surat', 'config_id']);
+        }
+    }
+}
+
+if (! function_exists('getSuratBawaanDinasTinyMCE')) {
+    function getSuratBawaanDinasTinyMCE($url_surat = null)
+    {
+        $list_data = file_get_contents(DEFAULT_LOKASI_IMPOR . 'template-surat-dinas-tinymce.json');
+
+        return collect(json_decode($list_data, true))
+            ->when($url_surat, static fn ($collection) => $collection->where('url_surat', $url_surat))->map(static fn ($item) => collect($item)->except('id', 'config_id', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at', 'margin_cm_to_mm', 'url_surat_sistem', 'url_surat_desa', 'kunci')->toArray());
+    }
+}
+
+if (! function_exists('restoreSuratBawaanDinasTinyMCE')) {
+    function restoreSuratBawaanDinasTinyMCE($id = null)
+    {
+        $id ??= identitas('id');
+
+        $suratFormats = SuratDinas::withoutConfigId($id)
+            ->where('jenis', 3)
+            ->get()->keyBy('url_surat');
+
+        $suratBawaanTinyMCE = getSuratBawaanDinasTinyMCE();
+
+        foreach ($suratBawaanTinyMCE as $defaultSurat) {
+            $defaultSurat['config_id']  = $id;
+            $defaultSurat['form_isian'] = $defaultSurat['form_isian'] ? json_encode($defaultSurat['form_isian']) : null;
+            $defaultSurat['kode_isian'] = $defaultSurat['kode_isian'] ? json_encode($defaultSurat['kode_isian']) : null;
+            $urlSurat                   = $defaultSurat['url_surat'];
+            if (isset($suratFormats[$urlSurat])) {
+                $defaultSurat['kunci']   = $suratFormats[$urlSurat]->kunci;
+                $defaultSurat['favorit'] = $suratFormats[$urlSurat]->favorit;
+            }
+            SuratDinas::withoutConfigId($id)->upsert($defaultSurat, ['url_surat', 'config_id']);
+        }
     }
 }
 
@@ -2063,6 +2278,11 @@ if (! function_exists('caseWord')) {
             }
         }
 
+        // Ganti '/' dengan ---atau--- Hanya untuk pendidikan dan pekerjaan saja
+        if (preg_match('/\bpendidikan(?:_[^\s]*)?\b/i', strtolower($condition)) || preg_match('/\bpekerjaan(?:_[^\s]*)?\b/i', strtolower($condition))) {
+            $teks = str_replace('/', ' ---atau--- ', $teks);
+        }
+
         // Normal
         if (ctype_upper($condition[0]) && ctype_upper($condition[strlen($condition) - 1])) {
             $teks = set_words($teks);
@@ -2080,6 +2300,20 @@ if (! function_exists('caseWord')) {
             $teks = set_words($teks, 'ucfirst');
         }
 
+        // kembalikan '---atau---' menjadi '/'
+        $teks = str_ireplace(' ---atau--- ', '/', $teks);
+
+        // Kasus lain
+        if (preg_match('/\bpendidikan(?:_[^\s]*)?\b/i', strtolower($condition)) || preg_match('/\bpekerjaan(?:_[^\s]*)?\b/i', strtolower($condition))) {
+            $teks = kasus_lain('pendidikan', $teks);
+            $teks = kasus_lain('pekerjaan', $teks);
+        }
+
+        // Kasus lain RT / RW
+        if (preg_match('/\balamat(_[^\s]*)?\b/i', strtolower($condition))) {
+            $teks = preg_replace_callback('/\b(RT|Rw|Rt|rw)\b/i', static fn ($matches) => strtoupper($matches[1]), $teks);
+        }
+
         // Return teks asli jika tidak sesuai kondisi
         return $prefix . $teks . $suffix;
     }
@@ -2094,7 +2328,7 @@ if (! function_exists('caseHitung')) {
         return preg_replace_callback($pola, static function (array $matches) {
             $onlyNumberAndOperator = preg_replace('/[^0-9\+\-\*\/\(\)]/', '', $matches[2]);
             if (strpos($onlyNumberAndOperator, '/0') !== false) {
-            return '0';
+                return '0';
             }
 
             $operasi = eval("return {$onlyNumberAndOperator};");
@@ -2324,6 +2558,81 @@ if (! function_exists('forceRemoveDir')) {
     }
 }
 
+if (! function_exists('getStatistikLabel')) {
+    /**
+     * Mendapatkan label statistik berdasarkan kode laporan.
+     *
+     * @param mixed $lap
+     * @param mixed $stat
+     * @param mixed $namaDesa
+     *
+     * @return array
+     */
+    function getStatistikLabel($lap, $stat, $namaDesa)
+    {
+        $akhiran  = ' di ' . ucwords(setting('sebutan_desa') . ' ' . $namaDesa) . ', ' . date('Y');
+        $kategori = 'Penduduk';
+        $label    = 'Jumlah dan Persentase Penduduk Berdasarkan ' . $stat . $akhiran;
+
+        if ($bantuan = Bantuan::whereSlug($lap)->select(['nama', 'sasaran'])->first()) {
+            $program                  = $bantuan->toArray();
+            $program['judul_sasaran'] = SasaranEnum::valueOf($program['sasaran']);
+            $kategori                 = 'Bantuan';
+            $label                    = 'Jumlah dan Persentase Peserta ' . $program['nama'] . $akhiran;
+        } elseif ((int) $lap > 20 || $lap === 'kelas_sosial') {
+            $kategori = 'Keluarga';
+            $label    = 'Jumlah dan Persentase Keluarga Berdasarkan ' . $stat . $akhiran;
+        } else {
+            switch ($lap) {
+                case 'bantuan_keluarga':
+                    $kategori = 'Bantuan';
+                    $label    = 'Jumlah dan Persentase ' . $stat . $akhiran;
+                    break;
+
+                case 'bdt':
+                    $kategori = 'RTM';
+                    $label    = 'Jumlah dan Persentase Rumah Tangga Berdasarkan ' . $stat . $akhiran;
+                    break;
+
+                case '1':
+                    $label = 'Jumlah dan Persentase Penduduk Berdasarkan Aktivitas atau Jenis Pekerjaannya ' . $akhiran;
+                    break;
+
+                case '0':
+                case '14':
+                    $label = 'Jumlah dan Persentase Penduduk Berdasarkan ' . $stat . ' yang Dicatat dalam Kartu Keluarga ' . $akhiran;
+                    break;
+
+                case '13':
+                case '15':
+                    $label = 'Jumlah dan Persentase Penduduk Menurut Kelompok ' . $stat . $akhiran;
+                    break;
+
+                case '16':
+                    $label = 'Jumlah dan Persentase Penduduk Menurut Penggunaan Alat Keluarga Berencana dan Jenis Kelamin ' . $akhiran;
+                    break;
+
+                case '13':
+                    $label = 'Jumlah Keluarga dan Penduduk Berdasarkan Wilayah RT ' . $akhiran;
+                    break;
+
+                case '4':
+                    $label = 'Jumlah Penduduk yang Memiliki Hak Suara ' . $stat . $akhiran;
+                    break;
+
+                case 'hamil':
+                    $label = 'Jumlah dan Persentase Penduduk Perempuan Berdasarkan ' . $stat . $akhiran;
+                    break;
+            }
+        }
+
+        return [
+            'kategori' => $kategori,
+            'label'    => $label,
+        ];
+    }
+}
+
 function waktu($waktu_terakhir): string
 {
     $waktu_sekarang = time();
@@ -2356,6 +2665,78 @@ function waktu($waktu_terakhir): string
         return "{$bulan} bulan yang lalu";
     }
 
-        return "{$tahun} tahun yang lalu";
+    return "{$tahun} tahun yang lalu";
+}
 
+function versiUmumSetara($version): string
+{
+    $formatVersi = 'y.m'; // contoh format 24.01
+    $versiSetara = Carbon::createFromFormat($formatVersi, $version)->addMonths(7);
+
+    return $versiSetara->format($formatVersi);
+}
+
+function copyFavicon(): void
+{
+    if (file_exists(LOKASI_LOGO_DESA . 'favicon.ico')) {
+        copy(FCPATH . LOKASI_LOGO_DESA . 'favicon.ico', FCPATH . 'favicon.ico');
+    } else {
+        copy(FCPATH . LOKASI_FILES_LOGO . 'favicon.ico', FCPATH . 'favicon.ico');
+    }
+}
+
+function dummyQrCode($logo)
+{
+    $qrCode = [
+        'isiqr'   => 'dummy qrcode OpenSID',
+        'urls_id' => 'http://dummy.com',
+        'logoqr'  => gambar_desa($logo, false, true),
+        'sizeqr'  => 6,
+        'foreqr'  => '#000000',
+    ];
+
+    $qrCode['viewqr'] = qrcode_generate($qrCode);
+
+    return $qrCode;
+}
+
+function randomCode($length)
+{
+    return substr(base_convert(sha1(uniqid(random_int(0, mt_getrandmax()))), 16, 36), 0, $length);
+}
+
+function encodeId($plainText)
+{
+    $key         = time();
+    $random_code = randomCode(20);
+    $base64      = base64_encode($random_code . ',' . $plainText . ',' . $key . ',' . $plainText);
+    $base64url   = strtr($base64, '+/=', '-  ');
+
+    return trim($base64url);
+}
+
+function decodeId($plainText)
+{
+    $base64url = strtr($plainText, '-  ', '+/=');
+    $base64    = base64_decode($base64url, true);
+    $exp       = explode(',', $base64);
+
+    return ($exp[1] !== $exp[3]) ? $plainText : $exp[1];
+}
+
+if (! function_exists('cek_kehadiran')) {
+    /**
+     * Cek perangkat lupa absen
+     */
+    function cek_kehadiran(): void
+    {
+        $cek_libur = JamKerja::libur()->first();
+        $cek_jam   = JamKerja::jamKerja()->first();
+        $kehadiran = Kehadiran::where('status_kehadiran', 'hadir')->where('jam_keluar', null)->get();
+        if ($kehadiran->count() > 0 && ($cek_jam != null || $cek_libur != null)) {
+            foreach ($kehadiran as $data) {
+                Kehadiran::lupaAbsen($data->tanggal);
+            }
+        }
+    }
 }

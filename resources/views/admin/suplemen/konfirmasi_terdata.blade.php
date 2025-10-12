@@ -21,7 +21,7 @@
     <div class="form-group">
         <label for="keperluan" class="col-sm-3 control-label">Pendidikan</label>
         <div class="col-sm-8">
-            <input class="form-control input-sm" type="text" value="{{ $individu->pendidikan->nama }}" disabled="">
+            <input class="form-control input-sm" type="text" value="{{ strtoupper(\App\Enums\PendidikanKKEnum::valueOf($individu->pendidikan_kk_id)) }}" disabled="">
         </div>
     </div>
     <div class="form-group">
@@ -37,7 +37,7 @@
     <input type="hidden" name="id_terdata" value="{{ $individu->keluarga->id }}">
     <div class="form-group">
         <label for="keperluan" class="col-sm-3 control-label">Tempat Tanggal Lahir (Umur) KK</label>
-        <div class="col-sm-4">
+        <div class="col-sm-5">
             <input class="form-control input-sm" type="text" value="{{ $individu->tempatlahir }}" disabled="">
         </div>
         <div class="col-sm-2">
@@ -49,14 +49,14 @@
     </div>
     <div class="form-group">
         <label for="keperluan" class="col-sm-3 control-label">Alamat Keluarga</label>
-        <div class="col-sm-8">
+        <div class="col-sm-9">
             <input class="form-control input-sm" type="text" value="{{ $individu->alamat_wilayah }}" disabled="">
         </div>
     </div>
     <div class="form-group">
         <label for="keperluan" class="col-sm-3 control-label">Pendidikan KK</label>
-        <div class="col-sm-8">
-            <input class="form-control input-sm" type="text" value="{{ $individu->pendidikan->nama }}" disabled="">
+        <div class="col-sm-9">
+            <input class="form-control input-sm" type="text" value="{{ strtoupper(\App\Enums\PendidikanKKEnum::valueOf($individu->pendidikan_kk_id)) }}" disabled="">
         </div>
     </div>
     <div class="form-group">
@@ -64,7 +64,7 @@
         <div class="col-sm-4">
             <input class="form-control input-sm" type="text" value="{{ $individu->warganegara->nama }}" disabled="">
         </div>
-        <div class="col-sm-4">
+        <div class="col-sm-5">
             <input class="form-control input-sm" type="text" value="{{ $individu->agama->nama }}" disabled="">
         </div>
     </div>

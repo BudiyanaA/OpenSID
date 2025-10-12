@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -41,7 +41,9 @@ use Illuminate\Cache\Console\CacheTableCommand;
 use Illuminate\Cache\Console\ClearCommand as CacheClearCommand;
 use Illuminate\Cache\Console\ForgetCommand as CacheForgetCommand;
 use Illuminate\Console\Scheduling\ScheduleFinishCommand;
+use Illuminate\Console\Scheduling\ScheduleListCommand;
 use Illuminate\Console\Scheduling\ScheduleRunCommand;
+use Illuminate\Console\Scheduling\ScheduleWorkCommand;
 use Illuminate\Database\Console\DumpCommand;
 use Illuminate\Database\Console\Migrations\FreshCommand as MigrateFreshCommand;
 use Illuminate\Database\Console\Migrations\InstallCommand as MigrateInstallCommand;
@@ -54,6 +56,7 @@ use Illuminate\Database\Console\Seeds\SeedCommand;
 use Illuminate\Database\Console\Seeds\SeederMakeCommand;
 use Illuminate\Database\Console\WipeCommand;
 use Illuminate\Queue\Console\BatchesTableCommand;
+use Illuminate\Queue\Console\ClearCommand as ClearQueueCommand;
 use Illuminate\Queue\Console\FailedTableCommand;
 use Illuminate\Queue\Console\FlushFailedCommand as FlushFailedQueueCommand;
 use Illuminate\Queue\Console\ForgetFailedCommand as ForgetFailedQueueCommand;
@@ -82,6 +85,7 @@ class ConsoleServiceProvider extends ServiceProvider
         'MigrateReset'    => 'command.migrate.reset',
         'MigrateRollback' => 'command.migrate.rollback',
         'MigrateStatus'   => 'command.migrate.status',
+        'QueueClear'      => 'command.queue.clear',
         'QueueFailed'     => 'command.queue.failed',
         'QueueFlush'      => 'command.queue.flush',
         'QueueForget'     => 'command.queue.forget',
@@ -91,8 +95,10 @@ class ConsoleServiceProvider extends ServiceProvider
         'QueueWork'       => 'command.queue.work',
         'Seed'            => 'command.seed',
         'Wipe'            => 'command.wipe',
-        'ScheduleFinish'  => ScheduleFinishCommand::class,
-        'ScheduleRun'     => ScheduleRunCommand::class,
+        'ScheduleFinish'  => 'command.schedule.finish',
+        'ScheduleRun'     => 'command.schedule.run',
+        'ScheduleList'    => 'command.schedule.list',
+        'ScheduleWork'    => 'command.schedule.work',
         'SchemaDump'      => 'command.schema.dump',
     ];
 
@@ -259,6 +265,16 @@ class ConsoleServiceProvider extends ServiceProvider
      *
      * @return void
      */
+    protected function registerQueueClearCommand()
+    {
+        $this->app->singleton('command.queue.clear', static fn () => new ClearQueueCommand());
+    }
+
+    /**
+     * Register the command.
+     *
+     * @return void
+     */
     protected function registerQueueFailedCommand()
     {
         $this->app->singleton('command.queue.failed', static fn (): \Illuminate\Queue\Console\ListFailedCommand => new ListFailedQueueCommand());
@@ -391,7 +407,7 @@ class ConsoleServiceProvider extends ServiceProvider
      */
     protected function registerScheduleFinishCommand()
     {
-        $this->app->singleton(ScheduleFinishCommand::class);
+        $this->app->singleton('command.schedule.finish', static fn () => new ScheduleFinishCommand());
     }
 
     /**
@@ -401,7 +417,27 @@ class ConsoleServiceProvider extends ServiceProvider
      */
     protected function registerScheduleRunCommand()
     {
-        $this->app->singleton(ScheduleRunCommand::class);
+        $this->app->singleton('command.schedule.run', static fn () => new ScheduleRunCommand());
+    }
+
+    /**
+     * Register the command.
+     *
+     * @return void
+     */
+    protected function registerScheduleWorkCommand()
+    {
+        $this->app->singleton('command.schedule.work', static fn () => new ScheduleWorkCommand());
+    }
+
+    /**
+     * Register the command.
+     *
+     * @return void
+     */
+    protected function registerScheduleListCommand()
+    {
+        $this->app->singleton('command.schedule.list', static fn () => new ScheduleListCommand());
     }
 
     /**

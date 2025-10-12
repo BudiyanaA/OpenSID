@@ -31,7 +31,7 @@
                     </div>
                 @endif
             @else
-                <a href="{{ ci_route('modul') }}" class="btn btn-social btn-info btn-sm visible-xs-block visible-sm-inline-block visible-md-inline-block visible-lg-inline-block"><i class="fa fa-arrow-circle-o-left"></i> Kembali Ke Daftar Modul</a>
+                @include('admin.layouts.components.tombol_kembali', ['url' => ci_route('modul'), 'label' => 'Daftar Modul'])
                 <div style="margin-top: 15px;">
                     <strong> Modul Utama : {{ SebutanDesa($parentName) }} </strong>
                 </div>
@@ -72,6 +72,7 @@
 @push('scripts')
     <script>
         $(document).ready(function() {
+            var parent = '{{ $utama }}';
             var TableData = $('#tabeldata').DataTable({
                 responsive: true,
                 processing: true,
@@ -126,7 +127,7 @@
                 aaSorting: []
             });
 
-            if (ubah == 0) {
+            if (ubah == 0 && parent == 0) {
                 TableData.column(1).visible(false);
             }
 

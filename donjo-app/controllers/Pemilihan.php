@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -42,17 +42,16 @@ defined('BASEPATH') || exit('No direct script access allowed');
 
 class Pemilihan extends Admin_Controller
 {
-    public $modul_ini       = 'kependudukan';
-    public $sub_modul_ini   = 'calon-pemilih';
-    public $aliasController = 'dpt';
+    public $modul_ini     = 'kependudukan';
+    public $sub_modul_ini = 'calon-pemilih';
+    public $akses_modul   = 'calon-pemilih';
 
     public function __construct()
     {
         parent::__construct();
         isCan('b');
-        isCan('u');
         if (! Schema::hasTable('pemilihan')) {
-            session_error('Tabel Pemilihan tidak ditemukan, silahkan lakukan migrasi database terlebih dahulu.');
+            session_error('Tabel Pemilihan tidak ditemukan, silakan lakukan migrasi database terlebih dahulu.');
             redirect('dpt');
         }
     }
@@ -178,7 +177,7 @@ class Pemilihan extends Admin_Controller
     {
         return [
             'judul'      => nama_terbatas($request['judul']),
-            'tanggal'    => date('Y-m-d', strtotime($request['tanggal'])),
+            'tanggal'    => date('Y-m-d', strtotime((string) $request['tanggal'])),
             'keterangan' => $request['keterangan'],
             'status'     => $request['status'] ?? 0,
         ];

@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -47,7 +47,7 @@ class Bumindes_penduduk_mutasi extends Admin_Controller
 {
     public $modul_ini           = 'buku-administrasi-desa';
     public $sub_modul_ini       = 'administrasi-penduduk';
-    public $kategori_pengaturan = 'data_lengkap';
+    public $kategori_pengaturan = 'Data Lengkap';
 
     public function __construct()
     {
@@ -71,9 +71,9 @@ class Bumindes_penduduk_mutasi extends Admin_Controller
         if ($this->input->is_ajax_request()) {
             return datatables()->of($this->sumberData())
                 ->addIndexColumn()
-                ->editColumn('sex', static fn ($row): string => strtoupper(JenisKelaminEnum::valueOf($row->penduduk->sex)))
+                ->editColumn('sex', static fn ($row): string => strtoupper((string) JenisKelaminEnum::valueOf($row->penduduk->sex)))
                 ->editColumn('tanggallahir', static fn ($row) => tgl_indo_out($row->penduduk->tanggallahir))
-                ->editColumn('warganegara', static fn ($row): string => strtoupper(WargaNegaraEnum::valueOf($row->penduduk->warganegara_id)))
+                ->editColumn('warganegara', static fn ($row): string => strtoupper((string) WargaNegaraEnum::valueOf($row->penduduk->warganegara_id)))
                 ->editColumn('alamat_sebelumnya', static fn ($row) => $row->kode_peristiwa == LogPenduduk::BARU_PINDAH_MASUK ? $row->penduduk->alamat_sebelumnya : '-')
                 ->editColumn('tanggal_sebelumnya', static fn ($row) => $row->kode_peristiwa == LogPenduduk::BARU_PINDAH_MASUK ? tgl_indo_out($row->penduduk->created_at) : '-')
                 ->editColumn('alamat_tujuan', static fn ($row) => $row->kode_peristiwa == LogPenduduk::PINDAH_KELUAR ? $row->alamat_tujuan : '-')
@@ -126,17 +126,17 @@ class Bumindes_penduduk_mutasi extends Admin_Controller
 
     public function cetak($aksi = '')
     {
-        $paramDatatable = json_decode($this->input->post('params'), 1);
+        $paramDatatable = json_decode((string) $this->input->post('params'), 1);
         $_GET           = $paramDatatable;
         $query          = $this->sumberData();
         if ($paramDatatable['start']) {
             $query->skip($paramDatatable['start']);
         }
 
-        $data              = $this->modal_penandatangan();
-        $data['aksi']      = $aksi;
-        $data['main']      = $query->take($paramDatatable['length'])->get();
-        $data['config']    = $this->header['desa'];
+        $data         = $this->modal_penandatangan();
+        $data['aksi'] = $aksi;
+        $data['main'] = $query->take($paramDatatable['length'])->get();
+
         $data['tgl_cetak'] = $this->input->post('tgl_cetak');
         $data['file']      = 'Buku Mutasi Penduduk';
         $data['isi']       = 'admin.bumindes.penduduk.mutasi.cetak';

@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -62,6 +62,8 @@ class Theme extends Admin_Controller
 
     public function unggah()
     {
+        isMultiDB();
+        isSiapPakai();
         isCan('u', 'theme', true, true);
 
         $form_action = site_url('theme/proses-unggah');
@@ -71,11 +73,13 @@ class Theme extends Admin_Controller
 
     public function proses_unggah(): void
     {
+        // isMultiDB();
+        // isSiapPakai();
         isCan('u', 'theme', true);
 
         $tema = $this->unggah_tema();
 
-        redirect_with($tema['status'], $tema['data']);
+        redirect_with($tema['status'] ? 'success' : 'error', $tema['data']);
     }
 
     public function pengaturan($id = '')
@@ -95,7 +99,9 @@ class Theme extends Admin_Controller
 
         $tema = ThemeModel::findOrFail($id);
 
-        $tema->update(['opsi' => $this->input->post('opsi')]);
+        $opsi = $this->validateOpsi($this->input->post('opsi'), $tema);
+
+        $tema->update(['opsi' => $opsi]);
 
         redirect_with('success', 'Berhasil Ubah Data', "theme/pengaturan/{$id}");
     }
@@ -165,6 +171,7 @@ class Theme extends Admin_Controller
         $config['file_name']     = $nama_tema . '.zip';
 
         $this->upload->initialize($config);
+
         if ($this->upload->do_upload('userfile')) {
             $upload = $this->upload->data();
             $zip    = new ZipArchive();
@@ -185,7 +192,7 @@ class Theme extends Admin_Controller
 
             $lokasi_tema = $lokasi_ekstrak . substr($subfolder, 0, -1);
 
-            if (! file_exists($lokasi_tema . '/template.php')) {
+            if (! file_exists($lokasi_tema . '/resources/views/template.blade.php')) {
                 delete_files($lokasi_tema, true);
 
                 return [
@@ -193,7 +200,6 @@ class Theme extends Admin_Controller
                     'data'   => 'Tema tidak valid',
                 ];
             }
-
             theme_scan();
 
             return [
@@ -215,5 +221,65 @@ class Theme extends Admin_Controller
         theme_scan();
 
         redirect_with('success', 'Berhasil Memindai Tema');
+    }
+
+    protected function validateOpsi($opsi, $tema)
+    {
+        $configPath  = FCPATH . $tema->path . '/config.json';
+        $configTheme = json_decode(file_get_contents($configPath), true);
+        $opsi        = [];
+
+        foreach ($configTheme as $config) {
+            $key      = $config['key'];
+            $postOpsi = $this->input->post('opsi')[$key] ?? null;
+
+            if ($config['type'] == 'unggah') {
+                if (! empty($_FILES[$key]['name'])) {
+                    $opsi[$key] = $this->imageUpload($tema->slug, $key);
+                } else {
+                    $opsi[$key] = theme_config($key);
+                }
+                $opsi['url_' . $key] = $this->input->post('opsi')['url_' . $key] ?? '';
+            } else {
+                $opsi[$key] = $postOpsi;
+            }
+        }
+
+        return $opsi;
+    }
+
+    public function imageUpload($namaTema, $key)
+    {
+        $this->load->library('Upload');
+
+        $uploadDir = CONFIG_THEMES . $namaTema;
+        if (! is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+
+        $config = [
+            'upload_path'   => $uploadDir,
+            'allowed_types' => 'jpg|jpeg|png|gif',
+            'overwrite'     => true,
+            'max_size'      => max_upload() * 5 * 1024,
+            'file_name'     => time() . '_' . $key,
+        ];
+
+        $this->upload->initialize($config);
+
+        if ($this->upload->do_upload($key)) {
+            $upload       = $this->upload->data();
+            $existingFile = FCPATH . theme_config($key);
+
+            if (file_exists($existingFile)) {
+                unlink($existingFile);
+            }
+
+            return $uploadDir . '/' . $upload['file_name'];
+        }
+
+        log_message('error', $this->upload->display_errors());
+
+        return null;
     }
 }

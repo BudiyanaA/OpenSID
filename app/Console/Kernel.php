@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -37,24 +37,38 @@
 
 namespace App\Console;
 
+use App\Console\Commands\AcakDataCommand;
+use App\Console\Commands\ModuleCommand;
+use App\Console\Commands\Modules\MigrationMakeCommand;
+use App\Console\Commands\Modules\SeedMakeCommand;
+use App\Console\Commands\ViewClearCommand;
 use App\Exceptions\Handler;
 use App\Services\Laravel;
 use Illuminate\Console\Application as Artisan;
+use Illuminate\Console\Events\CommandFinished;
+use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Console\Scheduling\ScheduleRunCommand;
 use Illuminate\Contracts\Console\Kernel as KernelContract;
 use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Events\Dispatcher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use RuntimeException;
+use Symfony\Component\Console\ConsoleEvents;
+use Symfony\Component\Console\Event\ConsoleCommandEvent;
+use Symfony\Component\Console\Event\ConsoleTerminateEvent;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 use Throwable;
 
 class Kernel implements KernelContract
 {
     /**
-     * The application implementation.
+     * The Symfony event dispatcher implementation.
+     *
+     * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface|null
      */
-    protected Laravel $app;
+    protected $symfonyDispatcher;
 
     /**
      * The Artisan application instance.
@@ -75,19 +89,29 @@ class Kernel implements KernelContract
      *
      * @var array
      */
-    protected $commands = [];
+    protected $commands = [
+        AcakDataCommand::class,
+        ViewClearCommand::class,
+        ModuleCommand::class,
+        MigrationMakeCommand::class,
+        SeedMakeCommand::class,
+    ];
 
     /**
      * Create a new console kernel instance.
      *
      * @return void
      */
-    public function __construct(Laravel $app)
-    {
-        $this->app = $app;
-
+    public function __construct(
+        /**
+         * The application implementation.
+         */
+        protected Laravel $app
+    ) {
         if ($this->app->runningInConsole()) {
             $this->setRequestForConsole($this->app);
+        } else {
+            $this->rerouteSymfonyCommandEvents();
         }
 
         $this->app->prepareForConsoleCommand($this->aliases);
@@ -121,6 +145,34 @@ class Kernel implements KernelContract
             [],
             $server
         ));
+    }
+
+    /**
+     * Re-route the Symfony command events to their Laravel counterparts.
+     *
+     * @internal
+     *
+     * @return $this
+     */
+    public function rerouteSymfonyCommandEvents()
+    {
+        if (null === $this->symfonyDispatcher) {
+            $this->symfonyDispatcher = new EventDispatcher();
+
+            $this->symfonyDispatcher->addListener(ConsoleEvents::COMMAND, function (ConsoleCommandEvent $event) {
+                $this->app[Dispatcher::class]->dispatch(
+                    new CommandStarting($event->getCommand()->getName(), $event->getInput(), $event->getOutput())
+                );
+            });
+
+            $this->symfonyDispatcher->addListener(ConsoleEvents::TERMINATE, function (ConsoleTerminateEvent $event) {
+                $this->app[Dispatcher::class]->dispatch(
+                    new CommandFinished($event->getCommand()->getName(), $event->getInput(), $event->getOutput(), $event->getExitCode())
+                );
+            });
+        }
+
+        return $this;
     }
 
     /**
@@ -241,9 +293,15 @@ class Kernel implements KernelContract
     protected function getArtisan()
     {
         if (null === $this->artisan) {
-            $artisan = new Artisan($this->app, $this->app->make('events'), VERSION);
+            $artisan = new Artisan($this->app, $this->app->make('events'), $this->app->version());
             $artisan->setName('OpenSID');
             $artisan->resolveCommands($this->getCommands());
+            $artisan->setContainerCommandLoader();
+
+            if ($this->symfonyDispatcher instanceof EventDispatcher) {
+                $artisan->setDispatcher($this->symfonyDispatcher);
+                $artisan->setSignalsToDispatchEvent();
+            }
 
             return $this->artisan = $artisan;
         }

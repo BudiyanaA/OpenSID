@@ -20,9 +20,8 @@
         <div class="col-md-8">
             <div class="box box-info">
                 <div class="box-header with-border">
-                    <a href="{{ ci_route('web', $cat) }}" class="btn btn-social btn-info btn-sm btn-sm visible-xs-block visible-sm-inline-block visible-md-inline-block visible-lg-inline-block" title="Tambah Artikel">
-                        <i class="fa fa-arrow-circle-left "></i>Kembali ke Daftar Artikel
-                    </a>
+                    @include('admin.layouts.components.tombol_kembali', ['url' => ci_route('web', $cat), 'label' => 'Daftar Artikel'])
+
                     @if ($artikel['slug'])
                         <a href="{{ $artikel['url_slug'] }}" target="_blank" class="btn btn-social bg-green btn-sm visible-xs-block visible-sm-inline-block visible-md-inline-block visible-lg-inline-block"><i class="fa fa-eye"></i> Lihat Artikel</a>
                     @endif
@@ -44,7 +43,7 @@
                     </div>
                     <div class="form-group">
                         <label class="control-label" for="kode_desa">Isi Artikel</label>
-                        <textarea name="isi" data-filemanager='{!! json_encode(['external_filemanager_path' => base_url('assets/kelola_file/'), 'filemanager_title' => 'Responsive Filemanager', 'filemanager_access_key' => $session->fm_key]) !!}' class="form-control input-sm required" style="height:350px;">{{ $artikel['isi'] }}</textarea>
+                        <textarea name="isi" data-filemanager='{!! json_encode(['external_filemanager_path' => base_url('rfm/'), 'filemanager_title' => 'Responsive Filemanager', 'filemanager_access_key' => $session->fm_key]) !!}' class="form-control input-sm required" style="height:350px;">{{ $artikel['isi'] }}</textarea>
                     </div>
                 </div>
             </div>
@@ -157,7 +156,7 @@
                                     <div class="input-group-addon">
                                         <i class="fa fa-map-marker"></i>
                                     </div>
-                                    <input class="form-control input-sm pull-right" name="lokasi_kegiatan" type="text" placeholder="Masukan lokasi tempat dilakukan kegiatan" value="{{ $artikel['agenda']['lokasi_kegiatan'] }}">
+                                    <input class="form-control input-sm pull-right" name="lokasi_kegiatan" type="text" placeholder="Masukan lokasi tempat dilakukan kegiatan" value="{{ $artikel['agenda']['lokasi_kegiatan'] }}" maxlength="100">
                                 </div>
                                 <span class="help-block"><code>(Isikan Lokasi Tempat Dilakukan Kegiatan)</code></span>
                                 <label class="control-label" for="koordinator_kegiatan">Koordinator Kegiatan</label>
@@ -165,7 +164,7 @@
                                     <div class="input-group-addon">
                                         <i class="fa fa-user"></i>
                                     </div>
-                                    <input class="form-control input-sm pull-right" name="koordinator_kegiatan" type="text" placeholder="Masukan nama koordinator" value="{{ $artikel['agenda']['koordinator_kegiatan'] }}">
+                                    <input class="form-control input-sm pull-right" name="koordinator_kegiatan" type="text" placeholder="Masukan nama koordinator" value="{{ $artikel['agenda']['koordinator_kegiatan'] }}" maxlength="50">
                                 </div>
                                 <span class="help-block"><code>(Isikan Koordinator Kegiatan)</code></span>
                             </div>
@@ -225,7 +224,7 @@
                         </div>
                         <div class="form-group">
                             <label class="control-label" for="nama_dokumen">Nama Dokumen</label>
-                            <input id="link_dokumen" name="link_dokumen" class="form-control input-sm strip_tags" type="text" value="{{ e($artikel['link_dokumen']) }}"></input>
+                            <input id="link_dokumen" name="link_dokumen" class="form-control input-sm strip_tags" type="text" value="{{ e($artikel['link_dokumen']) }}" maxlength="100">
                             <span class="help-block"><code>(Nantinya akan menjadi link unduh/download)</code></span>
                         </div>
                         <div class="form-group">
@@ -255,12 +254,13 @@
 @endsection
 @include('admin.layouts.components.datetime_picker')
 @push('scripts')
-    <script type="text/javascript" src="{{ asset('js/tinymce-651/tinymce.min.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('js/tinymce-72/tinymce.min.js') }}"></script>
     <script type="text/javascript">
         tinymce.init({
             selector: 'textarea',
             height: 700,
             promotion: false,
+            sandbox_iframes: false,
             theme: 'silver',
             formats: {
                 menjorok: {
@@ -282,7 +282,7 @@
             toolbar3: "| laporan_keuangan | penerima_bantuan | sotk",
             image_advtab: true,
             external_plugins: {
-                "filemanager": "{{ asset('kelola_file/plugin.min.js') }}"
+                "filemanager": "{{ base_url('rfm/plugin.min.js') }}"
             },
             templates: [{
                     title: 'Test template 1',

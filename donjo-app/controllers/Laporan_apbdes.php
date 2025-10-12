@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -73,7 +73,7 @@ class Laporan_apbdes extends Admin_Controller
             return datatables()->of(LaporanSinkronisasi::whereTipe($this->tipe))
                 ->addColumn('ceklist', static function ($row) {
                     if (can('h')) {
-                        return '<input type="checkbox" name="id_cb[]" value="' . $row->id_kontak . '"/>';
+                        return '<input type="checkbox" name="id_cb[]" value="' . $row->id . '"/>';
                     }
                 })
                 ->addIndexColumn()
@@ -86,7 +86,7 @@ class Laporan_apbdes extends Admin_Controller
 
                     return $aksi . ('<a href="' . ci_route($routePath . '.unduh', $row->id) . '" class="btn bg-purple btn-sm"  title="Unduh"><i class="fa fa-download"></i></a>');
                 })
-                ->editColumn('updated_at', static fn ($q) => $q->updated_at->format('Y-m-d H:i:s'))
+                ->editColumn('updated_at', static fn ($q) => $q->updated_at?->translatedFormat('d F Y H:i:s'))
                 ->rawColumns(['ceklist', 'aksi'])
                 ->make();
         }
@@ -145,7 +145,6 @@ class Laporan_apbdes extends Admin_Controller
     public function delete($id = null): void
     {
         isCan('h');
-
         if (LaporanSinkronisasi::destroy($id ?? $this->request['id_cb']) !== 0) {
             redirect_with('success', 'Berhasil Hapus Data');
         }
@@ -175,7 +174,7 @@ class Laporan_apbdes extends Admin_Controller
         //Tambah/Ubah Data
         $curl = curl_init();
         curl_setopt_array($curl, [
-            CURLOPT_URL            => "{$this->setting->api_opendk_server}/api/v1/" . str_replace('_', '-', $this->tipe),
+            CURLOPT_URL            => setting('api_opendk_server') . '/api/v1/' . str_replace('_', '-', $this->tipe),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING       => '',
             CURLOPT_MAXREDIRS      => 10,
@@ -187,7 +186,7 @@ class Laporan_apbdes extends Admin_Controller
             CURLOPT_HTTPHEADER     => [
                 'Accept: application/json',
                 'Content-Type: application/json',
-                "Authorization: Bearer {$this->setting->api_opendk_key}",
+                'Authorization: Bearer ' . setting('api_opendk_key'),
             ],
         ]);
 

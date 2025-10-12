@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -88,7 +88,7 @@ class Bumindes_kader extends Admin_Controller
                 })
                 ->editColumn('umur', static fn ($row): string => usia($row->penduduk->tanggallahir, null, '%y'))
                 ->editColumn('pendidikan', static fn ($row) => PendidikanKKEnum::valueOf($row->penduduk->pendidikan_kk_id) . '</br>' . preg_replace('/[^a-zA-Z, ]/', '', $row->kursus))
-                ->editColumn('bidang', static fn ($row) => preg_replace('/[^a-zA-Z, ]/', '', $row->bidang))
+                ->editColumn('bidang', static fn ($row): array|string|null => preg_replace('/[^a-zA-Z, ]/', '', $row->bidang))
                 ->orderColumn('umur', static function ($query, $order): void {
                      $query->whereHas('penduduk', static fn ($q) => $q->orderBy('tanggallahir', $order));
                 })
@@ -146,7 +146,7 @@ class Bumindes_kader extends Admin_Controller
             $list = preg_replace('/[^a-zA-Z, ]/', '', $list);
 
             foreach ($list as $value) {
-                $exploded = explode(',', $value);
+                $exploded = explode(',', (string) $value);
                 $exploded = array_map('trim', $exploded);
                 $new      = array_merge($new, $exploded);
             }
@@ -154,7 +154,7 @@ class Bumindes_kader extends Admin_Controller
 
         $data = collect(array_filter(array_unique([...$kursus, ...$new])));
 
-        $data = $data->filter(static fn ($item): bool => stripos($item, (string) $nama) !== false);
+        $data = $data->filter(static fn ($item): bool => stripos((string) $item, (string) $nama) !== false);
 
         echo json_encode($data, JSON_THROW_ON_ERROR);
     }
@@ -176,7 +176,7 @@ class Bumindes_kader extends Admin_Controller
             $list = preg_replace('/[^a-zA-Z, ]/', '', $list);
 
             foreach ($list as $value) {
-                $exploded = explode(',', $value);
+                $exploded = explode(',', (string) $value);
                 $exploded = array_map('trim', $exploded);
                 $new      = array_merge(array_filter($new), $exploded);
             }
@@ -184,7 +184,7 @@ class Bumindes_kader extends Admin_Controller
 
         $data = collect(array_filter(array_unique([...$bidang, ...$new])));
 
-        $data = $data->filter(static fn ($item): bool => stripos($item, (string) $nama) !== false);
+        $data = $data->filter(static fn ($item): bool => stripos((string) $item, (string) $nama) !== false);
 
         echo json_encode($data, JSON_THROW_ON_ERROR);
     }
@@ -239,8 +239,8 @@ class Bumindes_kader extends Admin_Controller
 
     private function validate(array $request = []): array
     {
-        $kursus = array_unique(explode(',', $request['kursus']));
-        $bidang = array_unique(explode(',', $request['bidang']));
+        $kursus = array_unique(explode(',', (string) $request['kursus']));
+        $bidang = array_unique(explode(',', (string) $request['bidang']));
 
         return [
             'penduduk_id' => bilangan($request['penduduk_id']),
@@ -260,11 +260,11 @@ class Bumindes_kader extends Admin_Controller
 
     public function cetak($aksi = '')
     {
-        $query             = $this->sumberData();
-        $data              = $this->modal_penandatangan();
-        $data['aksi']      = $aksi;
-        $data['main']      = $query->get();
-        $data['config']    = $this->header['desa'];
+        $query        = $this->sumberData();
+        $data         = $this->modal_penandatangan();
+        $data['aksi'] = $aksi;
+        $data['main'] = $query->get();
+
         $data['tgl_cetak'] = $this->input->post('tgl_cetak');
         $data['file']      = 'Buku Mutasi Penduduk';
         $data['isi']       = 'admin.bumindes.pembangunan.kader.cetak';

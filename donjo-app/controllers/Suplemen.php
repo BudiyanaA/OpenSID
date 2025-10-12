@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -38,16 +38,18 @@
 use App\Enums\JenisKelaminEnum;
 use App\Enums\ListSasaranEnum;
 use App\Models\Keluarga;
+use App\Models\Pamong;
 use App\Models\Penduduk;
 use App\Models\Suplemen as ModelsSuplemen;
 use App\Models\SuplemenTerdata;
 use App\Models\Wilayah;
+use OpenSpout\Common\Entity\Row;
 use OpenSpout\Common\Entity\Style\Border;
+use OpenSpout\Common\Entity\Style\BorderPart;
 use OpenSpout\Common\Entity\Style\Color;
-use OpenSpout\Reader\Common\Creator\ReaderEntityFactory;
-use OpenSpout\Writer\Common\Creator\Style\BorderBuilder;
-use OpenSpout\Writer\Common\Creator\Style\StyleBuilder;
-use OpenSpout\Writer\Common\Creator\WriterEntityFactory;
+use OpenSpout\Common\Entity\Style\Style;
+use OpenSpout\Reader\XLSX\Reader;
+use OpenSpout\Writer\XLSX\Writer;
 
 defined('BASEPATH') || exit('No direct script access allowed');
 
@@ -60,7 +62,6 @@ class Suplemen extends Admin_Controller
     {
         parent::__construct();
         isCan('b');
-        $this->load->model(['pamong_model']);
     }
 
     public function index()
@@ -75,27 +76,32 @@ class Suplemen extends Admin_Controller
         if ($this->input->is_ajax_request()) {
             $sasaran = $this->input->get('sasaran');
 
-            return datatables()->of(ModelsSuplemen::with('terdata')
-                ->filter($sasaran))
+            return datatables()->of(
+                ModelsSuplemen::withCount('terdata')->where('status', 1)
+                    ->filter($sasaran)
+            )
                 ->addIndexColumn()
                 ->addColumn('aksi', static function ($row): string {
                     $aksi     = '';
-                    $disabled = $row->terdata()->count() > 0 ? 'disabled' : 'data-target="#confirm-delete"';
+                    $disabled = $row->terdata_count > 0 ? 'disabled' : 'data-target="#confirm-delete"';
 
+                    $aksi .= '<a href="' . ci_route('suplemen.rincian', $row->id) . '" class="btn bg-purple btn-sm" title="Rincian Data"><i class="fa fa-list-ol"></i></a> ';
                     if (can('u')) {
-                        $aksi .= '<a href="' . ci_route('suplemen.rincian', $row->id) . '" class="btn bg-purple btn-sm" title="Rincian Data"><i class="fa fa-list-ol"></i></a> ';
-                        $aksi .= '<a href="' . ci_route('suplemen.impor_data', $row->id) . '" class="btn bg-navy btn-sm btn-import" title="Impor Data"><i class="fa fa-upload"></i></a> ';
-                        $aksi .= '<a href="' . ci_route('suplemen.form', $row->id) . '" class="btn btn-warning btn-sm"  title="Tanggapi Pengaduan"><i class="fa fa-pencil"></i></a> ';
+                        if ($row->sumber != 'OpenKab' && $row->config_id != null) {
+                            $aksi .= '<a href="' . ci_route('suplemen.impor_data', $row->id) . '" class="btn bg-navy btn-sm btn-import" title="Impor Data"><i class="fa fa-upload"></i></a> ';
+                            $aksi .= '<a href="' . ci_route('suplemen.form', $row->id) . '" class="btn btn-warning btn-sm"  title="Edit Pengaduan"><i class="fa fa-pencil"></i></a> ';
+                        }
                     }
 
                     if (can('h')) {
+                        if ($row->sumber != 'OpenKab' && $row->config_id != null) {
                         $aksi .= '<a href="#" data-href="' . ci_route('suplemen.delete', $row->id) . '" class="btn bg-maroon btn-sm"  title="Hapus Data" data-toggle="modal"' . $disabled . '><i class="fa fa-trash"></i></a> ';
+                        }
                     }
 
                     return $aksi;
                 })
-                ->editColumn('terdata', static fn ($row) => $row->terdata()->count())
-                ->editColumn('sasaran', static fn ($row) => unserialize(SASARAN)[$row->sasaran])
+                ->editColumn('sasaran', static fn ($row): mixed => unserialize(SASARAN)[$row->sasaran])
                 ->rawColumns(['aksi'])
                 ->make();
         }
@@ -111,6 +117,9 @@ class Suplemen extends Admin_Controller
             $action      = 'Ubah';
             $form_action = ci_route('suplemen.update', $id);
             $suplemen    = ModelsSuplemen::with('terdata')->findOrFail($id);
+            if ($suplemen->sumber == 'OpenKab' && $suplemen->config_id == null) {
+                redirect_with('error', 'Anda tidak memiliki akses untuk halaman tersebut!');
+            }
         } else {
             $action      = 'Tambah';
             $form_action = ci_route('suplemen.create');
@@ -127,7 +136,7 @@ class Suplemen extends Admin_Controller
         isCan('u');
 
         try {
-            ModelsSuplemen::create(static::validated($this->request));
+            ModelsSuplemen::create(static::validate($this->request));
             redirect_with('success', 'Berhasil Tambah Data');
         } catch (Exception $e) {
             redirect_with('error', 'Gagal Tambah Data ' . $e->getMessage());
@@ -141,7 +150,7 @@ class Suplemen extends Admin_Controller
         $update = ModelsSuplemen::findOrFail($id);
 
         try {
-            $data = static::validated($this->request);
+            $data = static::validate($this->request);
             $data['sasaran'] ??= $update->sasaran;
             $update->update($data);
             redirect_with('success', 'Berhasil Ubah Data');
@@ -155,6 +164,9 @@ class Suplemen extends Admin_Controller
         isCan('h');
 
         $suplemen = ModelsSuplemen::findOrFail($id);
+        if ($suplemen->sumber == 'OpenKab' && $suplemen->config_id == null) {
+            redirect_with('error', 'Anda tidak memiliki akses untuk halaman tersebut!');
+        }
         if ($suplemen->terdata()->count() > 0) {
             redirect_with('error', 'Gagal Hapus Data');
         }
@@ -166,12 +178,12 @@ class Suplemen extends Admin_Controller
         redirect_with('error', 'Gagal Hapus Data');
     }
 
-    protected static function validated($request = [])
+    protected static function validate($request = [])
     {
         return [
             'sasaran'    => $request['sasaran'],
             'nama'       => nomor_surat_keputusan($request['nama']),
-            'keterangan' => strip_tags($request['keterangan']),
+            'keterangan' => strip_tags((string) $request['keterangan']),
         ];
     }
 
@@ -179,9 +191,9 @@ class Suplemen extends Admin_Controller
     {
         $sasaran  = unserialize(SASARAN);
         $suplemen = ModelsSuplemen::findOrFail($id);
-        $dusun    = Wilayah::dusun()->pluck('dusun');
+        $wilayah  = Wilayah::treeAccess();
 
-        return view('admin.suplemen.detail', ['sasaran' => $sasaran, 'suplemen' => $suplemen, 'dusun' => $dusun]);
+        return view('admin.suplemen.detail', ['sasaran' => $sasaran, 'suplemen' => $suplemen, 'wilayah' => $wilayah]);
     }
 
     public function datatables_terdata()
@@ -195,11 +207,19 @@ class Suplemen extends Admin_Controller
                 'rw'    => $this->input->get('rw'),
                 'rt'    => $this->input->get('rt'),
             ];
+            $user          = ci_auth();
+            $aksesWilayah  = [];
+            $batasiWilayah = (bool) $user->batasi_wilayah;
+            if ($batasiWilayah) {
+                $aksesWilayah = $user->akses_wilayah ?? [];
+            }
 
-            return datatables()->of(SuplemenTerdata::anggota($sasaran, $id)->filter($filters))
+            return datatables()->of(SuplemenTerdata::anggota($sasaran, $id)->when($batasiWilayah, static fn ($q) => $q->whereIn('tweb_wil_clusterdesa.id', $aksesWilayah))->filter($filters))
                 ->addColumn('ceklist', static function ($row) {
                     if (can('h')) {
-                        return '<input type="checkbox" name="id_cb[]" value="' . $row->id . '"/>';
+                        if ($row->sumber != 'OpenKab' && $row->config_id != null) {
+                            return '<input type="checkbox" name="id_cb[]" value="' . $row->id . '"/>';
+                        }
                     }
                 })
                 ->addIndexColumn()
@@ -207,7 +227,11 @@ class Suplemen extends Admin_Controller
                     $aksi = '';
 
                     if (can('u')) {
-                        $aksi .= '<a href="' . site_url("suplemen/form_terdata/{$row->id_suplemen}/0/{$row->id_terdata}") . '" class="btn btn-warning btn-sm"  title="Tanggapi Pengaduan"><i class="fa fa-pencil"></i></a> ';
+                        $sasaran = $row->sasaran == SuplemenTerdata::PENDUDUK
+                            ? $row->penduduk_id
+                            : $row->keluarga_id;
+
+                        $aksi .= '<a href="' . site_url("suplemen/form_terdata/{$row->id_suplemen}/0/{$sasaran}") . '" class="btn btn-warning btn-sm"  title="Tanggapi Pengaduan"><i class="fa fa-pencil"></i></a> ';
                     }
 
                     if (can('h')) {
@@ -218,7 +242,12 @@ class Suplemen extends Admin_Controller
                 })
                 ->editColumn('tanggallahir', static fn ($row) => tgl_indo($row->tanggallahir))
                 ->editColumn('sex', static fn ($row) => JenisKelaminEnum::valueOf($row->sex))
-                ->editColumn('alamat', static fn ($row): string => 'RT/RW ' . $row->rt . '/' . $row->rw . ' - ' . strtoupper($row->dusun))
+                ->editColumn(
+                    'alamat',
+                    static fn ($row): string => $row->alamat
+                        ? $row->alamat . ' RT ' . $row->rt . ' / RW ' . $row->rw . ' ' . ucwords(setting('sebutan_dusun') . ' ' . $row->dusun)
+                        : $row->alamat_sekarang . ' RT ' . $row->rt . ' / RW ' . $row->rw . ' ' . ucwords(setting('sebutan_dusun') . ' ' . $row->dusun)
+                )
                 ->rawColumns(['ceklist', 'aksi'])
                 ->make();
         }
@@ -231,21 +260,30 @@ class Suplemen extends Admin_Controller
         isCan('u');
 
         $suplemen      = ModelsSuplemen::findOrFail($id_suplemen);
+        $formData      = $suplemen->form_isian;
         $sasaran       = unserialize(SASARAN);
         $judul_sasaran = ListSasaranEnum::valueOf($suplemen->sasaran);
         $individu      = isset($_POST['id_terdata']) ? Penduduk::findOrFail($_POST['id_terdata']) : null;
 
+        // Cek apakah field 'data_form_isian' ada di tabel 'suplemen_terdata'
+        $data_form_isian = Illuminate\Support\Facades\Schema::hasColumn('suplemen_terdata', 'data_form_isian');
+
         if ($id) {
-            $action      = 'Ubah';
-            $form_action = ci_route('suplemen.update_terdata', $id);
-            $terdata     = SuplemenTerdata::anggota($suplemen->sasaran, $suplemen->id)->where('id_terdata', $id)->first();
+            $sasaran = $suplemen->sasaran == SuplemenTerdata::PENDUDUK
+                ? 'penduduk_id'
+                : 'keluarga_id';
+
+            $action       = 'Ubah';
+            $form_action  = ci_route('suplemen.update_terdata', $id);
+            $terdata      = SuplemenTerdata::anggota($suplemen->sasaran, $suplemen->id)->where($sasaran, $id)->first();
+            $existingData = $terdata->data_form_isian;
         } else {
             $action      = 'Tambah';
             $form_action = ci_route('suplemen.create_terdata', $aksi);
             $terdata     = null;
         }
 
-        return view('admin.suplemen.form_terdata', ['action' => $action, 'form_action' => $form_action, 'suplemen' => $suplemen, 'terdata' => $terdata, 'sasaran' => $sasaran, 'judul_sasaran' => $judul_sasaran, 'individu' => $individu]);
+        return view('admin.suplemen.form_terdata', ['action' => $action, 'form_action' => $form_action, 'suplemen' => $suplemen, 'terdata' => $terdata, 'sasaran' => $sasaran, 'judul_sasaran' => $judul_sasaran, 'individu' => $individu, 'formData' => $formData, 'existingData' => $existingData, 'data_form_isian' => $data_form_isian]);
     }
 
     public function create_terdata($aksi): void
@@ -265,9 +303,29 @@ class Suplemen extends Admin_Controller
     {
         isCan('u');
 
-        $update = SuplemenTerdata::where('id_suplemen', $this->request['id_suplemen'])->where('id_terdata', $id)->first();
+        $update = SuplemenTerdata::where('id_suplemen', $this->request['id_suplemen'])
+            ->where(static function ($query) use ($id) {
+                $query->where('penduduk_id', $id)
+                    ->orWhere('keluarga_id', $id);
+            })
+            ->first();
 
-        if ($update->update(['keterangan' => substr(htmlentities($this->request['keterangan']), 0, 100)])) {
+        if (! $update) {
+            redirect_with('error', 'Data tidak ditemukan', 'suplemen/rincian/' . $this->request['id_suplemen']);
+        }
+
+        // Data yang akan diperbarui
+        $updateData = [
+            'keterangan' => substr(htmlentities((string) $this->request['keterangan']), 0, 100),
+        ];
+
+        // Tambahkan `data_form_isian` hanya jika `input_data` ada dan valid
+        if (isset($this->request['input_data']) && is_array($this->request['input_data'])) {
+            $updateData['data_form_isian'] = $this->request['input_data'];
+        }
+
+        // Proses update
+        if ($update->update($updateData)) {
             redirect_with('success', 'Berhasil Ubah Data', 'suplemen/rincian/' . $this->request['id_suplemen']);
         }
 
@@ -278,7 +336,7 @@ class Suplemen extends Admin_Controller
     {
         isCan('h');
 
-        $id_suplemen = substr($_SERVER['HTTP_REFERER'], -1);
+        $id_suplemen = substr((string) $_SERVER['HTTP_REFERER'], -1);
 
         if (SuplemenTerdata::destroy($id)) {
             redirect_with('success', 'Berhasil Hapus Data', 'suplemen/rincian/' . $id_suplemen);
@@ -291,7 +349,7 @@ class Suplemen extends Admin_Controller
     {
         isCan('h');
 
-        $id_suplemen = substr($_SERVER['HTTP_REFERER'], -1);
+        $id_suplemen = substr((string) $_SERVER['HTTP_REFERER'], -1);
 
         if (SuplemenTerdata::destroy($this->request['id_cb'])) {
             redirect_with('success', 'Berhasil Hapus Data', 'suplemen/rincian/' . $id_suplemen);
@@ -302,12 +360,23 @@ class Suplemen extends Admin_Controller
 
     protected static function validated_terdata($request = [])
     {
-        return [
+        $terdata = $request['sasaran'] == SuplemenTerdata::PENDUDUK
+            ? ['penduduk_id' => $request['id_terdata']]
+            : ['keluarga_id' => $request['id_terdata']];
+
+        $result = [
+            ...$terdata,
             'id_suplemen' => $request['id_suplemen'],
-            'id_terdata'  => $request['id_terdata'],
             'sasaran'     => $request['sasaran'],
-            'keterangan'  => substr(htmlentities($request['keterangan']), 0, 100),
+            'keterangan'  => substr(htmlentities((string) $request['keterangan']), 0, 100),
         ];
+
+        // Tambahkan `data_form_isian` hanya jika `input_data` ada dan valid
+        if (isset($request['input_data']) && is_array($request['input_data'])) {
+            $result['data_form_isian'] = $request['input_data'];
+        }
+
+        return $result;
     }
 
     public function apipenduduksuplemen()
@@ -316,15 +385,14 @@ class Suplemen extends Admin_Controller
             $cari     = $this->input->get('q');
             $suplemen = $this->input->get('suplemen');
             $sasaran  = $this->input->get('sasaran');
-            $terdata  = SuplemenTerdata::where('id_suplemen', $suplemen)->pluck('id_terdata');
 
             switch ($sasaran) {
                 case 1:
-                    $this->get_pilihan_penduduk($cari, $terdata);
+                    $this->get_pilihan_penduduk($cari, $suplemen);
                     break;
 
                 case 2:
-                    $this->get_pilihan_kk($cari, $terdata);
+                    $this->get_pilihan_kk($cari, $suplemen);
                     break;
 
                 default:
@@ -336,19 +404,22 @@ class Suplemen extends Admin_Controller
 
     private function get_pilihan_penduduk($cari, $terdata)
     {
-        $penduduk = Penduduk::select(['id', 'nik', 'nama', 'id_cluster', 'kk_level'])
-            ->when($cari, static function ($query) use ($cari): void {
-                $query->orWhere('nik', 'like', "%{$cari}%")
-                    ->orWhere('nama', 'like', "%{$cari}%");
+        $id_suplemen = $terdata;
+        $penduduk    = Penduduk::select(['id', 'nik', 'nama', 'id_cluster', 'kk_level'])
+            ->when($cari, static function ($query) use ($cari) {
+                return $query->where(static function ($q) use ($cari) {
+                    $q->where('nik', 'like', "%{$cari}%")
+                        ->orWhere('nama', 'like', "%{$cari}%");
+                });
             })
-            ->whereNotIn('id', $terdata)
+            ->whereNotIn('id', static fn ($q) => $q->select(['penduduk_id'])->whereNotNull('penduduk_id')->from('suplemen_terdata')->where('id_suplemen', $id_suplemen))
             ->paginate(10);
 
         return json([
             'results' => collect($penduduk->items())
                 ->map(static fn ($item): array => [
                     'id'   => $item->id,
-                    'text' => 'NIK : ' . $item->nik . ' - ' . $item->nama . ' RT-' . $item->wilayah->rt . ', RW-' . $item->wilayah->rw . ', ' . strtoupper(setting('sebutan_dusun')) . ' ' . $item->wilayah->dusun,
+                    'text' => 'NIK : ' . $item->nik . ' - ' . $item->nama . ' RT-' . $item->wilayah->rt . ', RW-' . $item->wilayah->rw . ', ' . strtoupper((string) setting('sebutan_dusun')) . ' ' . $item->wilayah->dusun,
                 ]),
             'pagination' => [
                 'more' => $penduduk->currentPage() < $penduduk->lastPage(),
@@ -358,7 +429,8 @@ class Suplemen extends Admin_Controller
 
     private function get_pilihan_kk($cari, $terdata)
     {
-        $penduduk = Penduduk::with('pendudukHubungan')
+        $id_suplemen = $terdata;
+        $penduduk    = Penduduk::with('pendudukHubungan')
             ->select(['tweb_penduduk.id', 'tweb_penduduk.nik', 'keluarga_aktif.no_kk', 'tweb_penduduk.kk_level', 'tweb_penduduk.nama', 'tweb_penduduk.id_cluster'])
             ->leftJoin('tweb_penduduk_hubungan', static function ($join): void {
                 $join->on('tweb_penduduk.kk_level', '=', 'tweb_penduduk_hubungan.id');
@@ -374,8 +446,7 @@ class Suplemen extends Admin_Controller
                 });
             })
             ->whereIn('tweb_penduduk.kk_level', ['1'])
-            // ->whereIn('tweb_penduduk.kk_level', ['1', '2', '3', '4'])
-            ->whereNotIn('tweb_penduduk.id_kk', $terdata)
+            ->whereNotIn('tweb_penduduk.id_kk', static fn ($q) => $q->select(['keluarga_id'])->whereNotNull('keluarga_id')->from('suplemen_terdata')->where('id_suplemen', $id_suplemen))
             ->orderBy('tweb_penduduk.id_kk')
             ->paginate(10);
 
@@ -383,7 +454,7 @@ class Suplemen extends Admin_Controller
             'results' => collect($penduduk->items())
                 ->map(static fn ($item): array => [
                     'id'   => $item->id,
-                    'text' => 'No KK : ' . $item->no_kk . ' - ' . $item->pendudukHubungan->nama . '- NIK : ' . $item->nik . ' - ' . $item->nama . ' RT-' . $item->wilayah->rt . ', RW-' . $item->wilayah->rw . ', ' . strtoupper(setting('sebutan_dusun')) . ' ' . $item->wilayah->dusun,
+                    'text' => 'No KK : ' . $item->no_kk . ' - ' . $item->pendudukHubungan->nama . '- NIK : ' . $item->nik . ' - ' . $item->nama . ' RT-' . $item->wilayah->rt . ', RW-' . $item->wilayah->rw . ', ' . strtoupper((string) setting('sebutan_dusun')) . ' ' . $item->wilayah->dusun,
                 ]),
             'pagination' => [
                 'more' => $penduduk->currentPage() < $penduduk->lastPage(),
@@ -408,9 +479,8 @@ class Suplemen extends Admin_Controller
             $data['suplemen']       = ModelsSuplemen::findOrFail($id)->toArray();
             $data['terdata']        = SuplemenTerdata::anggota($data['suplemen']['sasaran'], $data['suplemen']['id'])->get()->toArray();
             $data['sasaran']        = unserialize(SASARAN);
-            $data['config']         = $this->header['desa'];
-            $data['pamong_ttd']     = $this->pamong_model->get_data($this->request['pamong_ttd']);
-            $data['pamong_ketahui'] = $this->pamong_model->get_data($this->request['pamong_ketahui']);
+            $data['pamong_ttd']     = Pamong::selectData()->where(['pamong_id' => $this->request['pamong_ttd']])->first()->toArray();
+            $data['pamong_ketahui'] = Pamong::selectData()->where(['pamong_id' => $this->request['pamong_ketahui']])->first()->toArray();
             $data['aksi']           = $aksi;
 
             //pengaturan data untuk format cetak/ unduh
@@ -420,14 +490,17 @@ class Suplemen extends Admin_Controller
 
             return view('admin.layouts.components.format_cetak', $data);
         }
+
+        return show_404();
     }
 
     public function impor_data($id)
     {
-        $suplemen    = ModelsSuplemen::findOrFail($id);
-        $form_action = ci_route('suplemen.impor');
-
-        return view('admin.suplemen.impor', ['suplemen' => $suplemen, 'form_action' => $form_action]);
+        return view('admin.suplemen.impor', [
+            'suplemen'    => ModelsSuplemen::findOrFail($id),
+            'form_action' => ci_route('suplemen.impor'),
+            'formatImpor' => ci_route('unduh', encrypt(DEFAULT_LOKASI_IMPOR . 'format-impor-suplemen.xlsx')),
+        ]);
     }
 
     public function impor()
@@ -440,7 +513,7 @@ class Suplemen extends Admin_Controller
             'allowed_types' => 'xls|xlsx|xlsm',
         ];
 
-        $this->load->library('MY_Upload', null, 'upload');
+        $this->load->library('upload');
         $this->upload->initialize($config);
 
         if (! $this->upload->do_upload('userfile')) {
@@ -449,7 +522,7 @@ class Suplemen extends Admin_Controller
 
         $upload = $this->upload->data();
 
-        $reader = ReaderEntityFactory::createXLSXReader();
+        $reader = new Reader();
         $reader->open($upload['full_path']);
 
         $data_peserta      = [];
@@ -465,23 +538,25 @@ class Suplemen extends Admin_Controller
             $field = ['id', 'nama', 'sasaran', 'keterangan'];
 
             // Sheet Program
-            if ($sheet->getName() == 'Peserta') {
+            if ($sheet->getName() === 'Peserta') {
                 $suplemen_record = $this->get_suplemen($suplemen_id);
                 $sasaran         = $suplemen_record['sasaran'];
-                $ambil_peserta   = SuplemenTerdata::where('id_suplemen', $suplemen_id)->pluck('id_terdata');
 
                 if ($sasaran == '1') {
+                    $ambil_peserta     = SuplemenTerdata::where('id_suplemen', $suplemen_id)->pluck('penduduk_id');
                     $terdaftar_peserta = Penduduk::whereIn('id', $ambil_peserta)->pluck('nik')->toArray();
                 } elseif ($sasaran == '2') {
+                    $ambil_peserta     = SuplemenTerdata::where('id_suplemen', $suplemen_id)->pluck('keluarga_id');
                     $terdaftar_peserta = Keluarga::whereIn('id', $ambil_peserta)->pluck('no_kk')->toArray();
                 }
 
                 foreach ($sheet->getRowIterator() as $row) {
-                    $cells   = $row->getCells();
-                    $peserta = trim((string) $cells[0]); // NIK atau No_kk sesuai sasaran
+                    $cells = $row->getCells();
+
+                    $peserta = trim((string) $cells[0]->getValue()); // NIK atau No_kk sesuai sasaran
 
                     // Data terakhir
-                    if ($peserta == '###') {
+                    if ($peserta === '###') {
                         break;
                     }
 
@@ -521,13 +596,17 @@ class Suplemen extends Admin_Controller
 
                     $terdaftar_peserta[] = $peserta;
 
+                    $terdata = $sasaran == SuplemenTerdata::PENDUDUK
+                        ? ['penduduk_id' => $id_terdata]
+                        : ['keluarga_id' => $id_terdata];
+
                     // Simpan data peserta yg diimpor dalam bentuk array
                     $simpan = [
+                        ...$terdata,
                         'config_id'   => identitas('id'),
                         'id_suplemen' => $suplemen_id,
-                        'id_terdata'  => $id_terdata,
                         'sasaran'     => $sasaran, // Duplikasi
-                        'keterangan'  => (string) $cells[1],
+                        'keterangan'  => (string) $cells[1]->getValue(),
                     ];
 
                     $data_peserta[] = $simpan;
@@ -563,7 +642,7 @@ class Suplemen extends Admin_Controller
             ->toArray();
     }
 
-    private function cek_peserta(string $peserta = '', $sasaran = 1)
+    private function cek_peserta(string $peserta = '', $sasaran = 1): false|array
     {
         if (in_array($peserta, [null, '-', ' ', '0'])) {
             return false;
@@ -596,7 +675,7 @@ class Suplemen extends Admin_Controller
         ];
     }
 
-    private function cek_penduduk($sasaran, string $peserta)
+    private function cek_penduduk($sasaran, string $peserta): array
     {
         $terdata = [];
         if ($sasaran == '1') {
@@ -630,11 +709,23 @@ class Suplemen extends Admin_Controller
 
     public function ekspor($id = 0): void
     {
-        $data_suplemen['suplemen'] = ModelsSuplemen::findOrFail($id)->toArray();
+        // Validasi apakah suplemen ditemukan
+        $suplemen = ModelsSuplemen::find($id);
+        if (! $suplemen) {
+            abort(404, 'Suplemen tidak ditemukan.');
+        }
+
+        // Ambil data suplemen dan terdata
+        $data_suplemen['suplemen'] = $suplemen->toArray();
         $data_suplemen['terdata']  = SuplemenTerdata::anggota($data_suplemen['suplemen']['sasaran'], $id)->get()->toArray();
 
-        $writer    = WriterEntityFactory::createXLSXWriter();
+        // Validasi apakah ada data terdata
+        if (empty($data_suplemen['terdata'])) {
+            abort(404, 'Tidak ada data terdata untuk suplemen ini.');
+        }
+
         $file_name = namafile($data_suplemen['suplemen']['nama']) . '.xlsx';
+        $writer    = new Writer();
         $writer->openToBrowser($file_name);
 
         // Ubah Nama Sheet
@@ -642,82 +733,103 @@ class Suplemen extends Admin_Controller
         $sheet->setName('Peserta');
 
         // Deklarasi Style
-        $border = (new BorderBuilder())
-            ->setBorderTop(Color::BLACK, Border::WIDTH_THIN, Border::STYLE_SOLID)
-            ->setBorderBottom(Color::BLACK, Border::WIDTH_THIN, Border::STYLE_SOLID)
-            ->setBorderRight(Color::BLACK, Border::WIDTH_THIN, Border::STYLE_SOLID)
-            ->setBorderLeft(Color::BLACK, Border::WIDTH_THIN, Border::STYLE_SOLID)
-            ->build();
+        $border = new Border(
+            new BorderPart(Border::TOP, Color::GREEN, Border::WIDTH_THIN, Border::STYLE_SOLID),
+            new BorderPart(Border::BOTTOM, Color::GREEN, Border::WIDTH_THIN, Border::STYLE_SOLID),
+            new BorderPart(Border::LEFT, Color::GREEN, Border::WIDTH_THIN, Border::STYLE_SOLID),
+            new BorderPart(Border::RIGHT, Color::GREEN, Border::WIDTH_THIN, Border::STYLE_SOLID)
+        );
 
-        $borderStyle = (new StyleBuilder())
+        $headerStyle = (new Style())
             ->setBorder($border)
-            ->build();
-
-        $yellowBackgroundStyle = (new StyleBuilder())
             ->setBackgroundColor(Color::YELLOW)
-            ->setFontBold()
-            ->setBorder($border)
-            ->build();
+            ->setFontBold();
 
-        $greenBackgroundStyle = (new StyleBuilder())
-            ->setBackgroundColor(Color::LIGHT_GREEN)
-            ->build();
+        $footerStyle = (new Style())
+            ->setBackgroundColor(Color::LIGHT_GREEN);
 
         // Cetak Header Tabel
-        $values        = ['Peserta', 'Nama', 'Tempat Lahir', 'Tanggal Lahir', 'Alamat', 'Keterangan'];
-        $rowFromValues = WriterEntityFactory::createRowFromArray($values, $yellowBackgroundStyle);
+        $values = ['Peserta', 'Nama', 'Tempat Lahir', 'Tanggal Lahir', 'Alamat', 'Keterangan'];
+
+        // Mengambil key dari data_form_isian sebagai header
+        $first_data = $data_suplemen['terdata'][0] ?? [];
+        $dataForm   = $this->getDataFormIsian($first_data);
+
+        if (! empty($dataForm)) {
+            foreach ($dataForm as $key => $value) {
+                $values[] = $this->formatColumnName($key);  // Mengubah format kolom
+            }
+        }
+
+        $rowFromValues = Row::fromValues($values, $headerStyle);
         $writer->addRow($rowFromValues);
 
         // Cetak Data Anggota Suplemen
-        $data_anggota = $data_suplemen['terdata'];
-
-        foreach ($data_anggota as $data) {
+        foreach ($data_suplemen['terdata'] as $data) {
             $cells = [
-                WriterEntityFactory::createCell($data['nik']),
-                WriterEntityFactory::createCell(strtoupper($data['nama'])),
-                WriterEntityFactory::createCell($data['tempatlahir']),
-                WriterEntityFactory::createCell(tgl_indo_out($data['tanggallahir'])),
-                WriterEntityFactory::createCell(strtoupper($data['alamat'] . ' RT ' . $data['rt'] . ' / RW ' . $data['rw'] . ' ' . $this->setting->sebutan_dusun . ' ' . $data['dusun'])),
-                WriterEntityFactory::createCell(empty($data['keterangan']) ? '-' : $data['keterangan']),
+                $data['nik'] ?? '-',
+                strtoupper((string) $data['nama']),
+                $data['tempatlahir'],
+                tgl_indo_out($data['tanggallahir']),
+                strtoupper($data['alamat'] . ' RT ' . $data['rt'] . ' / RW ' . $data['rw'] . ' ' . setting('sebutan_dusun') . ' ' . $data['dusun']),
+                empty($data['keterangan']) ? '-' : $data['keterangan'],
             ];
 
-            $singleRow = WriterEntityFactory::createRow($cells);
-            $singleRow->setStyle($borderStyle);
+            // Ambil data form isian
+            $dataForm = $this->getDataFormIsian($data);
+
+            if (! empty($dataForm)) {
+                foreach ($dataForm as $value) {
+                    $cells[] = $value;  // Menambahkan nilai form isian ke sel
+                }
+            }
+
+            $singleRow = Row::fromValues($cells);
             $writer->addRow($singleRow);
         }
 
-        $cells = [
-            '###', '', '', '', '', '',
-        ];
-        $singleRow = WriterEntityFactory::createRowFromArray($cells);
+        // Menambahkan baris kosong
+        $cells     = ['###', '', '', '', '', ''];
+        $singleRow = Row::fromValues($cells);
         $writer->addRow($singleRow);
 
         // Cetak Catatan
         $array_catatan = [
-            [
-                'Catatan:', '', '', '', '', '',
-            ],
-            [
-                '1. Sesuaikan kolom peserta (A) berdasarkan sasaran : - penduduk = nik, - keluarga = no. kk', '', '', '', '', '',
-            ],
-            [
-                '2. Kolom Peserta (A)  wajib di isi', '', '', '', '', '',
-            ],
-            [
-                '3. Kolom (B, C, D, E) diambil dari database kependudukan', '', '', '', '', '',
-            ],
-            [
-                '4. Kolom (F) opsional', '', '', '', '', '',
-            ],
+            ['Catatan:', '', '', '', '', ''],
+            ['1. Sesuaikan kolom peserta (A) berdasarkan sasaran : - penduduk = nik, - keluarga = no. kk', '', '', '', '', ''],
+            ['2. Kolom Peserta (A) wajib di isi', '', '', '', '', ''],
+            ['3. Kolom (B, C, D, E) diambil dari database kependudukan', '', '', '', '', ''],
+            ['4. Kolom (F) opsional', '', '', '', '', ''],
         ];
 
         $rows_catatan = [];
 
         foreach ($array_catatan as $catatan) {
-            $rows_catatan[] = WriterEntityFactory::createRowFromArray($catatan, $greenBackgroundStyle);
+            $rows_catatan[] = Row::fromValues($catatan, $footerStyle);
         }
         $writer->addRows($rows_catatan);
 
         $writer->close();
+    }
+
+    // Fungsi untuk memformat nama kolom, mengubah underscore menjadi spasi dan kapitalisasi setiap kata
+    private function formatColumnName($columnName)
+    {
+        // Mengganti underscore dengan spasi
+        $formatted = str_replace('_', ' ', $columnName);
+
+        // Kapitalisasi setiap kata
+        return ucwords($formatted);
+    }
+
+    // Fungsi untuk mengambil data_form_isian dengan validasi
+    private function getDataFormIsian($data)
+    {
+        $dataForm = [];
+        if (! empty($data['data_form_isian'])) {
+            $dataForm = is_array($data['data_form_isian']) ? $data['data_form_isian'] : json_decode($data['data_form_isian'], true);
+        }
+
+        return is_array($dataForm) ? $dataForm : [];
     }
 }

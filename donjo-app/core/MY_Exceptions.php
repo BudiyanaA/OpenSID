@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -37,11 +37,6 @@
 
 class MY_Exceptions extends CI_Exceptions
 {
-    /**
-     * @var CI_Controller
-     */
-    protected $ci;
-
     /**
      * List shared mysql/mariadb error code.
      *
@@ -54,11 +49,6 @@ class MY_Exceptions extends CI_Exceptions
     public function __construct()
     {
         parent::__construct();
-
-        if (! is_cli()) {
-            $this->ci = get_instance();
-        }
-
     }
 
     /**
@@ -74,13 +64,13 @@ class MY_Exceptions extends CI_Exceptions
     {
         parent::log_exception($severity, $message, $filepath, $line);
         if (preg_match('/\\[PERIKSA\\]/', $message)) {
-            $this->ci->session->db_error = [
+            $_SESSION['db_error'] = [
                 'code'    => 99001,
                 'message' => '<p>' . $message . '</p>',
             ];
-            $this->ci->session->heading           = 'Error ditemukan pada isi data';
-            $this->ci->session->message_query     = '<p>Error ditemukan di file' . $filepath . 'pada baris ' . $line . '</p>';
-            $this->ci->session->message_exception = strip_tags((new Exception())->getTraceAsString());
+            $_SESSION['heading']           = 'Error ditemukan pada isi data';
+            $_SESSION['message_query']     = '<p>Error ditemukan di file' . $filepath . 'pada baris ' . $line . '</p>';
+            $_SESSION['message_exception'] = strip_tags((new Exception())->getTraceAsString());
 
             redirect('periksa');
         }
@@ -96,18 +86,18 @@ class MY_Exceptions extends CI_Exceptions
         }
 
         if (preg_match('/Aplikasi tidak bisa terhubung ke database/', $message[0])) {
-            $this->ci->session->error_koneksi = true;
-            $error['code']                    = 1049;
-            $error['message']                 = 'Aplikasi tidak bisa terhubung ke database';
+            $_SESSION['error_koneksi'] = true;
+            $error['code']             = 1049;
+            $error['message']          = 'Aplikasi tidak bisa terhubung ke database';
         }
 
-        $error = $error ?: $this->ci->db->error();
+        $error = $error ?: get_instance()?->db?->error();
         if ($error !== [] && in_array($error['code'], $this->db_error_codes)) {
-            $this->ci->session->db_error          = $error;
-            $this->ci->session->message           = '<p>' . (is_array($error) ? implode('</p><p>', $error) : $error) . '</p>';
-            $this->ci->session->heading           = $heading;
-            $this->ci->session->message_query     = '<p>' . (is_array($message) ? implode('</p><p>', $message) : $message) . '</p>';
-            $this->ci->session->message_exception = strip_tags((new Exception())->getTraceAsString());
+            $_SESSION['db_error']          = $error;
+            $_SESSION['message']           = '<p>' . (is_array($error) ? implode('</p><p>', $error) : $error) . '</p>';
+            $_SESSION['heading']           = $heading;
+            $_SESSION['message_query']     = '<p>' . (is_array($message) ? implode('</p><p>', $message) : $message) . '</p>';
+            $_SESSION['message_exception'] = strip_tags((new Exception())->getTraceAsString());
             /*
             | 1049 adalah kode koneksi database gagal. Dalam hal ini tampilkan halaman khusus
             | menjelaskan langkah yang dapat dilakukan untuk mengatasi.

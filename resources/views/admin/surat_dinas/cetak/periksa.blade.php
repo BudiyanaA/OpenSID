@@ -122,9 +122,7 @@
             </div>
         </div>
         <div class="box-footer text-center">
-            <a href="{{ ci_route('surat_dinas_arsip.masuk') }}" id="back" class="btn btn-social btn-info btn-sm btn-sm visible-xs-block visible-sm-inline-block visible-md-inline-block visible-lg-inline-block">
-                <i class="fa fa-arrow-circle-left"></i>Kembali ke Daftar Permohonan
-            </a>
+            @include('admin.layouts.components.tombol_kembali', ['url' => ci_route('surat_dinas_arsip.masuk'), 'label' => 'Daftar Permohonan'])
             @if (is_file($surat->filesurat . '.pdf'))
                 <button type="button" class="btn btn-social btn-primary btn-sm preview"><i class="fa fa-file-pdf-o"></i>Lihat PDF</button>
             @elseif(is_file($surat->filesurat . '.rtf'))
@@ -203,7 +201,7 @@
                         popup: 'swal-lg',
                     },
                     title: 'Lihat',
-                    html: `<object data="{{ ci_route('surat_dinas_arsip.unduh/tinymce', $surat->id . '/true') }}" style="width: 100%;min-height: 400px;" type="application/pdf"></object>`,
+                    html: `<object data="{{ ci_route('surat_dinas_arsip.unduh/tinymce', $surat->id . '/true') }}#toolbar=0" style="width: 100%;min-height: 400px;" type="application/pdf"></object>`,
                     showCancelButton: true,
                     cancelButtonText: 'tutup',
                     showConfirmButton: false,
@@ -218,7 +216,7 @@
                         popup: 'swal-lg',
                     },
                     title: 'Lihat',
-                    html: `<object data="{{ ci_route('surat_dinas_arsip.unduh/lampiran', $surat->id . '/true') }}" style="width: 100%;min-height: 400px;" type="application/pdf"></object>`,
+                    html: `<object data="{{ ci_route('surat_dinas_arsip.unduh/lampiran', $surat->id . '/true') }}#toolbar=0" style="width: 100%;min-height: 400px;" type="application/pdf"></object>`,
                     showCancelButton: true,
                     cancelButtonText: 'tutup',
                     showConfirmButton: false,
@@ -233,7 +231,7 @@
                         popup: 'swal-lg',
                     },
                     title: 'Lihat',
-                    html: `<object data="${attr}" style="width: 100%;min-height: 400px;" ></object>`,
+                    html: `<object data="${attr}#toolbar=0" style="width: 100%;min-height: 400px;" ></object>`,
                     showCancelButton: true,
                     cancelButtonText: 'tutup',
                     showConfirmButton: false,

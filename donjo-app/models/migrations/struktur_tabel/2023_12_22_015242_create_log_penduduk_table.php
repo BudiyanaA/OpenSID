@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -64,11 +64,8 @@ return new class () extends Migration {
             $table->string('no_kk', 16)->nullable();
             $table->string('nama_kk', 100)->nullable();
             $table->tinyInteger('ref_pindah')->nullable()->default(1)->index('id_ref_pindah');
-            $table->timestamp('created_at')->nullable()->useCurrent();
-            $table->integer('created_by')->nullable();
-            $table->timestamp('updated_at')->useCurrentOnUpdate()->nullable()->useCurrent();
-            $table->integer('updated_by')->nullable();
             $table->string('maksud_tujuan_kedatangan', 50)->nullable();
+            $table->timesWithUserstamps();
 
             $table->unique(['config_id', 'id_pend', 'kode_peristiwa', 'tgl_peristiwa'], 'id_pend_config');
         });

@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -38,23 +38,27 @@
 use App\Models\Kelompok as KelompokModel;
 use App\Models\KelompokAnggota;
 use App\Models\KelompokMaster;
+use App\Models\Pamong;
 use App\Models\Penduduk;
+use App\Traits\Upload;
 
 defined('BASEPATH') || exit('No direct script access allowed');
 
 class Kelompok extends Admin_Controller
 {
+    use Upload;
+
     public $modul_ini            = 'kependudukan';
     public $sub_modul_ini        = 'kelompok';
     private array $_list_session = ['penerima_bantuan', 'sex', 'status_dasar'];
     protected $tipe              = 'kelompok';
+    protected $kelompokObj;
 
     public function __construct()
     {
         parent::__construct();
         isCan('b');
-        $this->load->model(['kelompok_model', 'pamong_model']);
-        $this->kelompok_model->set_tipe($this->tipe);
+        $this->kelompokObj = new KelompokModel(['tipe' => $this->tipe]);
     }
 
     public function clear(): void
@@ -67,27 +71,15 @@ class Kelompok extends Admin_Controller
 
     public function index()
     {
-        $data['list_master'] = KelompokMaster::tipe($this->tipe)->get(['id', 'kelompok']);
-
+        $data['list_master']          = KelompokMaster::tipe($this->tipe)->get(['id', 'kelompok']);
+        $data['default_status_dasar'] = $this->input->get('default_status_dasar') ?? 1;
+        $data['default_kelompok']     = $this->input->get('default_kelompok');
         if ($this->input->is_ajax_request()) {
             $controller = $this->controller;
             $status     = $this->input->get('status_dasar');
-            $query      = KelompokModel::with(['kelompokMaster', 'ketua'])
-                ->withCount('kelompokAnggota as jml_anggota')
-                ->tipe($this->tipe)
-                ->jenisKelaminKetua($this->session->sex)
-                ->penerimaBantuan()
-                ->whereHas('kelompokMaster', function ($query): void {
-                    if ($filter = $this->input->get('filter')) {
-                        $query->where('id_master', $filter);
-                    }
-                })->whereHas('ketua', static function ($query) use ($status): void {
-                    if ($status == 1) {
-                        $query->where('status_dasar', 1);
-                    } elseif ($status == 2) {
-                        $query->where('status_dasar', null);
-                    }
-                });
+            $tipe       = $this->tipe;
+            $filter     = $this->input->get('filter');
+            $query      = $this->sumberData($status, $tipe, $filter);
 
             return datatables()->of($query)
                 ->addIndexColumn()
@@ -98,7 +90,7 @@ class Kelompok extends Admin_Controller
                     $aksi .= '<a href="' . route($row->tipe . '_anggota.detail', $row->id) . '" class="btn bg-purple btn-sm" title="Rincian"><i class="fa fa-list-ol"></i></a> ';
 
                     if (can('u')) {
-                        $aksi .= '<a href="' . site_url("{$controller}/form/{$row->id}") . '" class="btn bg-orange btn-sm" title="Ubah Kategori"><i class="fa fa-edit"></i></a> ';
+                        $aksi .= '<a href="' . site_url("{$controller}/form/{$row->id}") . '" class="btn bg-orange btn-sm" title="Ubah"><i class="fa fa-edit"></i></a> ';
                     }
                     if (can('h') && $row->jml_anggota <= 0) {
                         $aksi .= '<a href="#" data-href="' . site_url("{$controller}/delete/{$row->id}") . '" class="btn bg-maroon btn-sm" title="Hapus" data-toggle="modal" data-target="#confirm-delete"><i class="fa fa-trash-o"></i></a> ';
@@ -113,13 +105,37 @@ class Kelompok extends Admin_Controller
         return view('admin.kelompok.index', $data);
     }
 
+    private function sumberData($status, $tipe, $filter = null)
+    {
+        return KelompokModel::with(['kelompokMaster', 'ketua'])
+            ->withCount(['kelompokAnggota as jml_anggota' => static function ($query) use ($tipe) {
+                $query->where('tipe', $tipe);
+            }])
+            ->tipe($tipe)
+            ->when($this->session->sex, static fn ($q) => $q->jenisKelaminKetua() )
+            ->penerimaBantuan()
+            ->whereHas('kelompokMaster', static function ($query) use ($filter): void {
+                if ($filter) {
+                    $query->where('id_master', $filter);
+                }
+            })->when($status > 0, static function ($query) use ($status) {
+                    $query->whereHas('ketua', static function ($query) use ($status): void {
+                        if ($status == 1) {
+                            $query->where('status_dasar', 1);
+                        } elseif ($status == 2) {
+                            $query->where('status_dasar', null);
+                        }
+                    });
+                });
+    }
+
     public function form($id = 0)
     {
         isCan('u');
         $list_master = KelompokMaster::tipe($this->tipe)->get(['id', 'kelompok']);
 
         if (count($list_master) <= 0) {
-            redirect_with('error', "Kategori {$this->tipe} tidak tersedia, silakan tambah ketegori terlebih dahulu");
+            redirect_with('error', "Kategori {$this->tipe} tidak tersedia, silakan tambah kategori terlebih dahulu");
         }
 
         if ($id) {
@@ -179,21 +195,22 @@ class Kelompok extends Admin_Controller
     public function dialog($aksi = 'cetak'): void
     {
         $data                = $this->modal_penandatangan();
-        $data['aksi']        = ucwords($aksi);
+        $data['aksi']        = ucwords((string) $aksi);
         $data['form_action'] = site_url("{$this->controller}/daftar/{$aksi}");
 
-        view('admin.layouts.components.ttd_pamong', $data);
+        view('admin.layouts.components.ttd_pamong_datatable', $data);
     }
 
     public function daftar($aksi = 'cetak'): void
     {
+        $status                 = $this->input->get('status_dasar');
+        $filter                 = $this->input->get('filter');
         $post                   = $this->input->post();
         $data['aksi']           = $aksi;
-        $data['config']         = $this->header['desa'];
-        $data['tipe']           = ucwords($this->tipe);
-        $data['pamong_ttd']     = $this->pamong_model->get_data($post['pamong_ttd']);
-        $data['pamong_ketahui'] = $this->pamong_model->get_data($post['pamong_ketahui']);
-        $data['main']           = $this->kelompok_model->list_data();
+        $data['tipe']           = ucwords((string) $this->tipe);
+        $data['pamong_ttd']     = Pamong::selectData()->where(['pamong_id' => $post['pamong_ttd']])->first()->toArray();
+        $data['pamong_ketahui'] = Pamong::selectData()->where(['pamong_id' => $post['pamong_ketahui']])->first()->toArray();
+        $data['main']           = $this->sumberData($status, $this->tipe, $filter)->get()->toArray();
         $data['file']           = 'Data ' . $data['tipe']; // nama file
         $data['isi']            = 'admin.kelompok.cetak';
         $data['letak_ttd']      = ['1', '1', '1'];
@@ -209,7 +226,7 @@ class Kelompok extends Admin_Controller
         $getKelompok = KelompokModel::tipe($this->tipe)->where('kode', $data['kode'])->exists();
 
         if ($getKelompok) {
-            redirect_with('error', "<br/>Kode ini {$data['kode']} tidak bisa digunakan. Silahkan gunakan kode yang lain!");
+            redirect_with('error', "<br/>Kode ini {$data['kode']} tidak bisa digunakan. Silakan gunakan kode yang lain!");
         }
 
         // insert kelompok
@@ -234,14 +251,14 @@ class Kelompok extends Admin_Controller
     {
         isCan('u');
 
-        $data        = $this->validate($this->input->post());
+        $data        = $this->validate($this->input->post(), $id);
         $getKelompok = KelompokModel::tipe($this->tipe)->where('id', '!=', $id)
             ->where(static function ($query) use ($id, $data): void {
                 $query->where('id', $id)->orWhere('kode', $data['kode']);
             })->exists();
 
         if ($getKelompok) {
-            redirect_with('error', "<br/>Kode ini {$data['kode']} tidak bisa digunakan. Silahkan gunakan kode yang lain!");
+            redirect_with('error', "<br/>Kode ini {$data['kode']} tidak bisa digunakan. Silakan gunakan kode yang lain!");
         }
 
         KelompokModel::findOrFail($id)->update($data);
@@ -255,15 +272,28 @@ class Kelompok extends Admin_Controller
             $data['id_ketua'] = bilangan($request['id_ketua']);
         }
 
-        $data['id_master']  = bilangan($request['id_master']);
-        $data['nama']       = nama_terbatas($request['nama']);
-        $data['keterangan'] = htmlentities($request['keterangan']);
-        $data['kode']       = nomor_surat_keputusan($request['kode']);
-        $data['tipe']       = $this->tipe;
+        $data['id_master']       = bilangan($request['id_master']);
+        $data['nama']            = nama_terbatas($request['nama']);
+        $data['keterangan']      = htmlentities((string) $request['keterangan']);
+        $data['kode']            = nomor_surat_keputusan($request['kode']);
+        $data['no_sk_pendirian'] = nomor_surat_keputusan((string) $request['no_sk_pendirian']);
+        $data['tipe']            = $this->tipe;
 
         if (null === $id) {
-            $data['slug']      = unique_slug('kelompok', $data['nama']);
             $data['config_id'] = identitas('id');
+
+            // slug hanya dibuat pertama kali saat insert, lakukan pengecekan jika nama/slug dengan tipe yang sama sudah ada maka error.
+            if (KelompokModel::slugCheck($request['nama'], $this->tipe)) {
+                redirect_with('error', 'Slug sudah ada, coba gunakan nama yang lain.', route($this->tipe . '.form'));
+            }
+        }
+
+        if ($this->request['logo']) {
+            $config['upload_path']   = LOKASI_LOGO_DESA;
+            $config['allowed_types'] = 'jpg|jpeg|png|pdf';
+            $config['file_name']     = namafile($data['slug'] . ' - ' . time());
+
+            $data['logo'] = $this->upload('logo', $config);
         }
 
         return $data;
@@ -338,7 +368,7 @@ class Kelompok extends Admin_Controller
 
         $this->session->{$session} = ($nomor != TOTAL) ? $nomor : null;
 
-        $judul = $this->kelompok_model->get_judul_statistik($tipe, $nomor, $sex);
+        $judul = $this->kelompokObj->judulStatistik($tipe, $nomor, $sex);
 
         $this->session->unset_userdata('judul_statistik');
         if ($judul['nama']) {

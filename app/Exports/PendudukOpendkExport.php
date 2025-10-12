@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -49,7 +49,10 @@ class PendudukOpendkExport
         return $name ?? namafile('penduduk_opendk');
     }
 
-    public function data()
+    /**
+     * @return mixed[][]
+     */
+    public function data(): array
     {
         $daftar_kolom = [
             ['Alamat', 'alamat'],
@@ -102,7 +105,7 @@ class PendudukOpendkExport
 
         $this->fields = $judul;
 
-        $dataExport = DataEkspor::tambah_penduduk_sinkronasi_opendk($this->fields);
+        $dataExport = DataEkspor::tambah_penduduk_sinkronasi_opendk();
 
         if (empty($dataExport)) {
             return [emptyData($this->fields)];
@@ -123,7 +126,7 @@ class PendudukOpendkExport
         return (new FastExcel())->data($this->data())->export($filePath);
     }
 
-    public function zip()
+    public function zip(): string
     {
         $ci       = &get_instance();
         $penduduk = $this->export();

@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -37,6 +37,7 @@
 
 use App\Models\Ekspedisi as ModelsEkspedisi;
 use App\Models\KlasifikasiSurat;
+use App\Models\Pamong;
 use Illuminate\Support\Facades\DB;
 
 defined('BASEPATH') || exit('No direct script access allowed');
@@ -44,7 +45,7 @@ defined('BASEPATH') || exit('No direct script access allowed');
 class Ekspedisi extends Admin_Controller
 {
     public $modul_ini           = 'buku-administrasi-desa';
-    public $sub_modul_ini       = 'administrasi-umum';
+    public $sub_modul_ini       = 'buku-eskpedisi';
     private array $uploadConfig = [];
 
     public function __construct()
@@ -52,7 +53,7 @@ class Ekspedisi extends Admin_Controller
         parent::__construct();
         isCan('b');
         $this->load->helper('download');
-        $this->load->model('pamong_model');
+        $this->load->library('upload', null, 'upload');
         $this->uploadConfig = [
             'upload_path'   => LOKASI_ARSIP,
             'allowed_types' => 'gif|jpg|jpeg|png|pdf',
@@ -63,7 +64,7 @@ class Ekspedisi extends Admin_Controller
     public function datatables()
     {
         if ($this->input->is_ajax_request()) {
-            $data = ModelsEkspedisi::get();
+            $data = ModelsEkspedisi::query();
 
             return datatables()->of($data)
                 ->addIndexColumn()
@@ -78,9 +79,14 @@ class Ekspedisi extends Admin_Controller
                         $aksi .= '<a href="' . route('buku-umum.ekspedisi.unduh_tanda_terima', ['id' => $row->id]) . '" class="btn btn-purple btn-sm bg-purple" title="Unduh Tanda Terima" target="_blank"><i class="fa fa-download"></i></a> ';
                     }
 
-                    return $aksi . ('<a href="' . route('buku-umum.ekspedisi.bukan_ekspedisi', ['id' => $row->id]) . '" class="btn bg-olive btn-sm" title="Keluarkan dari Buku Ekspedisi"><i class="fa fa-undo"></i></a>');
+                    if (can('u')) {
+                        $aksi .= ('<a href="' . route('buku-umum.ekspedisi.bukan_ekspedisi', ['id' => $row->id]) . '" class="btn bg-olive btn-sm" title="Keluarkan dari Buku Ekspedisi"><i class="fa fa-undo"></i></a>');
+                    }
+
+                    return $aksi;
                 })
                 ->editColumn('tanggal_pengiriman', static fn ($row): string => tgl_indo($row->tanggal_pengiriman))
+                ->editColumn('tanggal_surat', static fn ($row): string => tgl_indo($row->tanggal_surat))
                 ->rawColumns(['aksi'])
                 ->make();
         }
@@ -111,7 +117,7 @@ class Ekspedisi extends Admin_Controller
         }
 
         // Buang unique id pada link nama file
-        $berkas                               = explode('__sid__', $data['surat_keluar']['tanda_terima']);
+        $berkas                               = explode('__sid__', (string) $data['surat_keluar']['tanda_terima']);
         $namaFile                             = $berkas[0];
         $ekstensiFile                         = explode('.', end($berkas));
         $ekstensiFile                         = end($ekstensiFile);
@@ -162,7 +168,7 @@ class Ekspedisi extends Admin_Controller
             }
             // Cek nama berkas tidak boleh lebih dari 80 karakter (+20 untuk unique id) karena -
             // karakter maksimal yang bisa ditampung kolom surat_keluar.berkas_scan hanya 100 karakter
-            if ((strlen($_FILES['tanda_terima']['name']) + 20) >= 100) {
+            if ((strlen((string) $_FILES['tanda_terima']['name']) + 20) >= 100) {
                 $this->session->success = -1;
                 $error_msg              = ' -> Nama berkas yang coba Anda unggah terlalu panjang, ' .
                     'batas maksimal yang diijinkan adalah 80 karakter';
@@ -218,10 +224,10 @@ class Ekspedisi extends Admin_Controller
         $this->session->success = null === $this->session->error_msg ? 1 : -1;
     }
 
-    private function validasi($post)
+    private function validasi(array $post)
     {
         $data['tanggal_pengiriman'] = tgl_indo_in($post['tanggal_pengiriman']);
-        $data['keterangan']         = htmlentities($post['keterangan']);
+        $data['keterangan']         = htmlentities((string) $post['keterangan']);
 
         return $data;
     }
@@ -238,9 +244,8 @@ class Ekspedisi extends Admin_Controller
 
     public function daftar($aksi = '')
     {
-        $data           = $this->data_cetak();
-        $data['config'] = $this->header['desa'];
-        $data['aksi']   = $aksi;
+        $data         = $this->data_cetak();
+        $data['aksi'] = $aksi;
 
         //pengaturan data untuk format cetak/ unduh
         $data['isi']       = $data['template'];
@@ -253,8 +258,8 @@ class Ekspedisi extends Admin_Controller
     {
         // Agar tidak terlalu banyak mengubah kode, karena menggunakan view global
         $ttd                    = $this->modal_penandatangan();
-        $data['pamong_ttd']     = $this->pamong_model->get_data($ttd['pamong_ttd']->pamong_id);
-        $data['pamong_ketahui'] = $this->pamong_model->get_data($ttd['pamong_ketahui']->pamong_id);
+        $data['pamong_ttd']     = Pamong::selectData()->where(['pamong_id' => $ttd['pamong_ttd']['pamong_id']])->first()->toArray();
+        $data['pamong_ketahui'] = Pamong::selectData()->where(['pamong_id' => $ttd['pamong_ketahui']['pamong_id']])->first()->toArray();
 
         $post          = $this->input->post();
         $data['input'] = $post;
@@ -262,8 +267,7 @@ class Ekspedisi extends Admin_Controller
         $data['main']  = ModelsEkspedisi::when($post['tahun'], static function ($query) use ($post): void {
             $query->whereYear('tanggal_surat', $post['tahun']);
         })->get();
-        $data['desa'] = $this->header['desa'];
-
+        $data['desa']     = $this->header['desa'];
         $data['file']     = 'Buku Ekspedisi';
         $data['template'] = 'admin.dokumen.ekspedisi.cetak';
 
@@ -284,6 +288,8 @@ class Ekspedisi extends Admin_Controller
 
     public function bukan_ekspedisi($id): void
     {
+        isCan('u');
+
         ModelsEkspedisi::UntukEkspedisi($id, $masuk = 0);
         redirect_with('success', 'Data berhasil dikeluarkan dari Buku Ekspedisi');
     }

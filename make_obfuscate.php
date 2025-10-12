@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -47,22 +47,50 @@ $onlyDirectory = [
     'donjo-app/helpers',
     'donjo-app/controllers',
     'donjo-app/models',
+    'donjo-app/third_party/pelanggan/libraries',
+    'donjo-app/third_party/MX',
+    'Modules',
 ];
 
 $exceptDirectory = [
-    'fmandiri',
+    'Providers',
+    'migrations',
+    'views',
+    'Views',
+    'DevelBar',
+    'security',
 ];
 
 $onlyFile = [
-    'Anjungan.php',
-    'AnjunganMenu.php',
-    'Anjungan.php',
-    'Anjungan_menu.php',
-    'Anjungan_pengaturan.php',
-    'cek_helper.php',
+    'donjo-app/core/Admin_Controller.php',
+    'donjo-app/core/AdminModulController.php',
+    'donjo-app/core/WebModulController.php',
+    'donjo-app/core/ModulTrait.php',
+    'donjo-app/helpers/core_helper.php',
+
+    'Modules/Anjungan/Http/Controllers/BackEnd/AnjunganBaseController.php',
+    'Modules/Anjungan/Http/Controllers/BackEnd/AnjunganController.php',
+    'Modules/Anjungan/Http/Controllers/BackEnd/AnjunganMenuController.php',
+    'Modules/Anjungan/Http/Controllers/BackEnd/AnjunganPengaturanController.php',
+    
+    
+    'Modules/BukuTamu/Http/Controllers/BackEnd/AnjunganBaseController.php',
+    'Modules/BukuTamu/Http/Controllers/BackEnd/KeperluanController.php',
+    'Modules/BukuTamu/Http/Controllers/BackEnd/KepuasanController.php',
+    'Modules/BukuTamu/Http/Controllers/BackEnd/PertanyaanController.php',
+    'Modules/BukuTamu/Http/Controllers/BackEnd/TamuController.php',
+
+    'Modules/Pelanggan/Http/Controllers/PelangganController.php',
+    'Modules/Pelanggan/Http/Controllers/PendaftaranKerjasamaController.php',
+    'Modules/Pelanggan/Services/PelangganService.php',
 ];
 
-$exceptFile = [];
+$exceptFile = [
+    'general_helper.php',
+    'Install.php',
+    'ViewServiceProvider.php',
+    'Router.php',
+];
 
 foreach ($onlyDirectory as $list) {
     cekFile($list, $exceptDirectory, $onlyFile, $exceptFile);
@@ -74,12 +102,12 @@ function cekFile($onlyDirectory, $exceptDirectory, $onlyFile, $exceptFile)
         foreach (glob($onlyDirectory . '/*') as $cek) {
             if (is_file($cek) && pathinfo($cek)['extension'] === 'php') {
                 // Only File
-                if ($onlyFile && ! (in_array($cek, $onlyFile) || preg_match('/' . implode('|', $onlyFile) . '/', basename($cek)))) {
+                if ($onlyFile && ! (in_array($cek, $onlyFile) || preg_match('/' . implode('|', array_map('preg_quote', $onlyFile, array_fill(0, count($onlyFile), '/'))) . '/', basename($cek)))) {
                     continue;
                 }
-
+                
                 // Except File
-                if ($exceptFile && (in_array($cek, $exceptFile) || preg_match('/' . implode('|', $exceptFile) . '/', basename($cek)))) {
+                if ($exceptFile && (in_array($cek, $exceptFile) || preg_match('/' . implode('|', array_map('preg_quote', $exceptFile, array_fill(0, count($exceptFile), '/'))) . '/', basename($cek)))) {
                     continue;
                 }
 

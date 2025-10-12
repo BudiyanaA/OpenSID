@@ -1,9 +1,3 @@
-$(document).ready(function () {
-  $("#resetme").click(function () {
-    window.location.reload(false);
-  });
-});
-
 var error_message = "";
 var sebutan_dusun;
 var layers = {};
@@ -248,30 +242,30 @@ function set_marker_persil_content(
       }
 
       content = `
-				<div class="persil">
-					<h4>Leter C-Desa </h4>
-					<h4><b>Nomor ${data.nomor}</b> </h4> 
-					<hr>
-					<table>
-						<tbody>
-							<tr>
-								<td>Nama Pemilik Tanah </td>
-								<td> : </td>
-								<td> ${data.nama_kepemilikan} </td>
-							</tr>
-							<tr>
-								<td>Kelas Tanah</td>
-								<td> : </td>
-								<td> ${data.kode} </td>
-							</tr>
-							<tr>
-								<td>Lokasi</td>
-								<td> : </td>
-								<td> ${data.alamat} </td>
-							</tr>
-					</tbody></table>
-				</div>
-			`;
+        <div class="persil">
+          <h4>Leter C-Desa </h4>
+          <h4><b>Nomor ${data.nomor}</b> </h4> 
+          <hr>
+          <table>
+            <tbody>
+              <tr>
+                <td>Nama Pemilik Tanah </td>
+                <td> : </td>
+                <td> ${data.nama_kepemilikan} </td>
+              </tr>
+              <tr>
+                <td>Kelas Tanah</td>
+                <td> : </td>
+                <td> ${data.kode} </td>
+              </tr>
+              <tr>
+                <td>Lokasi</td>
+                <td> : </td>
+                <td> ${data.alamat} </td>
+              </tr>
+          </tbody></table>
+        </div>
+      `;
       var label = L.tooltip({
         permanent: true,
         direction: "center",
@@ -439,7 +433,8 @@ function set_marker_multi_content(
 }
 
 function getBaseLayers(peta, access_token, jenis_peta) {
-  //Menampilkan BaseLayers Peta
+  var isValid = validateTokenMapbox(access_token);
+
   var defaultLayer = L.tileLayer.provider("OpenStreetMap.Mapnik", {
     attribution:
       '<a href="https://openstreetmap.org/copyright">© OpenStreetMap</a> | <a href="https://github.com/OpenSID/OpenSID">OpenSID</a>',
@@ -450,7 +445,10 @@ function getBaseLayers(peta, access_token, jenis_peta) {
       '<a href="https://openstreetmap.org/copyright">© OpenStreetMap</a> | <a href="https://github.com/OpenSID/OpenSID">OpenSID</a>',
   });
 
-  if (access_token) {
+  let mbGLstr, mbGLsat, mbGLstrsat;
+  let baseLayers;
+
+  if (isValid && access_token) {
     mbGLstr = L.mapboxGL({
       accessToken: access_token,
       style: "mapbox://styles/mapbox/streets-v11",
@@ -471,7 +469,28 @@ function getBaseLayers(peta, access_token, jenis_peta) {
       attribution:
         '<a href="https://www.mapbox.com/about/maps">© Mapbox</a> | <a href="https://github.com/OpenSID/OpenSID">OpenSID</a>',
     });
+
+    baseLayers = {
+      OpenStreetMap: defaultLayer,
+      "OpenStreetMap H.O.T.": OpenStreetMap,
+      "Mapbox Streets": mbGLstr,
+      "Mapbox Satellite": mbGLsat,
+      "Mapbox Satellite-Street": mbGLstrsat,
+    };
   } else {
+    if (typeof Swal !== "undefined" && typeof Swal.fire === "function") {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "warning",
+        title: "Token Mapbox Tidak Valid",
+        text: "Peta akan menggunakan OpenStreetMap",
+        showConfirmButton: false,
+        timer: 5000,
+        timerProgressBar: true,
+      });
+    }
+
     mbGLstr = L.tileLayer.provider("OpenStreetMap.Mapnik", {
       attribution:
         '<a href="https://openstreetmap.org/copyright">© OpenStreetMap</a> | <a href="https://github.com/OpenSID/OpenSID">OpenSID</a>',
@@ -484,6 +503,11 @@ function getBaseLayers(peta, access_token, jenis_peta) {
       attribution:
         '<a href="https://openstreetmap.org/copyright">© OpenStreetMap</a> | <a href="https://github.com/OpenSID/OpenSID">OpenSID</a>',
     });
+
+    baseLayers = {
+      OpenStreetMap: defaultLayer,
+      "OpenStreetMap H.O.T.": OpenStreetMap,
+    };
   }
 
   switch (jenis_peta) {
@@ -503,15 +527,25 @@ function getBaseLayers(peta, access_token, jenis_peta) {
       mbGLstrsat.addTo(peta);
   }
 
-  var baseLayers = {
-    OpenStreetMap: defaultLayer,
-    "OpenStreetMap H.O.T.": OpenStreetMap,
-    "Mapbox Streets": mbGLstr,
-    "Mapbox Satellite": mbGLsat,
-    "Mapbox Satellite-Street": mbGLstrsat,
-  };
-
   return baseLayers;
+}
+
+function validateTokenMapbox(access_token) {
+  var isValid = false;
+
+  $.ajax({
+    url: `https://api.mapbox.com/styles/v1/mapbox/streets-v11?access_token=${access_token}`,
+    type: 'GET',
+    async: false,
+    success: function (response) {
+      isValid = true; // Token is valid
+    },
+    error: function (xhr, status, error) {
+      console.error("Error validating token:", error);
+    }
+  });
+
+  return isValid;
 }
 
 function wilayah_property(set_marker, set_content = false, tampil_luas = 0) {
@@ -738,9 +772,14 @@ function eximGpxPoint(layerpeta) {
   controlGpxPoint = L.Control.fileLayerLoad({
     addToMap: false,
     formats: [".gpx", ".kml"],
-    fitBounds: true,
+    fitBounds: false,
     layerOptions: {
       pointToLayer: function (data, latlng) {
+        layerpeta.eachLayer(function (layer) {
+          if (layer instanceof L.Marker) {
+            layer.remove();
+          }
+        });
         return L.marker(latlng);
       },
     },
@@ -753,12 +792,17 @@ function eximGpxPoint(layerpeta) {
     var coords = [];
     var geojson = layer.toGeoJSON();
     var shape_for_db = JSON.stringify(geojson);
-    var polygon = L.geoJson(JSON.parse(shape_for_db), {
+    L.geoJson(JSON.parse(shape_for_db), {
       pointToLayer: function (feature, latlng) {
         return L.marker(latlng);
       },
       onEachFeature: function (feature, layer) {
-        coords.push(feature.geometry.coordinates);
+        if (feature.geometry.type == "Point") {
+          coords.push(feature.geometry.coordinates);
+          layerpeta.setView([coords[0][1], coords[0][0]], layerpeta.getZoom());
+        } else {
+          _error("Pilih file GPX dengan tipe Point");
+        }
       },
     }).addTo(layerpeta);
 
@@ -1198,7 +1242,8 @@ function showCurrentPoint(posisi1, layerpeta, mode = true) {
     });
   });
 
-  var lc = L.control
+  if ($("a[title='Lokasi Saya']").length == 0) {
+    var lc = L.control
     .locate({
       drawCircle: false,
       icon: "fa fa-map-marker",
@@ -1209,6 +1254,7 @@ function showCurrentPoint(posisi1, layerpeta, mode = true) {
       },
     })
     .addTo(layerpeta);
+  }
 
   layerpeta.on("locationfound", function (e) {
     $("#lat").val(e.latlng.lat);
@@ -2179,4 +2225,42 @@ function message(desa = null, dusun = null, rw = null, rt = null) {
   }
 
   return message + "</b> tidak valid.<br>";
+}
+
+function resetPoint(layer_peta, posisi, zoom) {
+  $("#reset-peta").click(function () {
+    $("#lat").val(posisi[0]);
+    $("#lng").val(posisi[1]);
+    layer_peta.eachLayer(function (layer) {
+      if (layer instanceof L.Marker) {
+        layer_peta.removeLayer(layer);
+      }
+    });
+
+    layer_peta.setView(posisi, zoom);
+    showCurrentPoint(posisi, layer_peta);
+  });
+}
+
+function resetPolygon(layer_peta, wilayah, posisi, zoom, multi, warna, TAMPIL_LUAS) {
+  $("#reset-peta").click(function () {
+    $("#path").val(wilayah);
+    layer_peta.eachLayer(function (layer) {
+      if (layer instanceof L.Polygon) {
+        layer_peta.removeLayer(layer);
+      }
+    });
+
+    layer_peta.setView(posisi, zoom);
+
+    if (wilayah) {
+      if (multi) {
+        showCurrentMultiPolygon(wilayah, layer_peta, warna, TAMPIL_LUAS);
+        addPetaMultipoly(layer_peta);
+      } else {
+        showCurrentPolygon(wilayah, layer_peta, warna, TAMPIL_LUAS);
+        addPetaPoly(layer_peta);
+      }
+    }
+  });
 }

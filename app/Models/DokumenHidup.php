@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -39,6 +39,7 @@ namespace App\Models;
 
 use App\Traits\Author;
 use App\Traits\ConfigId;
+use Illuminate\Support\Facades\DB;
 
 defined('BASEPATH') || exit('No direct script access allowed');
 
@@ -106,15 +107,14 @@ class DokumenHidup extends BaseModel
         }
     }
 
-    public function scopePeraturanDesa($query, $kat)
+    public function scopePeraturanDesa($query, $kat, $tahun = '')
     {
-        $data = $query->where('kategori', $kat);
-        if ($kat == 3 && ($jenis = session('jenis_peraturan'))) {
-            $attr = '"jenis_peraturan":"' . $jenis . '"';
-            $data->where('attr', 'like', '%' . $attr . '%');
+        $query->where('kategori', $kat);
+        if ($kat == 3 && $tahun != '') {
+            $query->whereRaw("JSON_EXTRACT(attr, '$.tgl_ditetapkan') LIKE ?", ["%{$tahun}%"]);
         }
 
-        return $data;
+        return $query;
     }
 
     public function isActive(): bool
@@ -124,50 +124,59 @@ class DokumenHidup extends BaseModel
 
     public function scopeInformasiPublik($query)
     {
-        return $query->where(['id_pend' => 0]);
+        return $query->whereNull('id_pend');
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where(['enabled' => self::ENABLE]);
+    }
+
+    public function scopeNonActive($query)
+    {
+        return $query->where('enabled', '!=', self::ENABLE);
     }
 
     public function scopeDataCetak($query, $kat = 1, ?string $tahun = '', ?string $jenis_peraturan = '')
     {
-        $data = $query->where('id_pend', '0')
-            ->where('enabled', '1');
+        $query = $query->whereNull('id_pend')->where('enabled', '1');
 
         if ($tahun !== null && $tahun !== '' && $tahun !== '0') {
             switch ($kat) {
                 case '1':
                     // Informasi publik
-                    $data->where('tahun', $tahun);
+                    $query->where('tahun', $tahun);
                     break;
 
                 case '2':
                     // SK KADES
                     $regex = '"tgl_kep_kades":"[[:digit:]]{2}-[[:digit:]]{2}-' . $tahun;
-                    $data->whereRaw("attr REGEXP '" . $regex . "'");
+                    $query->whereRaw("attr REGEXP '" . $regex . "'");
                     break;
 
                 case '3':
                     // PERDES
                     $regex = '"tgl_ditetapkan":"[[:digit:]]{2}-[[:digit:]]{2}-' . $tahun;
-                    $data->whereRaw("attr REGEXP '" . $regex . "'");
+                    $query->whereRaw("attr REGEXP '" . $regex . "'");
                     break;
             }
         }
 
         if ($kat == 3 && $jenis_peraturan) {
             $like = '"jenis_peraturan":"' . $jenis_peraturan . '"';
-            $data->where('attr', 'LIKE', "%{$like}%");
+            $query->where('attr', 'LIKE', "%{$like}%");
         }
 
         // Informasi publik termasuk kategori lainnya
         if ($kat != '1') {
-            $data->where('kategori', $kat);
+            $query->where('kategori', $kat);
         }
 
-        return $data->where('id_pend', '0')->where('enabled', '1')->get()->map(static function ($item) {
-            $item->attr = json_decode($item->attr, true);
+        $this->casts = [
+            'attr' => 'json',
+        ];
 
-            return $item;
-        });
+        return $query;
     }
 
     public function scopeGetDokumen($query, $id = 0, $id_pend = null): ?array
@@ -179,7 +188,7 @@ class DokumenHidup extends BaseModel
         $data = $query->where('id', $id)->first()->toArray();
 
         if ($data) {
-            $data['attr'] = json_decode($data['attr'], true);
+            $data['attr'] = json_decode((string) $data['attr'], true);
 
             return array_filter($data);
         }
@@ -225,5 +234,80 @@ class DokumenHidup extends BaseModel
         }
 
         return null;
+    }
+
+    /**
+     * Scope daftar arsip fisik dokumen desa.
+     *
+     * @var \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeArsipFisikDokumenDesa(mixed $query)
+    {
+        return $query
+            ->select([
+                'id',
+                DB::raw("IF(kategori = 3,
+                    REPLACE(TRIM(BOTH '\"' FROM JSON_EXTRACT(attr, '$.no_ditetapkan')), '\"', ''),
+                    IF(JSON_UNQUOTE(JSON_EXTRACT(attr, '$.no_kep_kades')) IS NOT NULL AND JSON_UNQUOTE(JSON_EXTRACT(attr, '$.no_kep_kades')) != '',
+                        REPLACE(TRIM(BOTH '\"' FROM JSON_EXTRACT(attr, '$.no_kep_kades')), '\"', ''),
+                        '-')
+                ) AS nomor_dokumen"),
+                DB::raw("IF(kategori = 2, STR_TO_DATE(TRIM(BOTH '' FROM JSON_EXTRACT(`attr`, '$.tgl_kep_kades')), '%d-%m-%Y'), IF(kategori = 3, STR_TO_DATE(TRIM(BOTH '' FROM JSON_EXTRACT(`attr`, '$.tgl_ditetapkan')), '%d-%m-%Y'), DATE(`updated_at`))) AS tanggal_dokumen"),
+                DB::raw('nama as nama_dokumen'),
+                DB::raw("IF(kategori=3, '1-3', IF(kategori=2, '1-2', '1-1')) as jenis"),
+                DB::raw("IF(kategori=3, 'perdes', IF(kategori=2, 'sk_kades', 'informasi_desa_lain')) as nama_jenis"),
+                'lokasi_arsip',
+                DB::raw("IF(kategori=3, 'dokumen_sekretariat/perdes/3', IF(kategori=2, 'dokumen_sekretariat/perdes/2', 'dokumen')) as modul_asli"),
+                'tahun',
+                DB::raw("'dokumen_desa' as kategori"),
+                DB::raw('NULL as lampiran'),
+            ])
+            ->whereNull('id_pend')
+            ->whereNotNull('satuan');
+    }
+
+    /**
+     * Scope daftar arsip fisik kependudukan.
+     *
+     * @var \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeArsipFisikKependudukan(mixed $query)
+    {
+        return $query
+            ->select([
+                DB::raw('dokumen_hidup.id'),
+                DB::raw("'' as nomor_dokumen"),
+                DB::raw('DATE(dokumen_hidup.updated_at) as tanggal_dokumen'),
+                DB::raw('tweb_penduduk.nama as nama_dokumen'),
+                DB::raw("CONCAT('4-', ref_syarat_surat.ref_syarat_id) as jenis"),
+                DB::raw('ref_syarat_surat.ref_syarat_nama as nama_jenis'),
+                DB::raw('dokumen_hidup.lokasi_arsip'),
+                DB::raw("CONCAT('penduduk/dokumen/', dokumen_hidup.id_pend) as modul_asli"),
+                DB::raw('EXTRACT(YEAR FROM dokumen_hidup.updated_at) as tahun'),
+                DB::raw("'kependudukan' as kategori"),
+                DB::raw('NULL as lampiran'),
+            ])
+            ->join('tweb_penduduk', 'dokumen_hidup.id_pend', '=', 'tweb_penduduk.id')
+            ->leftJoin('ref_syarat_surat', 'dokumen_hidup.id_syarat', '=', 'ref_syarat_surat.ref_syarat_id')
+            ->whereNotNull('dokumen_hidup.id_pend')
+            ->whereNotNull('dokumen_hidup.satuan');
+    }
+
+    public static function listDokumen($idPenduduk)
+    {
+        $data    = self::where('id_pend', $idPenduduk)->where('deleted', 0)->get()->toArray();
+        $counter = count($data);
+
+        for ($i = 0; $i < $counter; $i++) {
+            $data[$i]['no']     = $i + 1;
+            $data[$i]['hidden'] = false;
+
+            // jika dokumen berelasi dengan dokumen kepala kk
+            if (isset($data[$i]['id_parent'])) {
+                $data[$i]['hidden'] = true;
+            }
+        }
+
+        return $data;
     }
 }

@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -37,11 +37,11 @@
 
 namespace App\Libraries;
 
-defined('BASEPATH') || exit('No direct script access allowed');
-
 use Exception;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+
+defined('BASEPATH') || exit('No direct script access allowed');
 
 // Library ini berasal dari https://github.com/esyede/captcha
 class Captcha
@@ -74,21 +74,12 @@ class Captcha
         $bg   = static::background();
         $font = static::font();
         $info = getimagesize($bg);
-        $old  = null;
-
-        switch ($info['mime']) {
-            case 'image/jpg':
-            case 'image/jpeg': $old = imagecreatefromjpeg($bg);
-                break;
-
-            case 'image/gif':  $old = imagecreatefromgif($bg);
-                break;
-
-            case 'image/png':  $old = imagecreatefrompng($bg);
-                break;
-
-            default:           throw new Exception('Only JPG, PNG and GIF are supported for backgrounds.');
-        }
+        $old  = match ($info['mime']) {
+            'image/jpg', 'image/jpeg' => imagecreatefromjpeg($bg),
+            'image/gif' => imagecreatefromgif($bg),
+            'image/png' => imagecreatefrompng($bg),
+            default     => throw new Exception('Only JPG, PNG and GIF are supported for backgrounds.'),
+        };
 
         // default settings
         $width  = 120;
@@ -131,7 +122,7 @@ class Captcha
 
     public static function check($value): bool
     {
-        $value = trim((string) (static::$case_sensitive ? $value : strtolower($value)));
+        $value = trim((string) (static::$case_sensitive ? $value : strtolower((string) $value)));
         $hash  = ci()->session->captcha;
 
         return $value && $hash && Hash::check($value, $hash);

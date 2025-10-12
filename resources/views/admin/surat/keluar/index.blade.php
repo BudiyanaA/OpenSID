@@ -1,5 +1,6 @@
 @include('admin.layouts.components.asset_validasi')
 @include('admin.layouts.components.asset_datatables')
+@include('admin.layouts.components.datetime_picker')
 
 @extends('admin.layouts.index')
 
@@ -252,7 +253,7 @@
                             },
                             title: 'TTE',
                             html: `
-                    @if (empty(setting('tte_api')) || setting('tte_api') == base_url())
+                    @if (empty($list_setting->firstWhere('key', 'tte_api')?->value) || $list_setting->firstWhere('key', 'tte_api')?->value == base_url())
                         <div class="alert alert-warning alert-dismissible">
                             <h4><i class="icon fa fa-warning"></i> Info Penting!</h4>
                             Modul TTE ini hanya sebuah simulasi untuk persiapan penerapan TTE di {{ config_item('nama_aplikasi') }} dan Hanya berlaku untuk Surat yang Menggunakan TinyMCE
@@ -327,7 +328,7 @@
                         e.preventDefault();
                         var id = $(e.target).closest('a').data('id')
                         Swal.fire({
-                            title: 'Apakah anda yakin ingin mengirim surat ini ke kecamatan?',
+                            title: 'Apakah anda yakin ingin mengirim surat ini ke ' + '{{ ucwords(setting('sebutan_kecamatan')) }}' + ' ?',
                             showCancelButton: true,
                             confirmButtonText: 'Kirim',
                             showLoaderOnConfirm: true,
@@ -368,11 +369,13 @@
                                 } else {
                                     Swal.fire({
                                         icon: 'success',
-                                        title: 'Dokumen berhasil dikirim ke kecamatan',
+                                        title: 'Dokumen berhasil dikirim ke ' + '{{ ucwords(setting('sebutan_kecamatan')) }}',
                                         showConfirmButton: true,
                                     }).then((result) => {
-                                        window.location.replace("{{ ci_route('keluar') }}");
-                                    })
+                                        if (result.isConfirmed) {
+                                            window.location.replace("{{ ci_route('keluar') }}");
+                                        }
+                                    });
                                 }
                             }
 
@@ -419,5 +422,35 @@
             });
 
         });
+
+        function lockSurat(id) {
+            swal.fire({
+                title: 'Kunci Surat',
+                text: 'Surat yang dikunci tidak akan bisa diubah kembali. Ingin Melanjutkan?',
+                showCancelButton: true,
+                confirmButtonText: 'Ya',
+                cancelButtonText: 'Tidak',
+                icon: 'warning',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = "{{ ci_route('keluar.lock_surat') }}/" + id;
+                }
+            })
+        }
+
+        function setKeluar(id) {
+            swal.fire({
+                title: 'Surat Keluar',
+                text: 'Surat yang telah ditetapkan keluar tidak dapat diubah kembali.. Ingin Melanjutkan?',
+                showCancelButton: true,
+                confirmButtonText: 'Ya',
+                cancelButtonText: 'Tidak',
+                icon: 'warning',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = "{{ ci_route('keluar.set_keluar') }}/" + id;
+                }
+            })
+        }
     </script>
 @endpush

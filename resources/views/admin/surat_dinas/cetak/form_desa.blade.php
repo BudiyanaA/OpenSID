@@ -49,9 +49,8 @@
 
     <div class="box box-info">
         <div class="box-header with-border">
-            <a href="{{ ci_route('surat_dinas_cetak') }}" class="btn btn-social btn-info btn-sm btn-sm visible-xs-block visible-sm-inline-block visible-md-inline-block visible-lg-inline-block" title="Kembali Ke Daftar Wilayah">
-                <i class="fa fa-arrow-circle-left "></i>Kembali Ke Daftar Cetak Surat Dinas
-            </a>
+            @include('admin.layouts.components.tombol_kembali', ['url' => ci_route('surat_dinas_cetak'), 'label' => 'Daftar Cetak Surat Dinas'])
+
         </div>
         <div class="box-body">
             {!! form_open($form_action, 'id="validasi" method="POST" class="form-surat form-horizontal"') !!}
@@ -88,8 +87,8 @@
         </div>
         <div class="box-footer">
             <button type="reset" class="btn btn-social btn-danger btn-sm" onclick="reset_form($(this).val());"><i class="fa fa-times"></i> Batal</button>
-            <button type="submit" class="btn btn-social btn-info btn-sm pull-right"><i class="fa fa-check"></i>
-                Simpan</button>
+            <button type="submit" class="btn btn-social btn-info btn-sm pull-right"><i class="fa fa-check-square-o"></i>
+                Lanjut</button>
         </div>
         </form>
     </div>

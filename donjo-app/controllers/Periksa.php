@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,118 +29,199 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
  */
 
+use App\Libraries\Periksa as LibrariesPeriksa;
 use App\Models\Config;
+use App\Models\Penduduk;
+use App\Models\SuplemenTerdata;
+use App\Models\User;
 use App\Models\UserGrup;
+use App\Services\Auth\Traits\LoginRequest;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 defined('BASEPATH') || exit('No direct script access allowed');
 
 class Periksa extends CI_Controller
 {
+    use LoginRequest;
+
+    protected $guard = 'admin_periksa';
+    public $setting;
     public $header;
+    public $latar_login;
+    private string $collate;
 
     public function __construct()
     {
         parent::__construct();
 
-        $this->load->database();
-
         if ($this->session->db_error['code'] === 1049) {
             redirect('koneksi-database');
         }
 
-        $this->load->model(['periksa_model', 'user_model']);
+        $this->collate = DB::getConnections()['default']->getConfig()['collation'];
+
         $this->header      = Config::appKey()->first();
-        $this->latar_login = default_file(LATAR_LOGIN . $this->periksa_model->getSetting('latar_login'), DEFAULT_LATAR_SITEMAN);
+        $this->latar_login = default_file(LATAR_LOGIN . setting('latar_login'), DEFAULT_LATAR_SITEMAN);
     }
 
     public function index()
     {
-        $this->cek_user();
+        $this->cekUser();
 
         if ($this->session->message_query || $this->session->message_exception) {
             log_message('error', $this->session->message_query);
             log_message('error', $this->session->message_exception);
         }
 
-        return view('periksa.index', array_merge($this->periksa_model->periksa, ['header' => $this->header]));
+        return view('periksa.index', array_merge((new LibrariesPeriksa())->getPeriksa(), ['header' => $this->header, 'collation' => $this->collate]));
     }
 
-    private function cek_user(): void
+    private function cekUser(): void
     {
-        if ($this->session->periksa_data != 1) {
+        if (! Auth::guard($this->guard)->check()) {
             redirect('periksa/login');
         }
     }
 
     public function perbaiki(): void
     {
-        $this->cek_user();
-        $this->periksa_model->perbaiki();
+        $this->cekUser();
+        (new LibrariesPeriksa())->perbaiki();
         $this->session->unset_userdata(['db_error', 'message', 'message_query', 'heading', 'message_exception']);
 
         redirect('/');
     }
 
-    public function perbaiki_sebagian($masalah): void
+    public function perbaikiSebagian($masalah): void
     {
-        $this->cek_user();
-        $this->periksa_model->perbaiki_sebagian($masalah);
+        $this->cekUser();
+        (new LibrariesPeriksa())->perbaikiSebagian($masalah);
         $this->session->unset_userdata(['db_error', 'message', 'message_query', 'heading', 'message_exception']);
 
         redirect('/');
     }
 
     // Login khusus untuk periksa
-    public function login(): void
+    public function login()
     {
-        if ($this->session->periksa_data == 1) {
+        if (Auth::guard($this->guard)->check()) {
             redirect('periksa');
         }
 
-        $this->session->siteman_wait = 0;
-        $data                        = [
+        return view('admin.auth.login', [
             'header'      => $this->header,
             'form_action' => site_url('periksa/auth'),
+            'logo_bsre'   => default_file(LOGO_BSRE, false),
             'latar_login' => $this->latar_login,
-        ];
-
-        if ($this->setting) {
-            $this->setting->sebutan_desa      = $this->periksa_model->getSetting('sebutan_desa');
-            $this->setting->sebutan_kabupaten = $this->periksa_model->getSetting('sebutan_kabupaten');
-        }
-
-        $this->load->view('siteman', $data);
+        ]);
     }
 
     // Login khusus untuk periksa
     public function auth(): void
     {
-        $method       = $this->input->method(true);
-        $allow_method = ['POST'];
-        if (! in_array($method, $allow_method)) {
-            redirect('periksa/login');
-        }
-        $this->user_model->siteman();
+        // Check demo mode
+        $isDemoMode      = config_item('demo_mode');
+        $demoUser        = config_item('demo_user');
+        $requestUsername = request('username');
+        $requestPassword = request('password');
 
-        if ($this->session->siteman != 1) {
-            // Gagal otentifikasi atau bukan admin
-            redirect('periksa');
-        }
+        if ($isDemoMode && $requestUsername == $demoUser['username'] && $requestPassword == $demoUser['password']) {
+            $this->validated(request(), $this->rules());
 
-        if ($this->session->grup != UserGrup::getGrupId(UserGrup::ADMINISTRATOR)) {
-            // Bukan admin
-            $this->user_model->logout();
-            redirect('periksa');
+            // Log in as the first admin user
+            $user = User::superAdmin()->first();
+            Auth::guard($this->guard)->login($user);
+        } else {
+            $this->authenticate(['active' => 1, 'id_grup' => UserGrup::getGrupId(UserGrup::ADMINISTRATOR)]);
         }
 
-        // Bedakan dengan status login biasa supaya dipaksa login lagi setelah selesai perbaiki data
-        $this->session->periksa_data = 1;
+        $this->session->sess_regenerate();
+
         redirect('periksa');
+    }
+
+    protected function rules()
+    {
+        $captcha = [];
+
+        if (setting('google_recaptcha')) {
+            $captcha = [
+                'g-recaptcha-response' => 'required|captcha',
+            ];
+        }
+
+        return [
+            'username' => ['required', 'string'],
+            'password' => ['required', 'string'],
+            ...$captcha,
+        ];
+    }
+
+    /**
+     * Get the rate limiting throttle key for the request.
+     */
+    protected function throttleKey()
+    {
+        return Str::transliterate(Str::lower(request('username')) . '|' . request()->ip());
+    }
+
+    // Periksa tanggal lahir null atau kosong
+    public function tanggallahir()
+    {
+        $this->cekUser();
+
+        $dataPenduduk = array_combine($this->input->post('id'), $this->input->post('tanggallahir'));
+
+        foreach ($dataPenduduk as $id => $tanggallahir) {
+            Penduduk::where('id', $id)->update(['tanggallahir' => $tanggallahir]);
+        }
+
+        $this->session->unset_userdata(['db_error', 'message', 'message_query', 'heading', 'message_exception']);
+
+        return $this->output
+            ->set_content_type('application/json')
+            ->set_output(json_encode([
+                'status' => 1,
+            ], JSON_THROW_ON_ERROR));
+    }
+
+    // Periksa tanggal lahir null atau kosong
+    public function suplemenTerdata()
+    {
+        $this->cekUser();
+
+        $suplemenTerdataSasaran = $this->input->post('suplemen_terdata');
+        $listIdTerdata          = [];
+
+        foreach ($suplemenTerdataSasaran as $sasaran => $suplemenTerdata) {
+            foreach ($suplemenTerdata as $id => $idTerdata) {
+                if ($idTerdata) {
+                    $updateData = ['id_terdata' => $idTerdata];
+                    if ($sasaran == SuplemenTerdata::PENDUDUK) {
+                        $updateData['penduduk_id'] = $idTerdata;
+                    }
+                    if ($sasaran == SuplemenTerdata::KELUARGA) {
+                        $updateData['keluarga_id'] = $idTerdata;
+                    }
+                    SuplemenTerdata::where('id', $id)->update($updateData);
+                }
+            }
+        }
+
+        $this->session->unset_userdata(['db_error', 'message', 'message_query', 'heading', 'message_exception']);
+
+        return $this->output
+            ->set_content_type('application/json')
+            ->set_output(json_encode([
+                'status' => 1,
+            ], JSON_THROW_ON_ERROR));
     }
 }

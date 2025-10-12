@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -79,12 +79,9 @@ class Pengaduan extends BaseModel
     /**
      * Scope query untuk status pengaduan
      *
-     * @param mixed $query
-     * @param mixed $status
-     *
      * @return Builder
      */
-    public function scopeStatus($query, $status = null)
+    public function scopeStatus(mixed $query, mixed $status = null)
     {
         if ($status) {
             $query->where('status', $status);
@@ -98,10 +95,9 @@ class Pengaduan extends BaseModel
      * Jika id_pengaduan null maka dari warga
      * Jika id_pengaduan tidak null maka balasan dari admin
      *
-     * @param mixed      $query
      * @param mixed|null $id_pengaduan
      */
-    public function scopeTipe($query, $id_pengaduan = null)
+    public function scopeTipe(mixed $query, $id_pengaduan = null)
     {
         if ($id_pengaduan) {
             $query->where('id_pengaduan', $id_pengaduan);
@@ -123,12 +119,9 @@ class Pengaduan extends BaseModel
     /**
      * Scope query untuk status pengaduan bulanan
      *
-     * @param mixed $query
-     * @param mixed $status
-     *
      * @return Builder
      */
-    public function scopeBulanan($query, $status = null)
+    public function scopeBulanan(mixed $query, mixed $status = null)
     {
         if ($status) {
             $query->where('status', $status);

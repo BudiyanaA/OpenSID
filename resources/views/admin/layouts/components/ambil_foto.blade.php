@@ -1,18 +1,18 @@
 <div class="box box-primary">
     <div class="box-body box-profile">
-        <img class="penduduk" id="foto" src="{{ AmbilFoto($foto, '', $id_sex) }}" alt="Foto Penduduk">
+        <img class="penduduk" id="foto" src="{{ AmbilFoto($foto, '', $id_sex, $lokasiFoto ?? LOKASI_USER_PICT) }}" alt="Foto Penduduk">
         <br />
         @if (isset($show_dimensi) && $show_dimensi)
             <div class="row" style="margin-bottom: 8px">
                 <label for="" class="col-sm-6">Lebar (px)</label>
                 <div class="col-sm-6">
-                    <input name="lebar" class="form-control input-sm bilangan" type="number" value="200" placeholder="200">
+                    <input name="lebar" class="form-control input-sm bilangan" type="number" value="{{ $show_dimensi['width'] ?? '200' }}" placeholder="200">
                 </div>
             </div>
             <div class="row" style="margin-bottom: 8px">
                 <label for="" class="col-sm-6">Tinggi (px)</label>
                 <div class="col-sm-6">
-                    <input name="tinggi" class="form-control input-sm bilangan" type="number" value="200" placeholder="200">
+                    <input name="tinggi" class="form-control input-sm bilangan" type="number" value="{{ $show_dimensi['height'] ?? '200' }}" placeholder="200">
                 </div>
             </div>
         @endif

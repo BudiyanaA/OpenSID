@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -62,7 +62,7 @@ class Bumindes_tanah_kas_desa extends Admin_Controller
         $data['jenis_peraturan'] = JenisPeraturan::all();
 
         $data['main_content'] = 'admin.dokumen.tanah_kas_desa.table';
-        $data['subtitle']     = 'Buku Tanah Kas ' . ucwords(setting('sebutan_desa'));
+        $data['subtitle']     = 'Buku Tanah Kas ' . ucwords((string) setting('sebutan_desa'));
         $data['selected_nav'] = 'tanah_kas';
 
         view('admin.bumindes.umum.main', $data);
@@ -191,9 +191,9 @@ class Bumindes_tanah_kas_desa extends Admin_Controller
             }
         }
 
-        $data['nama_pemilik_asal']    = strip_tags($data['pemilik_asal']);
+        $data['nama_pemilik_asal']    = strip_tags((string) $data['pemilik_asal']);
         $data['letter_c']             = bilangan($data['letter_c_persil']);
-        $data['kelas']                = strip_tags($data['kelas']);
+        $data['kelas']                = strip_tags((string) $data['kelas']);
         $data['luas']                 = bilangan($data['luas']);
         $data['asli_milik_desa']      = bilangan($data['asli_milik_desa']);
         $data['pemerintah']           = bilangan($data['pemerintah']);
@@ -209,10 +209,10 @@ class Bumindes_tanah_kas_desa extends Admin_Controller
         $data['tidak_ada_patok']      = bilangan($data['tidak_ada_patok']);
         $data['ada_papan_nama']       = bilangan($data['ada_papan_nama']);
         $data['tidak_ada_papan_nama'] = bilangan($data['tidak_ada_papan_nama']);
-        $data['lokasi']               = strip_tags($data['lokasi']);
-        $data['peruntukan']           = strip_tags($data['peruntukan']);
-        $data['mutasi']               = strip_tags($data['mutasi']);
-        $data['keterangan']           = strip_tags($data['keterangan']);
+        $data['lokasi']               = strip_tags((string) $data['lokasi']);
+        $data['peruntukan']           = strip_tags((string) $data['peruntukan']);
+        $data['mutasi']               = strip_tags((string) $data['mutasi']);
+        $data['keterangan']           = strip_tags((string) $data['keterangan']);
         $data['visible']              = 1;
 
         if ($valid !== []) {
@@ -271,11 +271,11 @@ class Bumindes_tanah_kas_desa extends Admin_Controller
 
     public function cetak($aksi = '')
     {
-        $query             = $this->sumberData();
-        $data              = $this->modal_penandatangan();
-        $data['aksi']      = $aksi;
-        $data['main']      = $query->get();
-        $data['config']    = $this->header['desa'];
+        $query        = $this->sumberData();
+        $data         = $this->modal_penandatangan();
+        $data['aksi'] = $aksi;
+        $data['main'] = $query->get();
+
         $data['bulan']     = date('m');
         $data['tahun']     = date('Y');
         $data['tgl_cetak'] = $this->input->post('tgl_cetak');

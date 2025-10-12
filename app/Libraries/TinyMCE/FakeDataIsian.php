@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -48,20 +48,28 @@ use Illuminate\Support\Str;
 
 class FakeDataIsian
 {
-    private $request;
-    private $tinymce;
+    private readonly TinyMCE $tinymce;
     private $result;
     private array $data = [];
 
-    public function __construct($request)
+    public function __construct(private $request, private $jenis = null)
     {
         $this->tinymce = new TinyMCE();
-        $this->request = $request;
     }
 
-    public static function set($request)
+    public static function set($request, $jenis = null)
     {
-        return (new self($request))->replaceData();
+        return (new self($request, $jenis))->replaceData();
+    }
+
+    public function getResult()
+    {
+        return $this->result;
+    }
+
+    public function getData($key = null, $default = null)
+    {
+        return $key ? data_get($this->data, $key, $default) : $this->data;
     }
 
     private function replaceData()
@@ -73,20 +81,19 @@ class FakeDataIsian
         $this->formPengikut();
         $this->prosesReplace();
 
-        return $this->result;
+        return $this;
     }
 
     private function tempate(): void
     {
-        // TODO:: Sederhanakan cara ini, simpan di library TInymCE
-        $setting_header = $this->request['header'] == StatusEnum::TIDAK ? '' : setting('header_surat');
-        $setting_footer = $this->request['footer'] == StatusEnum::YA ? (setting('tte') == StatusEnum::YA ? setting('footer_surat_tte') : setting('footer_surat')) : '';
+        $setting_header = $this->request['header'] == StatusEnum::TIDAK ? '' : setting("header_surat{$this->jenis}");
+        $setting_footer = $this->request['footer'] == StatusEnum::YA ? (setting('tte') == StatusEnum::YA ? setting("footer_surat{$this->jenis}_tte") : setting("footer_surat{$this->jenis}")) : '';
         $this->result   = preg_replace('/\\\\/', '', $setting_header) . '<!-- pagebreak -->' . ($this->request['template_desa']) . '<!-- pagebreak -->' . preg_replace('/\\\\/', '', $setting_footer);
     }
 
     private function sumberData(): void
     {
-        $form_isian = json_decode($this->request['form_isian'], true);
+        $form_isian = json_decode((string) $this->request['form_isian'], true);
 
         if ($form_isian) {
             $pendudukLuar = json_decode(SettingAplikasi::where('key', 'form_penduduk_luar')->first()->value ?? [], true);
@@ -112,10 +119,10 @@ class FakeDataIsian
                     } else {
                         // tidak ada pilihan penduduk desa
                         $pendudukLuarTerpilih = $pendudukLuar[array_rand($pendudukLuar)];
-                        $formInputPenduduk    = explode(',', $pendudukLuarTerpilih['input']);
+                        $formInputPenduduk    = explode(',', (string) $pendudukLuarTerpilih['input']);
 
                         foreach ($formInputPenduduk as $input) {
-                            $input                             = $input == 'no_ktp' ? 'nik' : $input;
+                            $input                             = $input === 'no_ktp' ? 'nik' : $input;
                             $this->data['input'][$key][$input] = 'Masukkan ' . $input . ' ' . $key;
                         }
                         $this->data['input'][$key]['opsi_penduduk'] = 2;
@@ -131,7 +138,7 @@ class FakeDataIsian
 
     private function formDinamis(): void
     {
-        $kode_isian = json_decode($this->request['kode_isian'], true);
+        $kode_isian = json_decode((string) $this->request['kode_isian'], true);
 
         foreach ($kode_isian as $value) {
             $tanggal = date('d-m-Y');
@@ -154,20 +161,29 @@ class FakeDataIsian
                     break;
 
                 case 'number':
-                    $nilai_isian = Str::contains($value['atribut'], ['min', 'max']) ? random_int((int) Str::before(Str::after($value['atribut'], 'min="'), '"'), (int) Str::between($value['atribut'], 'max="', '"')) : random_int(1, 10);
+                    $min_value = (int) Str::between($value['atribut'], 'min="', '"');
+                    $max_value = (int) Str::between($value['atribut'], 'max="', '"');
+
+                    if ($min_value > $max_value) {
+                        $temp      = $min_value;
+                        $min_value = $max_value;
+                        $max_value = $temp;
+                    }
+
+                    $nilai_isian = random_int($min_value, $max_value);
                     break;
 
                 default:
-                    if (preg_match('/hari/i', $value['atribut'])) {
+                    if (preg_match('/hari/i', (string) $value['atribut'])) {
                         $nilai_isian = hari($tanggal);
-                    } elseif (preg_match('/rupiah/i', $value['atribut'])) {
+                    } elseif (preg_match('/rupiah/i', (string) $value['atribut'])) {
                         $nilai_isian = 'Rp. ' . number_format(random_int(100, 9999) . '000', 0, ',', '.');
                     } else {
                         $nilai_isian = $value['deskripsi'] ?? $value['nama'];
                     }
             }
 
-            $this->data['input'][underscore($value['nama'], true, true)] = $nilai_isian;
+            $this->data['input'][str_replace(['[form_', ']'], '', $value['kode'])] = $nilai_isian;
         }
     }
 
@@ -206,7 +222,7 @@ class FakeDataIsian
     private function formPengikut(): void
     {
         // Pengikut Pindah
-        if (preg_match('/pengikut_pindah/i', $this->request['template_desa'])) {
+        if (preg_match('/pengikut_pindah/i', (string) $this->request['template_desa'])) {
             $pengikutPindah                = Penduduk::with('pendudukHubungan')->orderBy(DB::raw('RAND()'))->take(3)->get();
             $this->data['pengikut_pindah'] = generatePengikutPindah($pengikutPindah);
         }
@@ -239,7 +255,7 @@ class FakeDataIsian
         // Pengingat : form_isian disamakan formatnya menggunakan object
         $this->data['surat']     = new FormatSurat($this->request);
         $this->data['isi_surat'] = $this->result;
-        $this->result            = $this->tinymce->gantiKodeIsian($this->data);
+        $this->result            = $this->tinymce->gantiKodeIsian($this->data, false, $this->jenis);
 
         $this->terakhirReplace();
     }

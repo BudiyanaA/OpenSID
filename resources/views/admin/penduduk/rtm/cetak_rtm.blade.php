@@ -25,7 +25,7 @@
                 <tr>
                     <td width="100">Nama KK</td>
                     <td width="600">: {{ strtoupper($kepala_kk['nama']) }}</td>
-                    <td width="160">Kecamatan</td>
+                    <td width="160">{{ ucwords(setting('sebutan_kecamatan')) }}</td>
                     <td width="150">: {{ strtoupper($desa['nama_kecamatan']) }}</td>
                 </tr>
                 <tr>
@@ -98,7 +98,7 @@
                     @foreach ($main as $key => $data)
                         <tr class="data">
                             <td align="center" width="2">{{ $key + 1 }}</td>
-                            <td>{{ $data['status_kawin']['nama'] ?? '' }}</td>
+                            <td>{{ $data['status_perkawinan'] ?? '' }}</td>
                             <td>{{ App\Enums\HubunganRTMEnum::valueOf($data['rtm_level']) }}</td>
                             <td>{{ $data['warga_negara']['nama'] ?? '' }}</td>
                             <td>{{ strtoupper($data['nama_ayah']) }}</td>

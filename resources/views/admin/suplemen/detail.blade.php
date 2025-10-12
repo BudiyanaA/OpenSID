@@ -32,8 +32,7 @@
                     'cetak' => "suplemen/dialog_daftar/{$suplemen->id}/cetak",
                     'unduh' => "suplemen/dialog_daftar/{$suplemen->id}/unduh",
                 ])
-                @include('admin.layouts.components.tombol_impor_ekspor', [
-                    'impor' => "suplemen/impor_data/{$suplemen->id}",
+                @include('admin.layouts.components.tombol_ekspor', [
                     'ekspor' => "suplemen/ekspor/{$suplemen->id}",
                 ])
             @endif
@@ -43,31 +42,22 @@
                     ></i> Hapus</a>
             @endif
             @if (can('u'))
-                <a href="{{ ci_route('suplemen') }}" class="btn btn-social btn-info btn-sm visible-xs-block visible-sm-inline-block visible-md-inline-block visible-lg-inline-block"><i class="fa fa-arrow-circle-left"></i> Kembali Ke Daftar Data Suplemen</a>
+                @include('admin.layouts.components.tombol_kembali', ['url' => ci_route('suplemen'), 'label' => 'Daftar Data Suplemen'])
             @endif
         </div>
         @include('admin.suplemen.rincian')
         <hr style="margin-bottom: 5px;">
         <div class="box-body">
             <h5><b>Daftar Terdata</b></h5>
-            <div class="form-inline">
-                <select class="form-control input-sm" id="sex" name="sex">
-                    <option value="">Pilih Jenis Kelamin</option>
-                    <option value="1">Laki-laki</option>
-                    <option value="2">Perempuan</option>
-                </select>
-                <select class="form-control input-sm" id="dusun" name="dusun">
-                    <option value="">Pilih Dusun</option>
-                    @foreach ($dusun as $item)
-                        <option value="{{ $item }}">{{ $item }}</option>
-                    @endforeach
-                </select>
-                <select class="form-control input-sm hide" id="rw" name="rw">
-                    <option value="">Pilih RW</option>
-                </select>
-                <select class="form-control input-sm  hide" id="rt" name="rt">
-                    <option value="">Pilih RT</option>
-                </select>
+            <div class="row mepet">
+                <div class="col-sm-2">
+                    <select class="form-control input-sm" id="sex" name="sex">
+                        <option value="">Pilih Jenis Kelamin</option>
+                        <option value="1">Laki-laki</option>
+                        <option value="2">Perempuan</option>
+                    </select>
+                </div>
+                @include('admin.layouts.components.wilayah')
             </div>
             <hr>
             {!! form_open(null, 'id="mainform" name="mainform"') !!}
@@ -86,6 +76,7 @@
                             <th>JENIS KELAMIN</th>
                             <th>ALAMAT</th>
                             <th>KETERANGAN</th>
+                            <th>DATA FORM ISIAN</th>
                         </tr>
                     </thead>
                 </table>
@@ -181,35 +172,82 @@
                         orderable: false,
                         class: 'padat'
                     },
+                    {
+                        data: 'data_form_isian',
+                        name: 'data_form_isian',
+                        orderable: false,
+                        class: 'padat',
+                        render: function(data, type, row, meta) {
+                            // Menampilkan tombol untuk melihat data form isian
+                            return `<a href="javascript:void(0)" class="btn btn-info btn-sm" onclick="toggleDetails(${meta.row})">Selengkapnya</a>`;
+                        }
+                    }
                 ],
                 order: [
                     [3, 'asc']
                 ],
             });
 
-            $('select[name="sex"]').on('change', function() {
-                $(this).val();
-                TableData.ajax.reload();
-            });
+            if (hapus == 0) {
+                TableData.column(0).visible(false);
+            }
 
-            $('select[name="dusun"]').on('change', function() {
-                $(this).val();
-                $('#rw').val('');
-                $('#rt').val('');
+            if (ubah == 0) {
+                TableData.column(2).visible(false);
+            }
 
-                TableData.ajax.reload();
-            });
+            $('#sex, #dusun, #rw, #rt').change(function() {
+                TableData.draw()
+            })
 
-            $('select[name="rw"]').on('change', function() {
-                $(this).val();
-                $('#rt').val('');
-                TableData.ajax.reload();
-            });
+            // Fungsi untuk menampilkan detail saat tombol diklik
+            window.toggleDetails = function(rowIndex) {
+                var table = $('#tabeldata').DataTable();
+                var row = table.row(rowIndex);
+                var rowData = row.data();
 
-            $('select[name="rt"]').on('change', function() {
-                $(this).val();
-                TableData.ajax.reload();
-            });
+                // Cek apakah sudah ada baris tambahan, jika ada maka hapus
+                if (row.child.isShown()) {
+                    row.child.hide();
+                } else {
+                    // Tampilkan baris tambahan dengan data form isian
+                    row.child(formatDetails(rowData)).show();
+                }
+            };
+
+            // Fungsi untuk format detail
+            function formatDetails(data) {
+                var detailsHtml = '<div class="details-row"><table class="table table-bordered"><tr>';
+
+                // Iterasi formData untuk menampilkan key dan value
+                for (var key in data.data_form_isian) {
+                    if (data.data_form_isian.hasOwnProperty(key)) {
+                        var formattedKey = formatKey(key);
+                        detailsHtml += `<td><b>${formattedKey}</b>: ${data.data_form_isian[key]}</td><tr>`;
+                    }
+                }
+
+                detailsHtml += '</table></div>';
+                return detailsHtml;
+            }
+
+
+            // Fungsi untuk mendekodekan HTML entities
+            function decodeHtmlEntities(text) {
+                var element = document.createElement('div');
+                if (text) {
+                    element.innerHTML = text;
+                    text = element.textContent;
+                    element.textContent = '';
+                }
+                return text;
+            }
+
+            // Fungsi untuk memformat key: mengganti underscore dengan spasi dan kapitalisasi huruf pertama
+            function formatKey(key) {
+                return key.replace(/_/g, ' ').replace(/^\w/, (c) => c.toUpperCase());
+            }
+
         });
     </script>
 @endpush

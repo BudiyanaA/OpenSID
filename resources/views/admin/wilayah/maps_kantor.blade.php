@@ -1,6 +1,7 @@
 @extends('admin.layouts.index')
 
 @include('admin.layouts.components.asset_datatables')
+@include('admin.layouts.components.asset_validasi')
 @section('title')
     <h1>
         <h1>Lokasi Kantor {{ $nama_wilayah }}</h1>
@@ -17,7 +18,7 @@
     @include('admin.layouts.components.notifikasi')
 
     <div class="box box-info">
-        <form action="{{ $form_action }}" method="POST" enctype="multipart/form-data" class="form-horizontal">
+        <form action="{{ $form_action }}" method="POST" enctype="multipart/form-data" id="validasi" class="form-horizontal">
             <div class="box-body">
                 <div id="tampil-map">
                     <input type="hidden" name="zoom" id="zoom" value="{{ $wil_ini['zoom'] }}" />
@@ -29,18 +30,18 @@
                 <div class="form-group">
                     <label class="col-sm-3 control-label" for="lat">Latitude</label>
                     <div class="col-sm-9">
-                        <input type="text" class="form-control input-sm lat" name="lat" id="lat" value="{{ $wil_ini['lat'] }}" />
+                        <input type="text" class="required form-control input-sm lat" name="lat" id="lat" value="{{ $wil_ini['lat'] }}" />
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="col-sm-3 control-label" for="lat">Longitude</label>
                     <div class="col-sm-9">
-                        <input type="text" class="form-control input-sm lng" name="lng" id="lng" value="{{ $wil_ini['lng'] }}" />
+                        <input type="text" class="required form-control input-sm lng" name="lng" id="lng" value="{{ $wil_ini['lng'] }}" />
                     </div>
                 </div>
                 <a href="{{ $tautan['link'] }}" class="btn btn-social bg-purple btn-sm visible-xs-block visible-sm-inline-block visible-md-inline-block visible-lg-inline-block" title="Kembali"><i class="fa fa-arrow-circle-o-left"></i> Kembali</a>
                 <a href="#" class="btn btn-social btn-success btn-sm visible-xs-block visible-sm-inline-block visible-md-inline-block visible-lg-inline-block" download="OpenSID.gpx" id="exportGPX"><i class='fa fa-download'></i> Export ke GPX</a>
-                <button type='reset' class='btn btn-social btn-danger btn-sm' id="resetme"><i class='fa fa-times'></i> Reset</button>
+                <button type='reset' class='btn btn-social btn-danger btn-sm' id="reset-peta"><i class='fa fa-times'></i> Reset</button>
                 @if (can('u'))
                     <button type='submit' class='btn btn-social btn-info btn-sm pull-right' id="simpan_kantor"><i class='fa fa-check'></i> Simpan</button>
                 @endif
@@ -53,19 +54,11 @@
 @push('scripts')
     <script>
         window.onload = function() {
-            @if (!empty($wil_ini['lat']) && !empty($wil_ini['lng']))
-                var posisi = [{{ $wil_ini['lat'] }}, {{ $wil_ini['lng'] }}];
-                var zoom = {{ $wil_ini['zoom'] ?: 18 }};
-            @elseif (!empty($wil_atas['lat']) && !empty($wil_atas['lng']))
-                // Jika posisi saat ini belum ada, maka posisi peta akan menampilkan peta desa
-                var posisi = [{{ $wil_atas['lat'] . ', ' . $wil_atas['lng'] }}];
-                var zoom = {{ $wil_atas['zoom'] }};
-            @else
-                var posisi = [-1.0546279422758742, 116.71875000000001];
-                var zoom = 4;
-            @endif
-
             // Inisialisasi tampilan peta
+            var lat = {{ $wil_ini['lat'] ?? ($wil_atas['lat'] ?? config('app.map.point.lat')) }};
+            var lng = {{ $wil_ini['lng'] ?? ($wil_atas['lng'] ?? config('app.map.point.lng')) }};
+            var zoom = {{ $wil_ini['zoom'] ?? ($wil_atas['zoom'] ?? config('app.map.zoom')) }};
+            var posisi = [lat, lng];
             var peta_kantor = L.map('tampil-map', pengaturan_peta).setView(posisi, zoom);
 
             // 1. Menampilkan overlayLayers Peta Semua Wilayah
@@ -175,6 +168,9 @@
 
             // Menampilkan notif error path
             view_error_path();
+
+            // Reset peta type point
+            resetPoint(peta_kantor, posisi, zoom);
         }; //EOF window.onload
     </script>
     <script src="{{ asset('js/leaflet.filelayer.js') }}"></script>

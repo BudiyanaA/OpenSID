@@ -59,7 +59,7 @@
                         data-body="Apakah yakin akan mengosongkan peta wilayah ini?"
                     ><i class="fa fa fa-trash-o"></i>Kosongkan</a>
                     <a href="#" class="btn btn-social btn-success btn-sm visible-xs-block visible-sm-inline-block visible-md-inline-block visible-lg-inline-block" download="OpenSID.gpx" id="exportGPX"><i class='fa fa-download'></i> Export ke GPX</a>
-                    <button type='reset' class='btn btn-social btn-danger btn-sm' id="resetme"><i class='fa fa-times'></i> Reset</button>
+                    <button type='reset' class='btn btn-social btn-danger btn-sm' id="reset-peta"><i class='fa fa-times'></i> Reset</button>
                     <button type='submit' class='btn btn-social btn-info btn-sm pull-right'><i class='fa fa-check'></i> Simpan</button>
                 </div>
             @endif
@@ -77,20 +77,11 @@
         window.onload = function() {
             $(".my-colorpicker2").colorpicker()
 
-            @if (!empty($wil_ini['lat']) && !empty($wil_ini['lng']))
-                var posisi = [{{ $wil_ini['lat'] . ', ' . $wil_ini['lng'] }}];
-                var zoom = {{ $wil_ini['zoom'] }};
-            @elseif (!empty($wil_atas['lat']) && !empty($wil_atas['lng']))
-                // Jika posisi saat ini belum ada, maka posisi peta akan menampilkan peta desa
-                var posisi = [{{ $wil_atas['lat'] . ', ' . $wil_atas['lng'] }}];
-                var zoom = {{ $wil_atas['zoom'] }};
-            @else
-                // Kondisi ini hanya untuk lokasi/wilayah desa yg belum ada
-                var posisi = [-1.0546279422758742, 116.71875000000001];
-                var zoom = 10;
-            @endif
-
             // Inisialisasi tampilan peta
+            var lat = {{ $wil_ini['lat'] ?? ($wil_atas['lat'] ?? config('app.map.point.lat')) }};
+            var lng = {{ $wil_ini['lng'] ?? ($wil_atas['lng'] ?? config('app.map.point.lng')) }};
+            var zoom = {{ $wil_ini['zoom'] ?? ($wil_atas['zoom'] ?? config('app.map.zoom')) }};
+            var posisi = [lat, lng];
             var peta_wilayah = L.map('tampil-map', pengaturan_peta).setView(posisi, zoom);
 
             // 1. Menampilkan overlayLayers Peta Semua Wilayah
@@ -128,6 +119,8 @@
 
             // Menampilkan BaseLayers Peta
             var baseLayers = getBaseLayers(peta_wilayah, MAPBOX_KEY, JENIS_PETA);
+            var wilayah = null;
+            var warna = '#FFFFFF';
 
             // Menampilkan Peta wilayah yg sudah ada
             @if (!empty($wil_ini['path']))
@@ -136,9 +129,11 @@
                 @if (isset($poly) && $poly == 'multi')
                     // MultiPolygon
                     showCurrentMultiPolygon(wilayah, peta_wilayah, warna, TAMPIL_LUAS);
+                    var multi = true;
                 @else
                     // Polygon
                     showCurrentPolygon(wilayah, peta_wilayah, warna, TAMPIL_LUAS);
+                    var multi = false;
                 @endif
             @endif
 
@@ -236,6 +231,10 @@
 
             // Menampilkan notif error path
             view_error_path();
+
+            // Reset peta type polygon
+            resetPolygon(peta_wilayah, wilayah, posisi, zoom, multi, warna, TAMPIL_LUAS);
+
         }; //EOF window.onload
     </script>
     <script src="{{ asset('js/leaflet.filelayer.js') }}"></script>

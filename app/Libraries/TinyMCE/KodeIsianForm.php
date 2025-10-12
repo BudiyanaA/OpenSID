@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -39,8 +39,6 @@ namespace App\Libraries\TinyMCE;
 
 class KodeIsianForm
 {
-    private $inputForm;
-    private $kodeIsian;
     private array $statisForm = [
         [
             'nama' => 'Mulai Berlaku',
@@ -67,7 +65,6 @@ class KodeIsianForm
             'kode' => 'pengikut_pindah',
         ],
     ];
-    private $masaBerlaku;
 
     /**
      * KodeIsianForm constructor.
@@ -78,11 +75,8 @@ class KodeIsianForm
      *
      * @return void
      */
-    public function __construct($inputForm, $kodeIsian, $masaBerlaku = false)
+    public function __construct(private $inputForm, private $kodeIsian, private $masaBerlaku = false)
     {
-        $this->inputForm   = $inputForm;
-        $this->kodeIsian   = $kodeIsian;
-        $this->masaBerlaku = $masaBerlaku;
     }
 
     /**
@@ -104,7 +98,7 @@ class KodeIsianForm
      */
     public function getKodeIsian()
     {
-        $input     = $this->inputForm;
+        $input     = is_array($this->inputForm) ? $this->inputForm : json_decode($this->inputForm, true);
         $kodeIsian = $this->kodeIsian;
 
         if (! is_array($kodeIsian)) {
@@ -117,7 +111,7 @@ class KodeIsianForm
 
         return collect($kodeIsian)
             ->map(static function (array $item, $key) use ($input): array {
-                $input_data = $input[underscore($item['nama'], true, true)];
+                $input_data = $input[str_replace(['[form_', ']'], '', $item['kode'])];
                 if ($item['tipe'] == 'date') {
                     $data = formatTanggal($input_data);
                 } elseif ($item['tipe'] == 'hari-tanggal') {

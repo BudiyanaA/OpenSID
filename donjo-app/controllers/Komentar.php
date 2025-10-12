@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -54,13 +54,18 @@ class Komentar extends Admin_Controller
 
     public function index(): void
     {
-        view('admin.komentar.index');
+        $defaultStatus = request('status', ModelsKomentar::ACTIVE);
+        view('admin.komentar.index', ['defaultStatus' => $defaultStatus]);
     }
 
     public function datatables()
     {
         if ($this->input->is_ajax_request()) {
-            return datatables()->of(ModelsKomentar::with('artikel')->whereNull('parent_id'))
+            $status = $this->input->get('status') ?? null;
+
+            return datatables()->of(ModelsKomentar::with('artikel')->whereNull('parent_id')
+                ->when(in_array($status, [ModelsKomentar::ACTIVE, ModelsKomentar::NONACTIVE]), static fn ($q) => $q->where('status', $status))
+                ->when(in_array($status, [ModelsKomentar::UNREAD]), static fn ($q) => $q->unread()))
                 ->addColumn('ceklist', static function ($row) {
                     if (can('h')) {
                         return '<input type="checkbox" name="id_cb[]" value="' . $row->id . '"/>';
@@ -130,12 +135,12 @@ class Komentar extends Admin_Controller
         }
     }
 
-    private function validasi($post)
+    private function validasi(array $post)
     {
-        $data['owner']    = htmlentities($post['owner']);
+        $data['owner']    = htmlentities((string) $post['owner']);
         $data['no_hp']    = bilangan($post['no_hp']);
         $data['email']    = email($post['email']);
-        $data['komentar'] = htmlentities($post['komentar']);
+        $data['komentar'] = htmlentities((string) $post['komentar']);
         if (isset($post['status'])) {
             $data['status'] = bilangan($post['status']);
         }
@@ -179,13 +184,17 @@ class Komentar extends Admin_Controller
 
         $data = [
             'id_artikel' => $komentar->id_artikel,
-            'komentar'   => htmlentities($this->input->post('komentar')),
-            'owner'      => auth()->id,
-            'status'     => '1',
+            'komentar'   => htmlentities((string) $this->input->post('komentar')),
+            'owner'      => ci_auth()->id,
+            'status'     => ModelsKomentar::ACTIVE,
             'parent_id'  => $komentar->id,
         ];
 
         try {
+            if (! $komentar->isActive()) {
+                $komentar->status = ModelsKomentar::ACTIVE;
+                $komentar->save();
+            }
             ModelsKomentar::create($data);
         } catch (Exception $e) {
             log_message('error', $e->getMessage());

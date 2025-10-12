@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -41,13 +41,11 @@ use App\Models\Pamong;
 
 class KodeIsianPenandaTangan
 {
-    private $inputForm;
-    private string $sebutanDesa;
+    private readonly string $sebutanDesa;
 
-    public function __construct($inputForm)
+    public function __construct(private $inputForm)
     {
-        $this->inputForm   = $inputForm;
-        $this->sebutanDesa = ucwords(setting('sebutan desa'));
+        $this->sebutanDesa = ucwords((string) setting('sebutan desa'));
     }
 
     public static function get($inputForm): array
@@ -65,23 +63,32 @@ class KodeIsianPenandaTangan
         $ttd         = $this->inputForm['pilih_atas_nama'];
         $atas_nama   = $kades->pamong_jabatan . ' ' . $nama_desa;
         $jabatan     = $kades->pamong_jabatan;
+        $jabatan_an  = $simbol_an = $simbol_ub = $ub_jabatan = '';
         $nama_pamong = $kades->pamong_nama;
         $nip_pamong  = $kades->pamong_nip;
         $niap_pamong = $kades->pamong_niap;
 
         $sekdes = Pamong::ttd('a.n')->first();
-        if (preg_match('/a.n/i', $ttd)) {
-            $atas_nama   = 'a.n ' . $atas_nama . ' <br> ' . $sekdes->pamong_jabatan;
+        if (preg_match('/a.n/i', (string) $ttd)) {
+            $atas_nama   = 'a.n. ' . $kades->nama_jabatan . ' ' . $nama_desa . ' <br> ' . $sekdes->pamong_jabatan;
             $jabatan     = $sekdes->pamong_jabatan;
+            $jabatan_an  = $jabatan;
+            $simbol_an   = 'a.n.';
+            $simbol_ub   = '';
+            $ub_jabatan  = '';
             $nama_pamong = $sekdes->pamong_nama;
             $nip_pamong  = $sekdes->pamong_nip;
             $niap_pamong = $sekdes->pamong_niap;
         }
 
-        if (preg_match('/u.b/i', $ttd)) {
+        if (preg_match('/u.b/i', (string) $ttd)) {
             $pamong      = Pamong::ttd('u.b')->find($this->inputForm['pamong_id']);
-            $atas_nama   = 'a.n ' . $atas_nama . ' <br> ' . $sekdes->pamong_jabatan . '<br> u.b <br>' . $pamong->jabatan->nama;
+            $atas_nama   = 'a.n. ' . $kades->nama_jabatan . ' ' . $nama_desa . ' <br> ' . $sekdes->pamong_jabatan . '<br> u.b. <br>' . $pamong->jabatan->nama;
             $jabatan     = $pamong->pamong_jabatan;
+            $jabatan_an  = $sekdes->pamong_jabatan;
+            $simbol_an   = 'a.n.';
+            $simbol_ub   = 'u.b';
+            $ub_jabatan  = $jabatan;
             $nama_pamong = $pamong->pamong_nama;
             $nip_pamong  = $pamong->pamong_nip;
             $niap_pamong = $pamong->pamong_niap;
@@ -102,6 +109,26 @@ class KodeIsianPenandaTangan
         }
 
         return [
+            [
+                'judul' => 'Simbol a.n.',
+                'isian' => 'Simbol_an',
+                'data'  => $simbol_an,
+            ],
+            [
+                'judul' => 'Jabatan a.n.',
+                'isian' => 'Jabatan_an',
+                'data'  => $jabatan_an,
+            ],
+            [
+                'judul' => 'Simbol u.b.',
+                'isian' => 'Simbol_ub',
+                'data'  => $simbol_ub,
+            ],
+            [
+                'judul' => 'Jabatan u.b.',
+                'isian' => 'Jabatan_ub',
+                'data'  => $ub_jabatan,
+            ],
             [
                 'judul' => 'Atas Nama',
                 'isian' => 'Atas_namA',

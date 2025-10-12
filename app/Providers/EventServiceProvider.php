@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -48,9 +48,31 @@ class EventServiceProvider extends ServiceProvider
      * @var array
      */
     protected $listen = [
-        // \App\Events\ExampleEvent::class => [
-        //     \App\Listeners\ExampleListener::class,
-        // ],
+        \Illuminate\Auth\Events\Registered::class => [
+            \App\Listeners\Penduduk\SendEmailVerificationNotification::class,
+            \App\Listeners\Penduduk\SendTelegramVerificationNotification::class,
+        ],
+        \Illuminate\Auth\Events\Attempting::class    => [],
+        \Illuminate\Auth\Events\Authenticated::class => [],
+        \Illuminate\Auth\Events\Login::class         => [
+            \App\Listeners\LoginAdminListener::class,
+            \App\Listeners\LoginPendudukListener::class,
+            \App\Listeners\LoginPerangkatListener::class,
+        ],
+        \Illuminate\Auth\Events\Failed::class => [
+            \App\Listeners\FailedAdminListener::class,
+        ],
+        \Illuminate\Auth\Events\Validated::class => [],
+        \Illuminate\Auth\Events\Verified::class  => [],
+        \Illuminate\Auth\Events\Logout::class    => [
+            \App\Listeners\LogoutAdminListener::class,
+        ],
+        \Illuminate\Auth\Events\CurrentDeviceLogout::class => [],
+        \Illuminate\Auth\Events\OtherDeviceLogout::class   => [],
+        \Illuminate\Auth\Events\Lockout::class             => [
+            \App\Listeners\LockoutAdminListener::class,
+        ],
+        \Illuminate\Auth\Events\PasswordReset::class => [],
     ];
 
     /**

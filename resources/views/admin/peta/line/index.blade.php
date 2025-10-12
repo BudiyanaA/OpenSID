@@ -21,7 +21,7 @@
             <div class="box box-info">
                 <div class="box-header with-border">
                     @if (can('u'))
-                        <a href="{{ ci_route('line.form', $parent) }}" class="btn btn-social btn-success btn-sm visible-xs-block visible-sm-inline-block visible-md-inline-block visible-lg-inline-block"><i class="fa fa-plus"></i> Tambah</a>
+                        <a href="{{ ci_route('line.form', $parent) }}?tipe={{ $tipe }}" class="btn btn-social btn-success btn-sm visible-xs-block visible-sm-inline-block visible-md-inline-block visible-lg-inline-block"><i class="fa fa-plus"></i> Tambah</a>
                     @endif
                     @if (can('h'))
                         <a href="#confirm-delete" title="Hapus Data" onclick="deleteAllBox('mainform', '{{ ci_route('line.delete', $parent) }}')" class="btn btn-social btn-danger btn-sm visible-xs-block visible-sm-inline-block visible-md-inline-block visible-lg-inline-block hapus-terpilih"><i
@@ -30,9 +30,7 @@
                             Hapus</a>
                     @endif
                     @if ($parent_jenis)
-                        <a href="{{ ci_route('line.index') }}" class="btn btn-social btn-info btn-sm btn-sm visible-xs-block visible-sm-inline-block visible-md-inline-block visible-lg-inline-block">
-                            <i class="fa fa-arrow-circle-left "></i>Kembali ke Tipe Garis
-                        </a>
+                        @include('admin.layouts.components.tombol_kembali', ['url' => ci_route('line.index'), 'label' => 'Tipe Garis'])
                     @endif
                 </div>
                 <div class="box-body">
@@ -80,6 +78,7 @@
     <script src="{{ asset('bootstrap/js/bootstrap-colorpicker.min.js') }}"></script>
     <script>
         $(document).ready(function() {
+            var parent = '{{ $parent_jenis }}';
             var TableData = $('#tabeldata').DataTable({
                 responsive: true,
                 processing: true,
@@ -136,7 +135,7 @@
                 TableData.column(0).visible(false);
             }
 
-            if (ubah == 0) {
+            if (ubah == 0 && parent) {
                 TableData.column(2).visible(false);
             }
 

@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,25 +29,26 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
  */
 
+use App\Traits\Migrator;
 use Illuminate\Support\Facades\Http;
 
 defined('BASEPATH') || exit('No direct script access allowed');
 // require_once('donjo-app/core/MY_Model.php');
 class Install_modul extends CI_Controller
 {
-    private $modulesDirectory;
+    use Migrator;
+
+    private readonly int|string $modulesDirectory;
 
     public function __construct()
     {
         parent::__construct();
-        //$this->load->database();
-        $this->load->model(['ekspor_model']);
         $this->modulesDirectory = array_keys(config_item('modules_locations') ?? [])[0] ?? '';
     }
 
@@ -66,7 +67,7 @@ class Install_modul extends CI_Controller
             $pasangBaru = false;
         }
         // jalankan migrasi dari paket
-        $this->jalankanMigrasi($name, 'up');
+        $this->jalankanMigrasiModule($name, 'up');
 
         if ($pasangBaru) {
             try {
@@ -74,12 +75,11 @@ class Install_modul extends CI_Controller
                 $urlHitModule = config_item('server_layanan') . '/api/v1/modules/install';
                 $token        = App\Models\SettingAplikasi::where(['key' => 'layanan_opendesa_token'])->first();
                 $response     = Http::withToken($token->value)->post($urlHitModule, ['module_name' => $name]);
-                log_message('error', $response->body());
+                log_message('notice', $response->body());
             } catch (Exception $e) {
                 log_message('error', $e->getMessage());
             }
         }
-        // reset cache views_blade karena di MY_Controller diset cache rememberForever
         // cache()->flush();
         log_message('notice', 'Paket ' . $name . ' berhasil dipasang');
     }
@@ -98,35 +98,10 @@ class Install_modul extends CI_Controller
             if ($name === '' || $name === '0') {
                 log_message('error', 'Nama paket tidak boleh kosong');
             }
-            $this->jalankanMigrasi($name, 'down');
-            // reset cache views_blade karena di MY_Controller diset cache rememberForever
-            cache()->forget('views_blade');
+            $this->jalankanMigrasiModule($name, 'down');
             log_message('notice', 'Paket ' . $name . ' berhasil dihapus');
         } catch (Exception $e) {
             log_message('error', $e->getMessage());
-        }
-    }
-
-    private function jalankanMigrasi(string $name, string $action = 'up'): void
-    {
-        $this->load->helper('directory');
-        $directoryTable = $this->modulesDirectory . $name . '/Database/Migrations';
-        $migrations     = directory_map($directoryTable, 1);
-        if ($action === 'up') {
-            usort($migrations, static fn ($a, $b): int => strcmp($a, $b));
-        }
-
-        foreach ($migrations as $migrate) {
-            $migrateFile = require $directoryTable . DIRECTORY_SEPARATOR . $migrate;
-
-            switch($action) {
-                case 'down':
-                    $migrateFile->down();
-                    break;
-
-                default:
-                    $migrateFile->up();
-            }
         }
     }
 }

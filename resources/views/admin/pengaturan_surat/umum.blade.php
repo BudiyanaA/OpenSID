@@ -179,6 +179,11 @@
         <div class="form-group">
             <label class="col-sm-3 control-label">Lampiran</label>
             <div class="col-sm-7">
+                @if ($viewOnly)
+                    @foreach (explode(',', $suratMaster->lampiran) as $item)
+                        <input type="hidden" name="lampiran[]" value="{{ $item }}">
+                    @endforeach
+                @endif
                 <select class="form-control input-sm select2" name="lampiran[]" multiple="multiple" data-placeholder="Pilih Lampiran">
                     @foreach ($daftar_lampiran as $value)
                         <option value="{{ $value }}" @selected(in_array($value, explode(',', $suratMaster->lampiran)))>{{ $value }} </option>
@@ -401,26 +406,6 @@
     </div>
 </div>
 
-<div class="modal fade" id="confirm-restore" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title" id="myModalLabel"><i class="fa fa-exclamation-triangle text-red"></i> Konfirmasi</h4>
-            </div>
-            <div class="modal-body btn-info">
-                Apakah Anda yakin ingin mengembalikan surat bawaan/sistem ini?
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-social btn-danger btn-sm pull-left" data-dismiss="modal"><i class="fa fa-sign-out"></i> Tutup</button>
-                <a class="btn-ok">
-                    <a href="{{ ci_route('surat_master.restore_surat_bawaan', $suratMaster->url_surat) }}" class="btn btn-social btn-success btn-sm" id="ok-restore"><i class="fa fa-refresh"></i> Kembalikan</a>
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-
 @push('scripts')
     <script>
         $(document).ready(function() {
@@ -429,11 +414,18 @@
                 $('#manual_margin').show()
             }
 
-            var format_nomor_global = $("[name='format_nomor_global']:checked").val()
-            if (format_nomor_global == 0) {
-                $('#manual_nomor_surat').show()
-            }
+            format_nomor_surat($("[name='format_nomor_global']:checked").val())
         })
+
+        function format_nomor_surat(params) {
+            if (params == 0) {
+                $('#manual_nomor_surat').show()
+                $('input[name="format_nomor"]').addClass('required')
+            } else {
+                $('#manual_nomor_surat').hide()
+                $('input[name="format_nomor"]').removeClass('required')
+            }
+        }
 
         $("[name='margin_global']").change(function() {
             var val = $(this).val()
@@ -445,12 +437,7 @@
         })
 
         $("[name='format_nomor_global']").change(function() {
-            var val = $(this).val()
-            if (val == 0) {
-                $('#manual_nomor_surat').show()
-            } else {
-                $('#manual_nomor_surat').hide()
-            }
+            format_nomor_surat($(this).val())
         })
 
         $('#kode_surat').select2({
@@ -501,6 +488,10 @@
             serverSide: true,
             bPaginate: false,
             ajax: "{{ ci_route('surat_master.syaratSuratDatatables', $suratMaster->id) }}",
+            drawCallback: function(settings) {
+                // Disable all checkbox inputs after the DataTable is rendered
+                $('input[type="checkbox"]').prop('disabled', {{ $viewOnly }});
+            },
             columns: [{
                     data: 'ceklist',
                     class: 'padat',

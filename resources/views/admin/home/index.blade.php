@@ -36,8 +36,8 @@
 
     <div class="row">
         @foreach ($shortcut as $sc)
-            @if (can('b', $sc['akses']))
-                <div class="col-lg-3 col-sm-6 col-xs-6">
+            @can("{$sc['akses']}:baca")
+                <div class="col-lg-3 col-sm-6 col-xs-12">
                     <div class="small-box" style="background-color: {!! $sc['warna'] !!}; border-radius: 5px;">
                         <div class="inner">
                             <h3 class="text-white">{{ $sc['count'] ?? '0' }}</h3>
@@ -50,6 +50,6 @@
                     </div>
                 </div>
             @endif
-        @endforeach
-    </div>
-@endsection
+            @endforeach
+        </div>
+    @endsection

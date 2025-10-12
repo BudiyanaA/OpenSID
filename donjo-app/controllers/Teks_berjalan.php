@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -60,6 +60,7 @@ class Teks_berjalan extends Admin_Controller
 
     public function tukar()
     {
+        isCan('u');
         $data = $this->input->post('data');
         TeksBerjalan::setNewOrder($data);
         cache()->flush();
@@ -73,7 +74,7 @@ class Teks_berjalan extends Admin_Controller
             $order = $this->input->get('order') ?? false;
 
             return datatables()->of(TeksBerjalan::with('artikel')->when(! $order, static fn ($q) => $q->orderBy('urut')))
-                ->addColumn('drag-handle', static fn () => '<i class="fa fa-sort-alpha-desc"></i>')
+                ->addColumn('drag-handle', static fn (): string => '<i class="fa fa-sort-alpha-desc"></i>')
                 ->addColumn('ceklist', static function ($row) {
                     if (can('h')) {
                         return '<input type="checkbox" name="id_cb[]" value="' . $row->id . '"/>';
@@ -147,7 +148,7 @@ class Teks_berjalan extends Admin_Controller
     {
         isCan('u');
 
-        if (TeksBerjalan::create($this->validated($this->request))) {
+        if (TeksBerjalan::create($this->validate($this->request))) {
             redirect_with('success', 'Berhasil Tambah Data');
         }
 
@@ -157,7 +158,7 @@ class Teks_berjalan extends Admin_Controller
     public function update($id = ''): void
     {
         isCan('u');
-        if (TeksBerjalan::findOrFail($id)->update($this->validated($this->request, $id))) {
+        if (TeksBerjalan::findOrFail($id)->update($this->validate($this->request, $id))) {
             redirect_with('success', 'Berhasil Ubah Data');
         }
         redirect_with('error', 'Gagal Ubah Data');
@@ -183,12 +184,12 @@ class Teks_berjalan extends Admin_Controller
         redirect_with('error', 'Gagal Ubah Status');
     }
 
-    protected function validated($request = [], $id = null)
+    protected function validate($request = [], $id = null)
     {
         $data = [
-            'teks'         => htmlentities($request['teks']),
+            'teks'         => htmlentities((string) $request['teks']),
             'tipe'         => (int) $request['tipe'], // 1 = 'Internal', 2 = 'Eksternal'
-            'judul_tautan' => htmlentities($request['judul_tautan']),
+            'judul_tautan' => htmlentities((string) $request['judul_tautan']),
             'status'       => (int) $request['status'],
         ];
 

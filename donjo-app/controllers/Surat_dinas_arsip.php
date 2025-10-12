@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -49,6 +49,7 @@ use App\Models\SuratDinas;
 use App\Models\Urls;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use NotificationChannels\Telegram\Telegram;
 
 defined('BASEPATH') || exit('No direct script access allowed');
 
@@ -57,7 +58,7 @@ class Surat_dinas_arsip extends Admin_Controller
     public $modul_ini     = 'surat-dinas';
     public $sub_modul_ini = 'arsip-surat-dinas';
     private $isAdmin;
-    private TinyMCE $tinymce;
+    private readonly TinyMCE $tinymce;
 
     public function __construct()
     {
@@ -65,7 +66,6 @@ class Surat_dinas_arsip extends Admin_Controller
         $this->tinymce = new TinyMCE();
         $this->load->helper('download');
         $this->isAdmin = $this->session->isAdmin->pamong;
-        $this->load->library('OTP/OTP_manager', null, 'otp_library');
     }
 
     public function index(): void
@@ -114,14 +114,14 @@ class Surat_dinas_arsip extends Admin_Controller
         $this->show($data);
     }
 
-    private function show($dataView): void
+    private function show(array $dataView): void
     {
         if (setting('verifikasi_kades') || setting('verifikasi_sekdes')) {
             $data['operator'] = ($this->isAdmin->jabatan_id == kades()->id || $this->isAdmin->jabatan_id == sekdes()->id) ? false : true;
             $data['widgets']  = $this->widget();
         }
 
-        $data['user_admin']  = config_item('user_admin') == auth()->id;
+        $data['user_admin']  = config_item('user_admin') == ci_auth()->id;
         $data['title']       = 'Arsip Surat Dinas';
         $data['tahun_surat'] = LogSuratDinas::withOnly([])->selectRaw(DB::raw('YEAR(tanggal) as tahun'))->groupBy(DB::raw('YEAR(tanggal)'))->orderBy(DB::raw('YEAR(tanggal)'), 'desc')->get();
         $data['bulan_surat'] = [];
@@ -239,6 +239,7 @@ class Surat_dinas_arsip extends Admin_Controller
                 ->addColumn('alasan', static fn ($row) => $row->tolak->last()->keterangan ?? '')
                 ->addColumn('kode_surat', static fn ($row) => $row->suratDinas->kode_surat ?? '')
                 ->editColumn('id_format_surat', static fn ($row) => $row->suratDinas->nama ?? '')
+                ->editColumn('id_user', static fn ($row) => $row->user->nama ?? '')
                 ->editColumn('keterangan', static fn ($row) => $row->keterangan ?? '-')
                 ->editColumn('tanggal', static fn ($row) => tgl_indo2($row->tanggal))
                 ->addColumn('status_label', static function ($row) use ($jabatanId, $idJabatanKades, $idJabatanSekdes): string {
@@ -252,14 +253,14 @@ class Surat_dinas_arsip extends Admin_Controller
                                     $status = '<span class="label label-success">Siap Dikirim ke Kecamatan</span>';
                                 } elseif ($row->kecamatan == 3) {
                                     $status = '<span class="label label-success">Telah Dikirim ke Kecamatan</span>';
+                                } elseif ($row->log_verifikasi) {
+                                    $status = '<span class="label label-warning">Menunggu ' . $row->log_verifikasi . ' </span>';
                                 } else {
                                     $status = '<span class="label label-success">Siap Cetak</span>';
                                 }
-                            } else {
-                                $status = '<span class="label label-warning">Menunggu ' . $row->log_verifikasi . ' </span>';
+                            } elseif ($statusPeriksa == 0) {
+                                $status = '<span class="label label-success">Siap Cetak</span>';
                             }
-                        } else {
-                            $status = '<span class="label label-warning">Menunggu ' . $row->log_verifikasi . ' </span>';
                         }
                     } else {
                         $status = '<span class="label label-danger">Konsep</span>';
@@ -367,10 +368,10 @@ class Surat_dinas_arsip extends Admin_Controller
             ];
             $this->create_log_notifikasi_admin($next, $isi_notifikasi);
 
-            if (cek_koneksi_internet()) {
+            if (cek_koneksi_internet() && setting('telegram_token')) {
                 if ($kirim_telegram != null) {
                     try {
-                        $telegram = new Telegram();
+                        $telegram = new Telegram(setting('telegram_token'));
 
                         // Data pesan telegram yang akan digantikan
                         $kirimPesan = str_replace(array_keys($pesan), array_values($pesan), $kirimPesan);
@@ -428,7 +429,7 @@ class Surat_dinas_arsip extends Admin_Controller
             LogTolak::create([
                 'keterangan'     => $alasan,
                 'id_surat_dinas' => $id,
-                'created_by'     => auth()->id,
+                'created_by'     => ci_auth()->id,
             ]);
 
             if ($log_surat->isi_surat != null) {
@@ -443,29 +444,29 @@ class Surat_dinas_arsip extends Admin_Controller
             $kirim_telegram = User::whereHas('pamong', static fn ($query) => $query->where('pamong_ub', '=', '0')->where('pamong_ttd', '=', '0'))
                 ->where('notif_telegram', '=', '1')
                 ->get();
+            if (setting('telegram_notifikasi')) {
+                $telegram = new Telegram(setting('telegram_token'));
 
-            $telegram = new Telegram();
+                foreach ($kirim_telegram as $value) {
+                    $telegram->sendMessage([
+                        'chat_id' => $value->id_telegram,
+                        'text'    => <<<EOD
+                            Permohonan Surat telah ditolak,
+                            Nomor Surat : {$log_surat->formatpenomoransurat}
+                            Jenis Surat : {$jenis_surat}
+                            Alasan : {$alasan}
 
-            foreach ($kirim_telegram as $value) {
-                $telegram->sendMessage([
-                    'chat_id' => $value->id_telegram,
-                    'text'    => <<<EOD
-                        Permohonan Surat telah ditolak,
-                        Nomor Surat : {$log_surat->formatpenomoransurat}
-                        Jenis Surat : {$jenis_surat}
-                        Alasan : {$alasan}
-
-                        TERIMA KASIH.
-                        EOD,
-                    'parse_mode'   => 'Markdown',
-                    'reply_markup' => json_encode([
-                        'inline_keyboard' => [[
-                            ['text' => 'Lihat detail', 'url' => ci_route('surat_dinas_arsip.ditolak')],
-                        ]],
-                    ]),
-                ]);
+                            TERIMA KASIH.
+                            EOD,
+                        'parse_mode'   => 'Markdown',
+                        'reply_markup' => json_encode([
+                            'inline_keyboard' => [[
+                                ['text' => 'Lihat detail', 'url' => ci_route('surat_dinas_arsip.ditolak')],
+                            ]],
+                        ]),
+                    ]);
+                }
             }
-
             // log ke notifikasi
             $kirimFCM = <<<EOD
                 Permohonan Surat telah ditolak,
@@ -657,10 +658,8 @@ class Surat_dinas_arsip extends Admin_Controller
         ];
         $data['aksi']           = $aksi;
         $data['input']          = $this->input->post();
-        $data['config']         = $this->header['desa'];
         $data['pamong_ttd']     = Pamong::selectData()->where(['pamong_id' => $this->input->post('pamong_ttd')])->first()->toArray();
         $data['pamong_ketahui'] = Pamong::selectData()->where(['pamong_id' => $this->input->post('pamong_ketahui')])->first()->toArray();
-        $data['desa']           = $this->header['desa'];
         $data['main']           = LogSuratDinas::withOnly(['suratDinas', 'penduduk', 'pamong', 'user'])->whereNull('deleted_at')->arsip($this->isAdmin, $listJabatan)->orderBy('tanggal', 'desc')->get();
 
         //pengaturan data untuk format cetak/ unduh

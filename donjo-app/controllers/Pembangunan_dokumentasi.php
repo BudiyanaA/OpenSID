@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -43,8 +43,9 @@ use App\Models\PembangunanDokumentasi;
 
 class Pembangunan_dokumentasi extends Admin_Controller
 {
-    public $modul_ini       = 'pembangunan';
-    public $aliasController = 'admin_pembangunan';
+    public $modul_ini           = 'pembangunan';
+    public $aliasController     = 'admin_pembangunan';
+    public $kategori_pengaturan = 'Pembangunan';
 
     public function __construct()
     {
@@ -86,7 +87,7 @@ class Pembangunan_dokumentasi extends Admin_Controller
 
                     return '';
                 })
-                ->editColumn('persentase', static fn ($row): string => $row->persentase . '%')
+                ->editColumn('persentase', static fn ($row): string => (strpos($row->persentase, '%') === false) ? $row->persentase . '%' : $row->persentase)
                 ->orderColumn('persentase', static function ($query, $order): void {
                     $query->orderByRaw("CONVERT(persentase, SIGNED) {$order}");
                 })
@@ -103,7 +104,7 @@ class Pembangunan_dokumentasi extends Admin_Controller
         isCan('u');
 
         $data['pembangunan'] = Pembangunan::findOrFail($id_suplemen);
-        $data['persentase']  = $this->referensi_model->list_ref(STATUS_PEMBANGUNAN);
+        $data['persentase']  = unserialize(STATUS_PEMBANGUNAN);
 
         if ($id) {
             $data['action']      = 'Ubah';
@@ -189,10 +190,8 @@ class Pembangunan_dokumentasi extends Admin_Controller
     {
         $data['pamong_ttd']     = Pamong::selectData()->where(['pamong_id' => $this->input->post('pamong_ttd')])->first()->toArray();
         $data['pamong_ketahui'] = Pamong::selectData()->where(['pamong_id' => $this->input->post('pamong_ketahui')])->first()->toArray();
-        $data['desa']           = $this->header['desa'];
         $data['pembangunan']    = Pembangunan::with('wilayah')->find($id) ?? show_404();
         $data['dokumentasi']    = PembangunanDokumentasi::where('id_pembangunan', $id)->get();
-        $data['config']         = $this->header['desa'];
 
         if ($aksi == 'unduh') {
             header('Content-type: application/octet-stream');
@@ -206,7 +205,7 @@ class Pembangunan_dokumentasi extends Admin_Controller
     private function upload_gambar_pembangunan(string $jenis, $id = null, $old_foto = null)
     {
         // Inisialisasi library 'upload'
-        $this->load->library('MY_Upload', null, 'upload');
+        $this->load->library('upload');
         $this->uploadConfig = [
             'upload_path'   => LOKASI_GALERI,
             'allowed_types' => 'jpg|jpeg|png',
@@ -250,7 +249,7 @@ class Pembangunan_dokumentasi extends Admin_Controller
         return (empty($uploadData)) ? null : $uploadData['file_name'];
     }
 
-    private function perubahan_anggaran($id_pembangunan = 0, $persentase = 0, $perubahan_anggaran = 0)
+    private function perubahan_anggaran($id_pembangunan = 0, $persentase = 0, $perubahan_anggaran = 0): bool
     {
         if (in_array($persentase, ['100', '100%'])) {
             $update = Pembangunan::findOrFail($id_pembangunan);

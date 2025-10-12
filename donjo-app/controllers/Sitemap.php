@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,34 +29,27 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
  */
 
-use App\Models\Config;
+use App\Models\Artikel;
+use Illuminate\Support\Facades\View;
 
 defined('BASEPATH') || exit('No direct script access allowed');
 
 class Sitemap extends CI_Controller
 {
-    public function __construct()
+    public function index()
     {
-        parent::__construct();
-        $this->load->database();
-    }
-
-    public function index(): void
-    {
-        $data['artikel'] = $this->db
-            ->select('a.*, YEAR(tgl_upload) AS thn, MONTH(tgl_upload) AS bln, DAY(tgl_upload) AS hri')
-            ->where('config_id', Config::appKey()->first()->id)
-            ->from('artikel a')
+        $data['artikel'] = Artikel::without(['author', 'category', 'comments'])->sitemap()
             ->get()
-            ->result_array();
+            ->toArray();
 
-        $this->output->set_content_type('text/xml', 'UTF-8');
-        $this->load->view('sitemap', $data);
+        $content = View::make('sitemap', $data)->render();
+        header('Content-Type: text/xml; charset=UTF-8');
+        echo $content;
     }
 }

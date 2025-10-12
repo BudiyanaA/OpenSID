@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -39,12 +39,12 @@ namespace App\Traits;
 
 trait GenerateRtf
 {
-    private function buat_berkas_kk($data = '')
+    private function buat_berkas_kk($data = ''): ?string
     {
         $path_arsip = LOKASI_ARSIP;
         $file       = DEFAULT_LOKASI_EKSPOR . 'kk.rtf';
         if (! is_file($file)) {
-            return;
+            return null;
         }
         $nama = '';
 
@@ -64,7 +64,7 @@ trait GenerateRtf
             $agama             .= ($ranggota['agama']['nama'] ?? '') . '\\line ';
             $pendidikan        .= ($ranggota['pendidikanKK']['nama'] ?? '') . '\\line ';
             $pekerjaan         .= ($ranggota['pekerjaan']['nama'] ?? '') . '\\line ';
-            $status_kawin      .= ($ranggota['statusKawin']['nama'] ?? '') . '\\line ';
+            $status_kawin      .= ($ranggota['status_perkawinan'] ?? '') . '\\line ';
             $warganegara       .= ($ranggota['wargaNegara']['nama'] ?? '') . '\\line ';
             $dokumen_pasport   .= $ranggota['dokumen_pasport'] . '\\line ';
             $dokumen_kitas     .= $ranggota['dokumen_kitas'] . '\\line ';
@@ -102,7 +102,7 @@ trait GenerateRtf
         $tertanda       = $h['nama_desa'] . ', ' . $tertanda;
         $buffer         = str_replace('[sebutan_kepala_desa]', "\\caps {$sebutan_kepala}", $buffer);
         $buffer         = str_replace('desa', "\\caps {$h['nama_desa']}", $buffer);
-        $buffer         = str_replace('alamat_plus_dusun', "\\caps {$k['keluarga']['wilayah']['dusun']}", $buffer);
+        $buffer         = str_replace('alamat_plus_dusun', "\\caps {$k['alamat_wilayah_kartu_keluarga']}", $buffer);
         $buffer         = str_replace('prop', "\\caps {$h['nama_propinsi']}", $buffer);
         $buffer         = str_replace('kab', "\\caps {$h['nama_kabupaten']}", $buffer);
         $buffer         = str_replace('kec', "\\caps {$h['nama_kecamatan']}", $buffer);

@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -37,6 +37,7 @@
 
 use App\Enums\SatuanWaktuEnum;
 use App\Enums\StatusEnum;
+use App\Enums\SumberDanaEnum;
 use App\Models\Area;
 use App\Models\Garis;
 use App\Models\Lokasi;
@@ -47,7 +48,8 @@ defined('BASEPATH') || exit('No direct script access allowed');
 
 class Admin_pembangunan extends Admin_Controller
 {
-    public $modul_ini = 'pembangunan';
+    public $modul_ini           = 'pembangunan';
+    public $kategori_pengaturan = 'Pembangunan';
 
     public function __construct()
     {
@@ -103,7 +105,7 @@ class Admin_pembangunan extends Admin_Controller
                     return '';
                 })
                 ->editColumn('persentase', static fn ($row) => $row->max_persentase)
-                ->editColumn('alamat', static fn ($row) => $row->wilayah->dusun ?? 'Lokasi tidak diketahui')
+                ->editColumn('alamat', static fn ($row) => $row->alamat)
                 ->editColumn('anggaran', static fn ($row) => $row->perubahan_anggaran > 0 ? $row->perubahan_anggaran : $row->anggaran)
                 ->rawColumns(['ceklist', 'aksi', 'foto'])
                 ->make();
@@ -127,7 +129,7 @@ class Admin_pembangunan extends Admin_Controller
         }
 
         $data['list_lokasi']  = Wilayah::rt()->orderBy('dusun')->get()->toArray();
-        $data['sumber_dana']  = $this->referensi_model->list_ref(SUMBER_DANA);
+        $data['sumber_dana']  = SumberDanaEnum::all();
         $data['satuan_waktu'] = SatuanWaktuEnum::all();
 
         return view('admin.pembangunan.form', $data);
@@ -173,7 +175,7 @@ class Admin_pembangunan extends Admin_Controller
         redirect_with('error', 'Gagal Hapus Data');
     }
 
-    private function validasi($post, $id = null, $old_foto = null)
+    private function validasi(array $post, $id = null, ?string $old_foto = null): array
     {
         return [
             'sumber_dana'             => bersihkan_xss($post['sumber_dana']),
@@ -200,10 +202,10 @@ class Admin_pembangunan extends Admin_Controller
         ];
     }
 
-    private function upload_gambar_pembangunan(string $jenis, $old_foto = '')
+    private function upload_gambar_pembangunan(string $jenis, ?string $old_foto = null)
     {
         // Inisialisasi library 'upload'
-        $this->load->library('MY_Upload', null, 'upload');
+        $this->load->library('upload');
         $this->uploadConfig = [
             'upload_path'   => LOKASI_GALERI,
             'allowed_types' => 'jpg|jpeg|png',
@@ -216,7 +218,7 @@ class Admin_pembangunan extends Admin_Controller
         $adaBerkas = ! empty($_FILES[$jenis]['name']);
         if (! $adaBerkas) {
             // Jika hapus (ceklis)
-            if (isset($_POST['hapus_foto'])) {
+            if (isset($_POST['hapus_foto']) && $old_foto !== null) {
                 unlink(LOKASI_GALERI . $old_foto);
 
                 return null;
@@ -251,8 +253,8 @@ class Admin_pembangunan extends Admin_Controller
     {
         isCan('u');
 
-        $data['lokasi']                 = Pembangunan::findOrFail($id)->toArray();
-        $data['desa']                   = $this->header['desa'];
+        $data['lokasi'] = Pembangunan::findOrFail($id)->toArray();
+
         $data['wil_atas']               = $this->header['desa'];
         $data['dusun_gis']              = Wilayah::dusun()->get()->toArray();
         $data['rw_gis']                 = Wilayah::rw()->get()->toArray();

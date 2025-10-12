@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -68,10 +68,8 @@ class Penduduk_log extends Admin_Controller
     public function index(): void
     {
         $tglLaporAwal  = LogPenduduk::whereNotNull('tgl_lapor')->min('tgl_lapor');
-        $defaultFilter = [
-            'tahun' => date('Y'),
-            'bulan' => date('m'),
-        ];
+        $defaultFilter = [];
+
         if ($this->statistikFilter) {
             $defaultFilter = $this->statistikFilter;
         }
@@ -93,17 +91,20 @@ class Penduduk_log extends Admin_Controller
         if ($this->input->is_ajax_request()) {
             $dataLengkap = data_lengkap();
             $pertanyaan  = $this->pertanyaan;
+            $ubah        = can('u');
 
             return datatables()->of($this->sumberData())
                 ->addColumn('ceklist', static fn ($row) => '<input type="checkbox" name="id_cb[]" value="' . $row->id . '"/>')
                 ->addColumn('foto', static fn ($row) => '<img class="penduduk_kecil" src="' . AmbilFoto($row->penduduk->foto, '', $row->penduduk->sex) . '" alt="Foto Penduduk" />')->addIndexColumn()
-                ->addColumn('aksi', static function ($row) use ($dataLengkap, $pertanyaan): string {
-                    $aksi = '<a href="' . ci_route("penduduk_log.edit.{$row->id}") . '" class="btn bg-orange btn-sm"  title="Ubah Log Penduduk" data-remote="false" data-toggle="modal" data-target="#modalBox" data-title="Ubah Log Penduduk" ><i class="fa fa-edit"></i></a>';
-                    if (! in_array($row->kode_peristiwa, [LogPenduduk::BARU_LAHIR, LogPenduduk::BARU_PINDAH_MASUK, LogPenduduk::TIDAK_TETAP_PERGI])) {
-                        if ($dataLengkap) {
-                            $aksi .= ' <a href="#" data-href="' . ci_route("penduduk_log.kembalikan_status.{$row->id}") . '" class="btn bg-olive btn-sm" title="Kembalikan Status"  data-remote="false"  data-toggle="modal" data-body="' . $pertanyaan . '" data-target="#confirm-status"><i class="fa fa-undo"></i></a>';
-                            if ($row->isKembaliDatang() && $row->isLogPergiTerakhir() && in_array($row->penduduk->status_dasar, [StatusDasarEnum::PINDAH, StatusDasarEnum::PERGI])) {
-                                $aksi .= ' <a href="' . ci_route("penduduk_log.ajax_kembalikan_status_pergi.{$row->id}") . '" class="btn bg-purple btn-sm" title="Datang Kembali"  data-remote="false"  data-toggle="modal" data-target="#modalBox" data-title="Kembalikan Penduduk"><i class="fa fa-angle-double-left"></i></a>';
+                ->addColumn('aksi', static function ($row) use ($dataLengkap, $pertanyaan, $ubah) {
+                    if ($ubah) {
+                        $aksi = '<a href="' . ci_route("penduduk_log.edit.{$row->id}") . '" class="btn bg-orange btn-sm"  title="Ubah Log Penduduk" data-remote="false" data-toggle="modal" data-target="#modalBox" data-title="Ubah Log Penduduk" ><i class="fa fa-edit"></i></a>';
+                        if (! in_array($row->kode_peristiwa, [LogPenduduk::BARU_LAHIR, LogPenduduk::BARU_PINDAH_MASUK, LogPenduduk::TIDAK_TETAP_PERGI])) {
+                            if ($dataLengkap) {
+                                $aksi .= ' <a href="#" data-href="' . ci_route("penduduk_log.kembalikan_status.{$row->id}") . '" class="btn bg-olive btn-sm" title="Kembalikan Status"  data-remote="false"  data-toggle="modal" data-body="' . $pertanyaan . '" data-target="#confirm-status"><i class="fa fa-undo"></i></a>';
+                                if ($row->isKembaliDatang() && $row->isLogPergiTerakhir() && in_array($row->penduduk->status_dasar, [StatusDasarEnum::PINDAH, StatusDasarEnum::PERGI])) {
+                                    $aksi .= ' <a href="' . ci_route("penduduk_log.ajax_kembalikan_status_pergi.{$row->id}") . '" class="btn bg-purple btn-sm" title="Datang Kembali"  data-remote="false"  data-toggle="modal" data-target="#modalBox" data-title="Kembalikan Penduduk"><i class="fa fa-angle-double-left"></i></a>';
+                                }
                             }
                         }
                     }
@@ -112,34 +113,37 @@ class Penduduk_log extends Admin_Controller
                         $aksi .= ' <a target="_blank" href="' . ci_route("penduduk_log.dokumen.{$row->id}") . '" class="btn btn-info btn-sm" title="Lihat File Akta Kematian"><i class="fa fa-eye"></i></a>';
                     }
 
-                    switch($row->kode_peristiwa) {
-                        case LogPenduduk::BARU_LAHIR:
-                            $suratTerkait = json_decode(setting('surat_kelahiran_terkait_penduduk'), 1);
-                            break;
+                    if ($ubah) {
+                        switch($row->kode_peristiwa) {
+                            case LogPenduduk::BARU_LAHIR:
+                                $suratTerkait = json_decode(setting('surat_kelahiran_terkait_penduduk'), 1);
+                                break;
 
-                        case LogPenduduk::MATI:
-                            $suratTerkait = json_decode(setting('surat_kematian_terkait_penduduk'), 1);
-                            break;
+                            case LogPenduduk::MATI:
+                                $suratTerkait = json_decode(setting('surat_kematian_terkait_penduduk'), 1);
+                                break;
 
-                        case LogPenduduk::PINDAH_KELUAR:
-                            $suratTerkait = json_decode(setting('surat_pindah_keluar_terkait_penduduk'), 1);
-                            break;
+                            case LogPenduduk::PINDAH_KELUAR:
+                                $suratTerkait = json_decode(setting('surat_pindah_keluar_terkait_penduduk'), 1);
+                                break;
 
-                        case LogPenduduk::HILANG:
-                            $suratTerkait = json_decode(setting('surat_hilang_terkait_penduduk'), 1);
-                            break;
+                            case LogPenduduk::HILANG:
+                                $suratTerkait = json_decode(setting('surat_hilang_terkait_penduduk'), 1);
+                                break;
 
-                        case LogPenduduk::BARU_PINDAH_MASUK:
-                            $suratTerkait = json_decode(setting('surat_pindah_masuk_terkait_penduduk'), 1);
-                            break;
+                            case LogPenduduk::BARU_PINDAH_MASUK:
+                                $suratTerkait = json_decode(setting('surat_pindah_masuk_terkait_penduduk'), 1);
+                                break;
 
-                        case LogPenduduk::TIDAK_TETAP_PERGI:
-                            $suratTerkait = json_decode(setting('surat_pergi_terkait_penduduk'), 1);
-                            break;
-                    }
-                    if ($suratTerkait) {
-                        foreach ($suratTerkait as $item) {
-                            $aksi .= ' <a target="_blank" href="' . ci_route("surat.form.{$item}") . '#' . $row->penduduk->id . '#' . $row->penduduk->nik . '#' . $row->penduduk->nama . '" class="btn btn-social bg-purple btn-sm" title="' . str_replace('-', ' ', $item) . '"><i class="fa fa-file-word-o"></i>' . str_replace('-', ' ', $item) . '</a>';
+                            case LogPenduduk::TIDAK_TETAP_PERGI:
+                                $suratTerkait = json_decode(setting('surat_pergi_terkait_penduduk'), 1);
+                                break;
+                        }
+
+                        if ($suratTerkait) {
+                            foreach ($suratTerkait as $item) {
+                                $aksi .= ' <a target="_blank" href="' . ci_route("surat.form.{$item}") . '#' . $row->penduduk->id . '#' . $row->penduduk->nik . '#' . $row->penduduk->nama . '" class="btn btn-social bg-purple btn-sm" title="' . str_replace('-', ' ', $item) . '"><i class="fa fa-file-word-o"></i>' . str_replace('-', ' ', $item) . '</a>';
+                            }
                         }
                     }
 
@@ -235,7 +239,7 @@ class Penduduk_log extends Admin_Controller
     public function edit($id): void
     {
         isCan('u');
-        $data['log_status_dasar'] = LogPenduduk::findOrFail($id);
+        $data['log_status_dasar'] = LogPenduduk::with('penduduk')->findOrFail($id);
         $data['list_ref_pindah']  = PindahEnum::all();
         $data['sebab']            = unserialize(SEBAB);
         $data['penolong_mati']    = unserialize(PENOLONG_MATI);
@@ -291,7 +295,7 @@ class Penduduk_log extends Admin_Controller
         $data['tgl_peristiwa'] = rev_tgl($this->input->post('tgl_peristiwa'));
         $data['tgl_lapor']     = rev_tgl($this->input->post('tgl_lapor'), null);
         $data['updated_at']    = date('Y-m-d H:i:s');
-        $data['updated_by']    = auth()->id;
+        $data['updated_by']    = ci_auth()->id;
 
         $log->update($data);
 
@@ -385,12 +389,15 @@ class Penduduk_log extends Admin_Controller
 
     public function cetak($aksi = 'cetak', $privasi_nik = 0): void
     {
-        $paramDatatable = json_decode($this->input->post('params'), 1);
-        $_GET           = $paramDatatable;
-        $query          = datatables()->of($this->sumberData());
+        $query = datatables($this->sumberData())
+            ->filter(function ($query) {
+                $query->when($this->input->post('id_cb'), static function ($query, $id) {
+                    $query->whereIn('id', $id);
+                });
+            });
 
         $data = [
-            'main'  => $query->results(),
+            'main'  => $query->prepareQuery()->results(),
             'judul' => $this->input->post('judul'),
         ];
         if ($privasi_nik == 1) {

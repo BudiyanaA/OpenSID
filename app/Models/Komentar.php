@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -50,6 +50,7 @@ class Komentar extends BaseModel
 
     public const ACTIVE      = 1;
     public const NONACTIVE   = 2;
+    public const UNREAD      = 3;
     public const TIPE_MASUK  = 2;
     public const TIPE_KELUAR = 1;
     public const LOCK        = 1;
@@ -97,6 +98,23 @@ class Komentar extends BaseModel
     public function scopeEnable($query)
     {
         return $query->where('status', static::ACTIVE);
+    }
+
+    public function scopeJumlahBaca($query, $id)
+    {
+        return $query->whereIdArtikel($id)->count();
+    }
+
+    /**
+     * Scope a query to only enable category.
+     *
+     * @param Builder $query
+     *
+     * @return Builder
+     */
+    public function scopeUnread($query)
+    {
+        return $query->whereColumn('updated_at', '<=', 'tgl_upload');
     }
 
     /**
@@ -180,10 +198,25 @@ class Komentar extends BaseModel
     {
         self::boot();
         static::addGlobalScope('isKomentar', static function (Builder $builder) {
-            $builder->whereNotIn('id_artikel', ['null', '775']);
+            $builder->whereNotIn('id_artikel', ['null', '775'])->whereNotNull('id_artikel');
         });
         static::deleting(static function ($komentar) {
             $komentar->children()->delete();
         });
+    }
+
+    public function isActive()
+    {
+        return $this->attributes['status'] == self::ACTIVE;
+    }
+
+    public function scopeShow($query)
+    {
+        return $query->selectRaw('komentar.*, YEAR(a.tgl_upload) AS thn, MONTH(a.tgl_upload) AS bln, DAY(a.tgl_upload) AS hri, a.slug as slug')
+            ->join('artikel as a', 'komentar.id_artikel', '=', 'a.id')
+            ->where('komentar.status', 1)
+            ->where('komentar.id_artikel', '<>', 775)
+            ->whereNull('komentar.parent_id')
+            ->orderBy('komentar.tgl_upload', 'DESC');
     }
 }

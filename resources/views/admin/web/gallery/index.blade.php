@@ -27,9 +27,7 @@
                     Hapus</a>
             @endif
             @if ($parent)
-                <a href="{{ ci_route('gallery') }}" class="btn btn-social btn-info btn-sm btn-sm visible-xs-block visible-sm-inline-block visible-md-inline-block visible-lg-inline-block">
-                    <i class="fa fa-arrow-circle-left "></i>Kembali ke Daftar Album
-                </a>
+                @include('admin.layouts.components.tombol_kembali', ['url' => ci_route('gallery'), 'label' => 'Daftar Album'])
             @endif
         </div>
         @if ($subtitle)
@@ -78,11 +76,23 @@
 @push('scripts')
     <script>
         $(document).ready(function() {
+            $('#status').val(1).trigger('change');
+
+            var parent = '{{ $parent }}';
             var TableData = $('#tabeldata').DataTable({
                 responsive: true,
                 processing: true,
                 serverSide: true,
-                ajax: "{{ ci_route('gallery.datatables') }}?parent={{ $parent }}",
+                order: [
+                    [7, 'asc']
+                ],
+                ajax: {
+                    url: "{{ ci_route('gallery.datatables') }}",
+                    data: function(req) {
+                        req.parent = parent;
+                        req.status = $('#status').val();
+                    }
+                },
                 columns: [{
                         data: 'drag-handle',
                         class: 'padat',
@@ -133,10 +143,6 @@
                         visible: false
                     },
                 ],
-                order: [
-                    [7, 'asc']
-                ],
-                aaSorting: [],
                 createdRow: function(row, data, dataIndex) {
                     $(row).attr('data-id', data.id)
                     $(row).addClass('dragable-handle');
@@ -159,7 +165,11 @@
             }
 
             if (ubah == 0) {
-                TableData.column(3).visible(false);
+                TableData.column(0).visible(false);
+
+                if (parent) {
+                    TableData.column(3).visible(false);
+                }
             }
 
             @include('admin.layouts.components.draggable', ['urlDraggable' => ci_route('gallery.tukar')])

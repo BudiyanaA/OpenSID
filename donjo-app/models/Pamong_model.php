@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,25 +29,26 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
  */
 
-use App\Models\Kehadiran;
+use App\Enums\StatusEnum;
 use App\Models\Pamong;
 use Carbon\Carbon;
+use Modules\Kehadiran\Models\Kehadiran;
 
 defined('BASEPATH') || exit('No direct script access allowed');
 
+// TODO: dihapus setelah modul covid dihapus, lapak dan pelanggan kerjasama dipindahkan
 class Pamong_model extends MY_Model
 {
     public function __construct()
     {
         parent::__construct();
         require_once APPPATH . '/models/Urut_model.php';
-        $this->load->model(['referensi_model']);
     }
 
     public function list_data($offset = 0, $limit = 500)
@@ -151,11 +152,15 @@ class Pamong_model extends MY_Model
 
     public function get_data($id = 0)
     {
+        $pejabat = setting('sebutan_pj_kepala_desa');
+
         $data = $this->config_id('u')
-            ->select('u.*, rj.nama AS jabatan, rj.nama AS pamong_jabatan, rj.id AS ref_jabatan_id,
+            ->select('u.*, rj.id AS ref_jabatan_id,
 				(case when p.nama is not null then p.nama else u.pamong_nama end) as nama,
 				(case when p.foto is not null then p.foto else u.foto end) as foto,
-				(case when p.sex is not null then p.sex else u.pamong_sex end) as id_sex')
+				(case when p.sex is not null then p.sex else u.pamong_sex end) as id_sex,
+                (case when u.status_pejabat = 1 THEN CONCAT("' . $pejabat . ' ", rj.nama) else rj.nama end) as pamong_jabatan,
+                (case when u.status_pejabat = 1 THEN CONCAT("' . $pejabat . ' ", rj.nama) else rj.nama end) as jabatan')
             ->from('tweb_desa_pamong u')
             ->join('tweb_penduduk p', 'u.id_pend = p.id', 'left')
             ->join('ref_jabatan rj', 'rj.id = u.jabatan_id', 'left')
@@ -168,7 +173,7 @@ class Pamong_model extends MY_Model
             if (! empty($data['pamong_nip']) && $data['pamong_nip'] != '-') {
                 $data['sebutan_pamong_niap_nip'] = 'NIP: ';
             } elseif (! empty($data['pamong_niap']) && $data['pamong_niap'] != '-') {
-                $data['sebutan_pamong_niap_nip'] = $this->setting->sebutan_nip_desa . ': ';
+                $data['sebutan_pamong_niap_nip'] = setting('sebutan_nip_desa') . ': ';
             } else {
                 $data['sebutan_pamong_niap_nip'] = '';
             }
@@ -210,12 +215,12 @@ class Pamong_model extends MY_Model
                 ->where('tanggal', Carbon::now()->format('Y-m-d'))
                 ->orderBy('id', 'DESC')->first();
 
-            $nama = $item['id_pend'] ? $item['penduduk']['nama'] : $item['pamong_nama'];
+            $nama = $item['pamong_nama'];
             $sex  = $item['id_pend'] ? $item['penduduk']['sex'] : $item['pamong_sex'];
 
             return [
                 'pamong_id'        => $item['pamong_id'],
-                'jabatan'          => $item['jabatan']['nama'],
+                'jabatan'          => $item['status_pejabat'] == StatusEnum::YA ? setting('sebutan_pj_kepala_desa') . ' ' . $item['jabatan']['nama'] : $item['jabatan']['nama'],
                 'pamong_niap'      => $item['pamong_niap'],
                 'gelar_depan'      => $item['gelar_depan'],
                 'gelar_belakang'   => $item['gelar_belakang'],
@@ -223,7 +228,7 @@ class Pamong_model extends MY_Model
                 'media_sosial'     => json_encode($item['media_sosial']),
                 'foto'             => AmbilFoto($item['foto_staff'], '', ($item['pamong_sex'] ?? $item['penduduk->sex'])),
                 'id_sex'           => $sex,
-                'nama'             => gelar($item['gelar_depan'], $nama, $item['gelar_belakang']),
+                'nama'             => $nama,
                 'status_kehadiran' => $kehadiran ? $kehadiran->status_kehadiran : null,
                 'tanggal'          => $kehadiran ? $kehadiran->tanggal : null,
             ];

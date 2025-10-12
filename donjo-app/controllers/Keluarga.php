@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -74,7 +74,7 @@ class Keluarga extends Admin_Controller
 
     public $modul_ini           = 'kependudukan';
     public $sub_modul_ini       = 'keluarga';
-    public $kategori_pengaturan = 'data_lengkap';
+    public $kategori_pengaturan = 'Data Lengkap';
     private $judulStatistik;
     private $filterColumn    = [];
     private $defaultStatus   = StatusDasarKKEnum::AKTIF;
@@ -95,6 +95,7 @@ class Keluarga extends Admin_Controller
         $data = [
             'status'          => StatusDasarKKEnum::all(),
             'jenis_kelamin'   => JenisKelaminEnum::all(),
+            'disableFilter'   => in_array($this->uri->segment(2), ['statistik']),
             'wilayah'         => Wilayah::treeAccess(),
             'judul_statistik' => $this->judulStatistik,
             'filterColumn'    => $this->filterColumn,
@@ -112,11 +113,7 @@ class Keluarga extends Admin_Controller
             $canUpdate = can('u');
 
             return datatables()->of($this->sumberData())
-                ->addColumn('ceklist', static function ($row) use ($canDelete) {
-                    if ($canDelete) {
-                        return '<input type="checkbox" name="id_cb[]" value="' . $row->id . '"/>';
-                    }
-                })->addColumn('valid_kk', static function ($row) {
+                ->addColumn('ceklist', static fn ($row) => '<input type="checkbox" name="id_cb[]" value="' . $row->id . '"/>')->addColumn('valid_kk', static function ($row) {
                     $result = '';
                     if (strlen($row->no_kk) < 16) {
                         $result = 'warning';
@@ -149,6 +146,7 @@ class Keluarga extends Admin_Controller
                     if ($canUpdate) {
                         if ($row->kepalaKeluarga->status_dasar == StatusDasarEnum::HIDUP) {
                             $aksi .= '<a href="' . ci_route('keluarga.edit_nokk', $row->id) . '" title="Ubah Data" data-remote="false" data-toggle="modal" data-target="#modalBox" data-title="Ubah Data KK" class="btn bg-orange btn-sm"><i class="fa fa-edit"></i></a> ';
+                            $aksi .= ' <a href="' . ci_route('penduduk.ajax_penduduk_maps.' . $row->kepalaKeluarga->id, 0) . '" class="btn btn-success btn-sm" title="Lokasi Tempat Tinggal"><i class="fa fa-map-marker"></i></a> ';
                         } else {
                             if ($row->anggota->count() > 0) {
                                 $aksi .= '<a href="' . ci_route('keluarga.form_pecah_semua', $row->id) . '" title="Pecah semua anggota ke keluarga baru" data-remote="false" data-toggle="modal" data-target="#modalBox" data-title="Pecah menjadi keluarga baru" class="btn bg-purple btn-sm"><i class="fa fa-cut"></i></a> ';
@@ -182,6 +180,7 @@ class Keluarga extends Admin_Controller
         $rt              = $this->input->get('rt') ?? null;
         $kumpulanKK      = $this->input->get('kumpulanKK');
         $bantuan         = $this->input->get('bantuan');
+        $kkSementara     = $this->input->get('kk_sementara') ?? null;
         $kelasSosial     = $this->input->get('kelas_sosial') ?? null;
         $statistikFilter = $this->input->get('statistikfilter') ?? null;
 
@@ -216,15 +215,13 @@ class Keluarga extends Admin_Controller
                         return $r->where('status_dasar', '!=', 1);
 
                     case 3:
-                        return $r->where(static fn ($s) => $s->whereNull('status_dasar')->orwhere('kk_level', '!=', SHDKEnum::KEPALA_KELUARGA) );
-
-                    case 4:
-                        return $r->where('no_kk', 'like', '0%');
+                        return $r->where(static fn ($s) => $s->whereNull('status_dasar')->orwhere('kk_level', '!=', SHDKEnum::KEPALA_KELUARGA));
                 }
             }))->when($status == 3, static fn ($q) => $q->orWhereNull('nik_kepala'))
             ->when($sex, static fn ($q) => $q->whereHas('kepalaKeluarga', static fn ($r) => $r->whereSex($sex)))
             ->when($idCluster, static fn ($q) => $q->whereHas('kepalaKeluarga.keluarga', static fn ($r) => $r->whereIn('id_cluster', $idCluster)))
             ->when($kumpulanKK, static fn ($q) => $q->whereIn('no_kk', $kumpulanKK))
+            ->when($kkSementara, static fn ($q) => $q->where('no_kk', 'like', '0%'))
             ->when($kelasSosial, static function ($q) use ($kelasSosial) {
                 switch($kelasSosial) {
                     case JUMLAH:
@@ -264,22 +261,16 @@ class Keluarga extends Admin_Controller
 
     public function cetak($aksi = '', $privasi_kk = 0): void
     {
-        $paramDatatable = json_decode($this->input->post('params'), 1);
-        $_GET           = $paramDatatable;
-        $listKK         = $this->input->post('id_cb') ?? null;
+        $query = datatables($this->sumberData())
+            ->filter(function ($query) {
+                $query->when($this->input->post('id_cb'), static function ($query, $id) {
+                    $query->whereIn('id', $id);
+                });
+            });
 
-        $orderColumn = $paramDatatable['columns'][$paramDatatable['order'][0]['column']]['name'];
-        $orderDir    = $paramDatatable['order'][0]['dir'];
-        $query       = $this->sumberData();
-        if ($listKK) {
-            $query->whereIn('id', $listKK);
-        }
-        if ($paramDatatable['start']) {
-            $query->skip($paramDatatable['start']);
-        }
         $data = [
-            'main'  => $query->take($paramDatatable['length'])->orderBy($orderColumn, $orderDir)->get(),
-            'start' => $paramDatatable['start'],
+            'main'  => $query->prepareQuery()->results(),
+            'start' => app('datatables.request')->start(),
         ];
 
         if ($privasi_kk == 1) {
@@ -328,7 +319,7 @@ class Keluarga extends Admin_Controller
         $data['cek_nik']            = 1;
         $data['cek_nokk']           = 1;
         $data['nokk_sementara']     = KeluargaModel::formatNomerKKSementara();
-        $data['status_penduduk']    = StatusPendudukEnum::all();
+        $data['status_penduduk']    = [StatusPendudukEnum::TETAP => StatusPendudukEnum::valueOf(StatusPendudukEnum::TETAP)];
         $data['jenis_peristiwa']    = LogPenduduk::BARU_PINDAH_MASUK;
         $data['controller']         = 'keluarga';
         $originalInput              = session('old_input');
@@ -493,10 +484,10 @@ class Keluarga extends Admin_Controller
             $data['kelas_sosial'] = null;
         }
         $data['updated_at'] = date('Y-m-d H:i:s');
-        $data['updated_by'] = auth()->id;
+        $data['updated_by'] = ci_auth()->id;
         $keluarga->update($data);
 
-        redirect($this->controller);
+        redirect_with('success', 'Keluarga berhasil diubah');
     }
 
     public function delete($id = 0): void
@@ -513,7 +504,7 @@ class Keluarga extends Admin_Controller
         }
         $keluarga->delete();
 
-        redirect(ci_route('keluarga'));
+        redirect_with('success', 'Keluarga berhasil dihapus');
     }
 
     public function delete_all(): void
@@ -577,8 +568,7 @@ class Keluarga extends Admin_Controller
         $data['id_kk']       = $id;
         $keluarga            = KeluargaModel::with(['anggota' => static fn ($q) => $q->orderBy('kk_level'), 'kepalaKeluarga'])->find($id);
         $data['main']        = $keluarga->toArray();
-        $data['desa']        = $this->header['desa'];
-        $data['kepala_kk']   = $keluarga->kepalaKeluarga->toArray();
+        $data['kepala_kk']   = $keluarga->kepalaKeluarga ? $keluarga->kepalaKeluarga->toArray() : null;
         $data['form_action'] = ci_route('keluarga.print');
 
         view('admin.penduduk.keluarga.kartu_keluarga', $data);
@@ -611,6 +601,14 @@ class Keluarga extends Admin_Controller
 
     public function statistik($tipe = '0', $nomor = 0, $sex = null): void
     {
+        $bantuan = Bantuan::whereSlug($tipe)->first();
+        $nama    = $bantuan->nama ?? '-';
+        if (! in_array($nomor, [BELUM_MENGISI, TOTAL])) {
+            $nomor = $bantuan->id;
+        }
+        $kategori = $nama . ' : ';
+        $tipe     = 'bantuan_keluarga';
+
         switch (true) {
             case $tipe == 'kelas_sosial':
                 $kategori = 'KLASIFIKASI SOSIAL : ';
@@ -621,18 +619,6 @@ class Keluarga extends Admin_Controller
                     $this->defaultStatus = null;
                 } // tampilkan semua peserta walaupun bukan hidup/aktif
                 $kategori = 'PENERIMA BANTUAN (KELUARGA) : ';
-                break;
-
-            case $tipe > 50:
-                $program_id = preg_replace('/^50/', '', $tipe);
-                $nama       = Bantuan::find($program_id)->nama ?? '-';
-
-                if (! in_array($nomor, [BELUM_MENGISI, TOTAL])) {
-                    $this->defaultStatus = null;
-                    $nomor               = $program_id;
-                }
-                $kategori = $nama . ' : ';
-                $tipe     = 'bantuan_keluarga';
                 break;
         }
         $judul = (new KeluargaModel())->judulStatistik($tipe, $nomor, $sex);

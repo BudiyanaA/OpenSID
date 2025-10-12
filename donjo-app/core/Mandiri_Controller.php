@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -46,28 +46,40 @@ class Mandiri_Controller extends MY_Controller
     {
         // To inherit directly the attributes of the parent class.
         parent::__construct();
+
         $CI             = &get_instance();
         $this->is_login = $this->session->is_login;
         $this->header   = identitas();
 
-        if ($this->setting->layanan_mandiri == 0 && ! $this->cek_anjungan) {
+        if (setting('layanan_mandiri') == 0 && ! $this->cek_anjungan) {
             show_404();
         }
 
-        if ($this->session->mandiri != 1) {
-            if (! $this->session->login_ektp) {
-                redirect('layanan-mandiri/masuk');
-            } else {
-                redirect('layanan-mandiri/masuk-ektp');
-            }
-        }
-    }
+        // Periksa jika pengguna belum terautentikasi.
+        if (! auth('penduduk')->check()) {
+            $redirectUrl = $this->session->login_ektp
+                ? 'layanan-mandiri/masuk-ektp'
+                : 'layanan-mandiri/masuk';
 
-    public function render($view, ?array $data = null): void
-    {
-        $data['desa']         = $this->header;
-        $data['cek_anjungan'] = $this->cek_anjungan;
-        $data['konten']       = $view;
-        $this->load->view(MANDIRI . '/template', $data);
+            return redirect($redirectUrl);
+        }
+
+        /** @var App\Models\PendudukMandiri $user */
+        $user = auth('penduduk')->user();
+
+        $isMustVerify         = $user instanceof Illuminate\Contracts\Auth\MustVerifyEmail;
+        $hasVerifiedEmail     = $isMustVerify && $user->hasVerifiedEmail();
+        $hasVerifiedTelegram  = $isMustVerify && $user->hasVerifiedTelegram();
+        $hasRequiredDocuments = $user->scan_ktp !== null && $user->scan_kk !== null && $user->foto_selfie !== null;
+
+        // Periksa jika pengguna belum verifikasi email atau telegram dan sudah memiliki dokumen yang diperlukan.
+        if (! $hasVerifiedEmail && $hasRequiredDocuments) {
+            // Pengguna belum melakukan verifikasi email, arahkan ke halaman verifikasi email
+            return redirect('layanan-mandiri/daftar/verifikasi/email');
+        }
+        if (! $hasVerifiedTelegram && $hasRequiredDocuments) {
+            // Pengguna belum melakukan verifikasi Telegram, arahkan ke halaman verifikasi Telegram
+            return redirect('layanan-mandiri/daftar/verifikasi/telegram');
+        }
     }
 }

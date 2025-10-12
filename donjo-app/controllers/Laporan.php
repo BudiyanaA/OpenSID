@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -39,6 +39,7 @@ use App\Enums\JenisKelaminEnum;
 use App\Enums\PindahEnum;
 use App\Enums\SHDKEnum;
 use App\Enums\WargaNegaraEnum;
+use App\Models\LogKeluarga;
 use App\Models\LogPenduduk;
 use App\Models\Pamong;
 use App\Models\Penduduk;
@@ -50,7 +51,7 @@ class Laporan extends Admin_Controller
 {
     public $modul_ini           = 'statistik';
     public $sub_modul_ini       = 'laporan-bulanan';
-    public $kategori_pengaturan = 'data_lengkap';
+    public $kategori_pengaturan = 'Data Lengkap';
 
     public function __construct()
     {
@@ -110,7 +111,6 @@ class Laporan extends Admin_Controller
         $this->session->tgl_lengkap = $tanggal_lengkap;
         $data['tgl_lengkap']        = $tanggal_lengkap;
         $data['tahun_lengkap']      = (new DateTime($tanggal_lengkap))->format('Y');
-        $data['config']             = $this->header['desa'];
         $dataPenduduk               = $this->data_penduduk($data['tahun'], $data['bulan']);
 
         view('admin.laporan.bulanan', array_merge($data, $dataPenduduk));
@@ -118,7 +118,8 @@ class Laporan extends Admin_Controller
 
     private function data_penduduk($tahun, $bulan)
     {
-        $pendudukAwalBulan = Penduduk::awalBulan($tahun, $bulan)->get();
+        $bulanDepan        = Carbon::create($tahun, $bulan)->addMonth();
+        $pendudukAwalBulan = Penduduk::awalBulan($bulanDepan->format('Y'), $bulanDepan->format('m'))->get();
         $pendudukAwal      = [
             'WNI_L' => $pendudukAwalBulan->where('sex', JenisKelaminEnum::LAKI_LAKI)->where('warganegara_id', WargaNegaraEnum::WNI)->count(),
             'WNI_P' => $pendudukAwalBulan->where('sex', JenisKelaminEnum::PEREMPUAN)->where('warganegara_id', WargaNegaraEnum::WNI)->count(),
@@ -128,8 +129,8 @@ class Laporan extends Admin_Controller
             'KK_L' => $pendudukAwalBulan->where('sex', JenisKelaminEnum::LAKI_LAKI)->where('kk_level', SHDKEnum::KEPALA_KELUARGA)->whereNotNull('id_kk')->count(),
             'KK_P' => $pendudukAwalBulan->where('sex', JenisKelaminEnum::PEREMPUAN)->where('kk_level', SHDKEnum::KEPALA_KELUARGA)->whereNotNull('id_kk')->count(),
         ];
-        $pendudukAwal['KK'] = $pendudukAwal['KK_L'] + $pendudukAwal['KK_P'];
-        $mutasiPenduduk     = LogPenduduk::with(['penduduk' => static fn ($q) => $q->withOnly([])])->whereYear('tgl_lapor', $tahun)->whereMonth('tgl_lapor', $bulan)->get();
+        $mutasiPenduduk   = LogPenduduk::with(['penduduk' => static fn ($q) => $q->withOnly([])])->whereYear('tgl_lapor', $tahun)->whereMonth('tgl_lapor', $bulan)->get();
+        $keluargaPenduduk = LogKeluarga::with(['keluarga.kepalaKeluarga' => static fn ($q) => $q->withOnly([])])->whereYear('tgl_peristiwa', $tahun)->whereMonth('tgl_peristiwa', $bulan)->get();
 
         $kelahiran = [
             'WNI_L' => $mutasiPenduduk->where('kode_peristiwa', LogPenduduk::BARU_LAHIR)->where('penduduk.sex', JenisKelaminEnum::LAKI_LAKI)->where('penduduk.warganegara_id', WargaNegaraEnum::WNI)->count(),
@@ -137,9 +138,14 @@ class Laporan extends Admin_Controller
             'WNA_L' => $mutasiPenduduk->where('kode_peristiwa', LogPenduduk::BARU_LAHIR)->where('penduduk.sex', JenisKelaminEnum::LAKI_LAKI)->where('penduduk.warganegara_id', '!=', WargaNegaraEnum::WNI)->count(),
             'WNA_P' => $mutasiPenduduk->where('kode_peristiwa', LogPenduduk::BARU_LAHIR)->where('penduduk.sex', JenisKelaminEnum::PEREMPUAN)->where('penduduk.warganegara_id', '!=', WargaNegaraEnum::WNI)->count(),
             // keluarga
-            'KK_L' => $mutasiPenduduk->where('kode_peristiwa', LogPenduduk::BARU_LAHIR)->where('penduduk.sex', JenisKelaminEnum::LAKI_LAKI)->where('penduduk.kk_level', SHDKEnum::KEPALA_KELUARGA)->where('penduduk.id_kk', '>', 0)->count(),
-            'KK_P' => $mutasiPenduduk->where('kode_peristiwa', LogPenduduk::BARU_LAHIR)->where('penduduk.sex', JenisKelaminEnum::PEREMPUAN)->where('penduduk.kk_level', SHDKEnum::KEPALA_KELUARGA)->where('penduduk.id_kk', '>', 0)->count(),
+            'KK_L' => $keluargaPenduduk->where('id_peristiwa', LogKeluarga::KELUARGA_BARU)->where('keluarga.kepalaKeluarga.sex', JenisKelaminEnum::LAKI_LAKI)->count(),
+            'KK_P' => $keluargaPenduduk->where('id_peristiwa', LogKeluarga::KELUARGA_BARU)->where('keluarga.kepalaKeluarga.sex', JenisKelaminEnum::PEREMPUAN)->count(),
         ];
+
+        $pendudukAwal['KK_L'] = $pendudukAwal['KK_L'] - $kelahiran['KK_L'];
+        $pendudukAwal['KK_P'] = $pendudukAwal['KK_P'] - $kelahiran['KK_P'];
+        $pendudukAwal['KK']   = $pendudukAwal['KK_L'] + $pendudukAwal['KK_P'];
+
         $kelahiran['KK'] = $kelahiran['KK_L'] + $kelahiran['KK_P'];
         $kematian        = [
             'WNI_L' => $mutasiPenduduk->where('kode_peristiwa', LogPenduduk::MATI)->where('penduduk.sex', JenisKelaminEnum::LAKI_LAKI)->where('penduduk.warganegara_id', WargaNegaraEnum::WNI)->count(),
@@ -147,8 +153,8 @@ class Laporan extends Admin_Controller
             'WNA_L' => $mutasiPenduduk->where('kode_peristiwa', LogPenduduk::MATI)->where('penduduk.sex', JenisKelaminEnum::LAKI_LAKI)->where('penduduk.warganegara_id', '!=', WargaNegaraEnum::WNI)->count(),
             'WNA_P' => $mutasiPenduduk->where('kode_peristiwa', LogPenduduk::MATI)->where('penduduk.sex', JenisKelaminEnum::PEREMPUAN)->where('penduduk.warganegara_id', '!=', WargaNegaraEnum::WNI)->count(),
             // keluarga
-            'KK_L' => $mutasiPenduduk->where('kode_peristiwa', LogPenduduk::MATI)->where('penduduk.sex', JenisKelaminEnum::LAKI_LAKI)->where('penduduk.kk_level', SHDKEnum::KEPALA_KELUARGA)->where('penduduk.id_kk', '>', 0)->count(),
-            'KK_P' => $mutasiPenduduk->where('kode_peristiwa', LogPenduduk::MATI)->where('penduduk.sex', JenisKelaminEnum::PEREMPUAN)->where('penduduk.kk_level', SHDKEnum::KEPALA_KELUARGA)->where('penduduk.id_kk', '>', 0)->count(),
+            'KK_L' => $keluargaPenduduk->where('id_peristiwa', LogKeluarga::KEPALA_KELUARGA_MATI)->where('keluarga.kepalaKeluarga.sex', JenisKelaminEnum::LAKI_LAKI)->count(),
+            'KK_P' => $keluargaPenduduk->where('id_peristiwa', LogKeluarga::KEPALA_KELUARGA_MATI)->where('keluarga.kepalaKeluarga.sex', JenisKelaminEnum::PEREMPUAN)->count(),
         ];
         $kematian['KK'] = $kematian['KK_L'] + $kematian['KK_P'];
         $pendatang      = [
@@ -157,8 +163,8 @@ class Laporan extends Admin_Controller
             'WNA_L' => $mutasiPenduduk->where('kode_peristiwa', LogPenduduk::BARU_PINDAH_MASUK)->where('penduduk.sex', JenisKelaminEnum::LAKI_LAKI)->where('penduduk.warganegara_id', '!=', WargaNegaraEnum::WNI)->count(),
             'WNA_P' => $mutasiPenduduk->where('kode_peristiwa', LogPenduduk::BARU_PINDAH_MASUK)->where('penduduk.sex', JenisKelaminEnum::PEREMPUAN)->where('penduduk.warganegara_id', '!=', WargaNegaraEnum::WNI)->count(),
             // keluarga
-            'KK_L' => $mutasiPenduduk->where('kode_peristiwa', LogPenduduk::BARU_PINDAH_MASUK)->where('penduduk.sex', JenisKelaminEnum::LAKI_LAKI)->where('penduduk.kk_level', SHDKEnum::KEPALA_KELUARGA)->where('penduduk.id_kk', '>', 0)->count(),
-            'KK_P' => $mutasiPenduduk->where('kode_peristiwa', LogPenduduk::BARU_PINDAH_MASUK)->where('penduduk.sex', JenisKelaminEnum::PEREMPUAN)->where('penduduk.kk_level', SHDKEnum::KEPALA_KELUARGA)->where('penduduk.id_kk', '>', 0)->count(),
+            'KK_L' => $keluargaPenduduk->where('id_peristiwa', LogKeluarga::KEPALA_KELUARGA_PINDAH)->where('keluarga.kepalaKeluarga.sex', JenisKelaminEnum::LAKI_LAKI)->count(),
+            'KK_P' => $keluargaPenduduk->where('id_peristiwa', LogKeluarga::KEPALA_KELUARGA_PINDAH)->where('keluarga.kepalaKeluarga.sex', JenisKelaminEnum::PEREMPUAN)->count(),
         ];
         $pendatang['KK'] = $pendatang['KK_L'] + $pendatang['KK_P'];
         $pindah          = [
@@ -167,8 +173,8 @@ class Laporan extends Admin_Controller
             'WNA_L' => $mutasiPenduduk->where('kode_peristiwa', LogPenduduk::PINDAH_KELUAR)->where('penduduk.sex', JenisKelaminEnum::LAKI_LAKI)->where('penduduk.warganegara_id', '!=', WargaNegaraEnum::WNI)->count(),
             'WNA_P' => $mutasiPenduduk->where('kode_peristiwa', LogPenduduk::PINDAH_KELUAR)->where('penduduk.sex', JenisKelaminEnum::PEREMPUAN)->where('penduduk.warganegara_id', '!=', WargaNegaraEnum::WNI)->count(),
             // keluarga
-            'KK_L' => $mutasiPenduduk->where('kode_peristiwa', LogPenduduk::PINDAH_KELUAR)->where('penduduk.sex', JenisKelaminEnum::LAKI_LAKI)->where('penduduk.kk_level', SHDKEnum::KEPALA_KELUARGA)->where('penduduk.id_kk', '>', 0)->count(),
-            'KK_P' => $mutasiPenduduk->where('kode_peristiwa', LogPenduduk::PINDAH_KELUAR)->where('penduduk.sex', JenisKelaminEnum::PEREMPUAN)->where('penduduk.kk_level', SHDKEnum::KEPALA_KELUARGA)->where('penduduk.id_kk', '>', 0)->count(),
+            'KK_L' => $keluargaPenduduk->where('id_peristiwa', LogKeluarga::KEPALA_KELUARGA_PINDAH)->where('keluarga.kepalaKeluarga.sex', JenisKelaminEnum::LAKI_LAKI)->count(),
+            'KK_P' => $keluargaPenduduk->where('id_peristiwa', LogKeluarga::KEPALA_KELUARGA_PINDAH)->where('keluarga.kepalaKeluarga.sex', JenisKelaminEnum::PEREMPUAN)->count(),
         ];
         $pindah['KK'] = $pindah['KK_L'] + $pindah['KK_P'];
         $hilang       = [
@@ -177,8 +183,8 @@ class Laporan extends Admin_Controller
             'WNA_L' => $mutasiPenduduk->where('kode_peristiwa', LogPenduduk::HILANG)->where('penduduk.sex', JenisKelaminEnum::LAKI_LAKI)->where('penduduk.warganegara_id', '!=', WargaNegaraEnum::WNI)->count(),
             'WNA_P' => $mutasiPenduduk->where('kode_peristiwa', LogPenduduk::HILANG)->where('penduduk.sex', JenisKelaminEnum::PEREMPUAN)->where('penduduk.warganegara_id', '!=', WargaNegaraEnum::WNI)->count(),
             // keluarga
-            'KK_L' => $mutasiPenduduk->where('kode_peristiwa', LogPenduduk::HILANG)->where('penduduk.sex', JenisKelaminEnum::LAKI_LAKI)->where('penduduk.kk_level', SHDKEnum::KEPALA_KELUARGA)->where('penduduk.id_kk', '>', 0)->count(),
-            'KK_P' => $mutasiPenduduk->where('kode_peristiwa', LogPenduduk::HILANG)->where('penduduk.sex', JenisKelaminEnum::PEREMPUAN)->where('penduduk.kk_level', SHDKEnum::KEPALA_KELUARGA)->where('penduduk.id_kk', '>', 0)->count(),
+            'KK_L' => $keluargaPenduduk->where('id_peristiwa', LogKeluarga::KEPALA_KELUARGA_HILANG)->where('keluarga.kepalaKeluarga.sex', JenisKelaminEnum::LAKI_LAKI)->count(),
+            'KK_P' => $keluargaPenduduk->where('id_peristiwa', LogKeluarga::KEPALA_KELUARGA_HILANG)->where('keluarga.kepalaKeluarga.sex', JenisKelaminEnum::PEREMPUAN)->count(),
         ];
         $hilang['KK']  = $hilang['KK_L'] + $hilang['KK_P'];
         $pendudukAkhir = [
@@ -258,7 +264,6 @@ class Laporan extends Admin_Controller
     private function data_cetak()
     {
         $data               = [];
-        $data['config']     = $this->header['desa'];
         $data['bulan']      = $this->session->bulanku;
         $data['tahun']      = $this->session->tahunku;
         $data['bln']        = getBulan($data['bulan']);
@@ -358,35 +363,111 @@ class Laporan extends Admin_Controller
             case 'lahir':
                 $data = [
                     'title' => (in_array($tipe, $keluarga) ? 'KELUARGA BARU BULAN ' : 'KELAHIRAN BULAN ') . $titlePeriode,
-                    'main'  => Penduduk::withOnly([])->whereHas('log', static fn ($q) => $q->whereKodePeristiwa(LogPenduduk::BARU_LAHIR)->whereYear('tgl_lapor', $tahun)->whereMonth('tgl_lapor', $bulan))->when($filter['kk_level'], static fn ($q) => $q->where('kk_level', $filter['kk_level'])->whereNotNull('id_kk'))->when($filter['warganegara_id'], static fn ($q) => $q->whereIn('warganegara_id', $filter['warganegara_id']))->when($filter['sex'], static fn ($q) => $q->whereSex($filter['sex']))->get(),
+                    'main'  => Penduduk::withOnly([])
+                        ->when(
+                            $filter['kk_level'],
+                            static fn ($q) => $q->where('kk_level', $filter['kk_level'])->whereNotNull('id_kk')
+                                ->whereHas(
+                                    'keluarga.logKeluarga',
+                                    static fn ($q) => $q->where('id_peristiwa', LogKeluarga::KELUARGA_BARU)->whereYear('tgl_peristiwa', $tahun)->whereMonth('tgl_peristiwa', $bulan)
+                                ),
+                            static function ($q) use ($tahun, $bulan) {
+                                $q->whereHas(
+                                    'log',
+                                    static fn ($q) => $q->whereKodePeristiwa(LogPenduduk::BARU_LAHIR)->whereYear('tgl_lapor', $tahun)->whereMonth('tgl_lapor', $bulan)
+                                );
+                            }
+                        )
+                        ->when($filter['warganegara_id'], static fn ($q) => $q->whereIn('warganegara_id', $filter['warganegara_id']))
+                        ->when($filter['sex'], static fn ($q) => $q->whereSex($filter['sex']))->get(),
                 ];
                 break;
 
             case 'mati':
                 $data = [
                     'title' => 'KEMATIAN BULAN ' . $titlePeriode,
-                    'main'  => Penduduk::withOnly([])->whereHas('log', static fn ($q) => $q->whereKodePeristiwa(LogPenduduk::MATI)->whereYear('tgl_lapor', $tahun)->whereMonth('tgl_lapor', $bulan))->when($filter['kk_level'], static fn ($q) => $q->where('kk_level', $filter['kk_level'])->whereNotNull('id_kk'))->when($filter['warganegara_id'], static fn ($q) => $q->whereIn('warganegara_id', $filter['warganegara_id']))->when($filter['sex'], static fn ($q) => $q->whereSex($filter['sex']))->get(),
+                    'main'  => Penduduk::withOnly([])
+                        ->when(
+                            $filter['kk_level'],
+                            static fn ($q) => $q->where('kk_level', $filter['kk_level'])->whereNotNull('id_kk')
+                                ->whereHas(
+                                    'keluarga.logKeluarga',
+                                    static fn ($q) => $q->where('id_peristiwa', LogKeluarga::KEPALA_KELUARGA_MATI)->whereYear('tgl_peristiwa', $tahun)->whereMonth('tgl_peristiwa', $bulan)
+                                ),
+                            static function ($q) use ($tahun, $bulan) {
+                                $q->whereHas(
+                                    'log',
+                                    static fn ($q) => $q->whereKodePeristiwa(LogPenduduk::MATI)->whereYear('tgl_lapor', $tahun)->whereMonth('tgl_lapor', $bulan)
+                                );
+                            }
+                        )
+                        ->when($filter['warganegara_id'], static fn ($q) => $q->whereIn('warganegara_id', $filter['warganegara_id']))->when($filter['sex'], static fn ($q) => $q->whereSex($filter['sex']))->get(),
                 ];
                 break;
 
             case 'datang':
                 $data = [
                     'title' => 'PENDATANG BULAN ' . $titlePeriode,
-                    'main'  => Penduduk::withOnly([])->whereHas('log', static fn ($q) => $q->whereKodePeristiwa(LogPenduduk::BARU_PINDAH_MASUK)->whereYear('tgl_lapor', $tahun)->whereMonth('tgl_lapor', $bulan))->when($filter['kk_level'], static fn ($q) => $q->where('kk_level', $filter['kk_level'])->whereNotNull('id_kk'))->when($filter['warganegara_id'], static fn ($q) => $q->whereIn('warganegara_id', $filter['warganegara_id']))->when($filter['sex'], static fn ($q) => $q->whereSex($filter['sex']))->get(),
+                    'main'  => Penduduk::withOnly([])
+                        ->when(
+                            $filter['kk_level'],
+                            static fn ($q) => $q->where('kk_level', $filter['kk_level'])->whereNotNull('id_kk')
+                                ->whereHas(
+                                    'keluarga.logKeluarga',
+                                    static fn ($q) => $q->where('id_peristiwa', LogKeluarga::KELUARGA_BARU_DATANG)->whereYear('tgl_peristiwa', $tahun)->whereMonth('tgl_peristiwa', $bulan)
+                                ),
+                            static function ($q) use ($tahun, $bulan) {
+                                $q->whereHas(
+                                    'log',
+                                    static fn ($q) => $q->whereKodePeristiwa(LogPenduduk::BARU_PINDAH_MASUK)->whereYear('tgl_lapor', $tahun)->whereMonth('tgl_lapor', $bulan)
+                                );
+                            }
+                        )
+                        ->when($filter['warganegara_id'], static fn ($q) => $q->whereIn('warganegara_id', $filter['warganegara_id']))->when($filter['sex'], static fn ($q) => $q->whereSex($filter['sex']))->get(),
                 ];
                 break;
 
             case 'pindah':
                 $data = [
                     'title' => 'PINDAH/KELUAR PERGI BULAN ' . $titlePeriode,
-                    'main'  => Penduduk::withOnly([])->whereHas('log', static fn ($q) => $q->whereKodePeristiwa(LogPenduduk::PINDAH_KELUAR)->whereYear('tgl_lapor', $tahun)->whereMonth('tgl_lapor', $bulan))->when($filter['kk_level'], static fn ($q) => $q->where('kk_level', $filter['kk_level'])->whereNotNull('id_kk'))->when($filter['warganegara_id'], static fn ($q) => $q->whereIn('warganegara_id', $filter['warganegara_id']))->when($filter['sex'], static fn ($q) => $q->whereSex($filter['sex']))->get(),
+                    'main'  => Penduduk::withOnly([])
+                        ->when(
+                            $filter['kk_level'],
+                            static fn ($q) => $q->where('kk_level', $filter['kk_level'])->whereNotNull('id_kk')
+                                ->whereHas(
+                                    'keluarga.logKeluarga',
+                                    static fn ($q) => $q->where('id_peristiwa', LogKeluarga::KEPALA_KELUARGA_PINDAH)->whereYear('tgl_peristiwa', $tahun)->whereMonth('tgl_peristiwa', $bulan)
+                                ),
+                            static function ($q) use ($tahun, $bulan) {
+                                $q->whereHas(
+                                    'log',
+                                    static fn ($q) => $q->whereKodePeristiwa(LogPenduduk::PINDAH_KELUAR)->whereYear('tgl_lapor', $tahun)->whereMonth('tgl_lapor', $bulan)
+                                );
+                            }
+                        )
+                        ->when($filter['warganegara_id'], static fn ($q) => $q->whereIn('warganegara_id', $filter['warganegara_id']))->when($filter['sex'], static fn ($q) => $q->whereSex($filter['sex']))->get(),
                 ];
                 break;
 
             case 'hilang':
                 $data = [
                     'title' => 'PENDUDUK HILANG BULAN ' . $titlePeriode,
-                    'main'  => Penduduk::withOnly([])->whereHas('log', static fn ($q) => $q->whereKodePeristiwa(LogPenduduk::HILANG)->whereYear('tgl_lapor', $tahun)->whereMonth('tgl_lapor', $bulan))->when($filter['kk_level'], static fn ($q) => $q->where('kk_level', $filter['kk_level'])->whereNotNull('id_kk'))->when($filter['warganegara_id'], static fn ($q) => $q->whereIn('warganegara_id', $filter['warganegara_id']))->when($filter['sex'], static fn ($q) => $q->whereSex($filter['sex']))->get(),
+                    'main'  => Penduduk::withOnly([])
+                        ->when(
+                            $filter['kk_level'],
+                            static fn ($q) => $q->where('kk_level', $filter['kk_level'])->whereNotNull('id_kk')
+                                ->whereHas(
+                                    'keluarga.logKeluarga',
+                                    static fn ($q) => $q->where('id_peristiwa', LogKeluarga::KEPALA_KELUARGA_HILANG)->whereYear('tgl_peristiwa', $tahun)->whereMonth('tgl_peristiwa', $bulan)
+                                ),
+                            static function ($q) use ($tahun, $bulan) {
+                                $q->whereHas(
+                                    'log',
+                                    static fn ($q) => $q->whereKodePeristiwa(LogPenduduk::HILANG)->whereYear('tgl_lapor', $tahun)->whereMonth('tgl_lapor', $bulan)
+                                );
+                            }
+                        )
+                        ->when($filter['warganegara_id'], static fn ($q) => $q->whereIn('warganegara_id', $filter['warganegara_id']))->when($filter['sex'], static fn ($q) => $q->whereSex($filter['sex']))->get(),
                 ];
                 break;
 
@@ -422,7 +503,7 @@ class Laporan extends Admin_Controller
         $data['pamong_ketahui'] = Pamong::selectData()->where(['pamong_id' => $this->input->post('pamong_ketahui')])->first()->toArray();
         $data['isi']            = 'admin.laporan.detail.cetak';
         $data['letak_ttd']      = ['1', '1', '1'];
-        $data['sensor_nik']     = $this->input->post('sensor_nik') ?? false;
+        $data['sensor_nik']     = $this->input->post('sensor_nik') == 'on' ? 1 : false;
 
         view('admin.layouts.components.format_cetak', array_merge($data, $sumberData));
     }

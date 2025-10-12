@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -40,10 +40,13 @@ namespace App\Models;
 use App\Enums\AgamaEnum;
 use App\Enums\CaraKBEnum;
 use App\Enums\JenisKelaminEnum;
+use App\Enums\PendidikanSedangEnum;
+use App\Enums\SakitMenahunEnum;
 use App\Enums\SasaranEnum;
 use App\Enums\SHDKEnum;
 use App\Enums\StatusDasarEnum;
 use App\Enums\StatusKawinEnum;
+use App\Enums\StatusKawinSpesifikEnum;
 use App\Enums\StatusPendudukEnum;
 use App\Scopes\AccessWilayahScope;
 use App\Traits\Author;
@@ -166,6 +169,7 @@ class Penduduk extends BaseModel
         'updated_by',
         'id_asuransi',
         'no_asuransi',
+        'status_asuransi',
         'email',
         'email_token',
         'email_tgl_kadaluarsa',
@@ -188,10 +192,15 @@ class Penduduk extends BaseModel
      * {@inheritDoc}
      */
     protected $appends = [
+        'pendidikan',
         'usia',
         'alamat_wilayah',
+        'alamat_wilayah_kartu_keluarga',
         'nama_asuransi',
         'jml_anak',
+        'lokasi',
+        'status_perkawinan',
+        'sakit_menahun',
     ];
 
     /**
@@ -200,7 +209,6 @@ class Penduduk extends BaseModel
     protected $with = [
         'jenisKelamin',
         'agama',
-        'pendidikan',
         'pendidikanKK',
         'pekerjaan',
         'wargaNegara',
@@ -227,11 +235,18 @@ class Penduduk extends BaseModel
      */
     protected $guarded = [];
 
+    private $wilayahColumn = 'id_cluster';
+
     protected static function boot()
     {
         parent::boot();
 
         static::addGlobalScope(new AccessWilayahScope());
+    }
+
+    public function getWilayahColumn()
+    {
+        return $this->wilayahColumn;
     }
 
     public function getJmlAnakAttribute(): string
@@ -289,14 +304,14 @@ class Penduduk extends BaseModel
         return $this->belongsTo(Agama::class, 'agama_id')->withDefault();
     }
 
-    /**
-     * Define an inverse one-to-one or many relationship.
-     *
-     * @return BelongsTo
-     */
-    public function pendidikan()
+    public function getPendidikanAttribute()
     {
-        return $this->belongsTo(Pendidikan::class, 'pendidikan_sedang_id')->withDefault();
+        return PendidikanSedangEnum::valueOf($this->pendidikan_sedang_id);
+    }
+
+    public function getSakitMenahunAttribute()
+    {
+        return SakitMenahunEnum::valueOf($this->sakit_menahun_id);
     }
 
     /**
@@ -354,16 +369,6 @@ class Penduduk extends BaseModel
      *
      * @return BelongsTo
      */
-    public function sakitMenahun()
-    {
-        return $this->belongsTo(SakitMenahun::class, 'sakit_menahun_id')->withDefault();
-    }
-
-    /**
-     * Define an inverse one-to-one or many relationship.
-     *
-     * @return BelongsTo
-     */
     public function kb()
     {
         return $this->belongsTo(KB::class, 'cara_kb_id')->withDefault();
@@ -410,6 +415,11 @@ class Penduduk extends BaseModel
                 WHEN tweb_penduduk.nik LIKE '0%' AND CHAR_LENGTH(tweb_penduduk.nik) = 16 THEN 2
                 ELSE 3
                 END"));
+    }
+
+    public function scopeOrderKeluarga($query)
+    {
+        return $query->orderBy('kk_level')->orderBy('tanggallahir');
     }
 
     public function scopeEksporData($query)
@@ -572,13 +582,24 @@ class Penduduk extends BaseModel
      */
     public function getStatusPerkawinanAttribute()
     {
-        return ! empty($this->status_kawin) && $this->status_kawin != 2
-            ? $this->statusKawin->nama
-            : (
-                empty($this->akta_perkawinan)
-                ? 'KAWIN BELUM TERCATAT'
-                : 'KAWIN TERCATAT'
-            );
+        $status = match ($this->status_kawin) {
+            StatusKawinSpesifikEnum::KAWIN_TERCATAT => $this->isBelumTercatat($this->akta_perkawinan, $this->tanggalperkawinan)
+                    ? StatusKawinSpesifikEnum::KAWIN_BELUM_TERCATAT
+                    : StatusKawinSpesifikEnum::KAWIN_TERCATAT,
+
+            StatusKawinSpesifikEnum::CERAIHIDUP_TERCATAT => $this->isBelumTercatat($this->akta_perceraian, $this->tanggalperceraian)
+                    ? StatusKawinSpesifikEnum::CERAIHIDUP_BELUM_TERCATAT
+                    : StatusKawinSpesifikEnum::CERAIHIDUP_TERCATAT,
+
+            default => $this->status_kawin,
+        };
+
+        return StatusKawinSpesifikEnum::valueOf($status);
+    }
+
+    private function isBelumTercatat($akta, $tanggal): bool
+    {
+        return empty($akta) && empty($tanggal);
     }
 
     /**
@@ -637,6 +658,18 @@ class Penduduk extends BaseModel
     public function scopeStatusDasar($query, array $value)
     {
         return $query->whereIn('status_dasar', $value);
+    }
+
+    /**
+     * Scope query untuk mendapatkan penduduk hidup
+     *
+     * @param Builder $query
+     *
+     * @return Builder
+     */
+    public function scopeHidup($query, int $value)
+    {
+        return $query->where('status_dasar', $value);
     }
 
     /**
@@ -706,6 +739,15 @@ class Penduduk extends BaseModel
         return $this->alamat_sekarang . ' RT ' . $this->wilayah->rt . ' / RW ' . $this->wilayah->rw . ' ' . ucwords(setting('sebutan_dusun') . ' ' . $this->wilayah->dusun);
     }
 
+    public function getAlamatWilayahKartuKeluargaAttribute(): string
+    {
+        if ($this->id_kk != null) {
+            return $this->keluarga->alamat . ' ' . ucwords(setting('sebutan_dusun') . ' ' . $this->keluarga->wilayah->dusun);
+        }
+
+        return $this->alamat_sekarang . ' ' . ucwords(setting('sebutan_dusun') . ' ' . $this->wilayah->dusun);
+    }
+
     public function scopeKepalaKeluarga($query)
     {
         return $query->where(['kk_level' => SHDKEnum::KEPALA_KELUARGA]);
@@ -734,10 +776,15 @@ class Penduduk extends BaseModel
         return $this->attributes['kk_level'] == SHDKEnum::KEPALA_KELUARGA;
     }
 
+    public function isAnak()
+    {
+        return $this->attributes['kk_level'] == SHDKEnum::ANAK;
+    }
+
     public function formIndividu()
     {
         $individu                = $this->toArray();
-        $individu['pendidikan']  = $individu['pendidikan_k_k']['nama'] ?? ($individu['pendidikan']['nama'] ?? '');
+        $individu['pendidikan']  = $individu['pendidikan_k_k']['nama'] ?? ($individu['pendidikan'] ?? '');
         $individu['warganegara'] = $individu['warga_negara']['nama'] ?? '';
         $individu['agama']       = $this->agama->nama ?? '';
         $individu['umur']        = $this->umur;
@@ -853,9 +900,24 @@ class Penduduk extends BaseModel
         return $this->belongsTo(User::class, 'updated_by');
     }
 
+    public function pamong(): HasOne
+    {
+        return $this->hasOne(Pamong::class, 'id_pend');
+    }
+
+    public function pamongUser(): HasOne
+    {
+        return $this->hasOne(Pamong::class, 'id_pend')->whereHas('user');
+    }
+
     public function bahasa()
     {
         return $this->belongsTo(Bahasa::class, 'bahasa_id');
+    }
+
+    public function logSurat(): HasMany
+    {
+        return $this->hasMany(LogSurat::class, 'id_pend');
     }
 
     /**
@@ -883,6 +945,7 @@ class Penduduk extends BaseModel
         $agama          = $filter['agama'];
         $cari           = $filter['cari'];
         $statusPenduduk = $filter['status_penduduk'];
+        $statusKawin    = $filter['status_kawin'];
         $pekerjaan      = $filter['pekerjaan_id'];
         $pendidikan     = $filter['pendidikan_kk_id'];
         $umurMin        = $filter['umur_min'];
@@ -908,7 +971,7 @@ class Penduduk extends BaseModel
             'wilayah',
             'keluarga',
             'rtm',
-        ])->with(['map'])->selectRaw('*')->when($groupType, static function ($r) use ($groupType) {
+        ])->with(['map'])->hidup(StatusDasarEnum::HIDUP)->selectRaw('*')->when($groupType, static function ($r) use ($groupType) {
             if ($groupType == 'rtm') {
                 return $r->whereNotNull('id_rtm')->where('id_rtm', '!=', 0)->where(['rtm_level' => 1])->selectRaw(DB::raw('(SELECT COUNT(*) FROM tweb_penduduk p WHERE p.id_rtm != 0 and p.id_rtm = tweb_penduduk.id_rtm) as jumlah_anggota'));
             }
@@ -924,6 +987,7 @@ class Penduduk extends BaseModel
             ->when($pendidikan, static fn ($q) => $q->wherePendidikanKkId($pendidikan))
             ->when($pekerjaan, static fn ($q) => $q->wherePekerjaanId($pekerjaan))
             ->when($statusPenduduk, static fn ($q) => $q->whereStatus($statusPenduduk))
+            ->when($statusKawin, static fn ($q) => $q->whereStatusKawin($statusKawin))
             ->when($cari, static fn ($q) => $q->where(static function ($r) use ($cari) {
                 $r->where('nama', 'like', "%{$cari}%")->orWhere('nik', 'like', "%{$cari}%")->orWhere('tag_id_card', 'like', "%{$cari}%");
             }))
@@ -1065,6 +1129,8 @@ class Penduduk extends BaseModel
         $data['email']    = empty($data['email']) ? null : email($data['email']);
         $data['telegram'] = empty($data['telegram']) ? null : bilangan($data['telegram']);
 
+        $data['status_asuransi'] = ($data['status_asuransi'] === '') ? null : $data['status_asuransi'];
+
         $valid = [];
         if (preg_match("/[^a-zA-Z '\\.,\\-]/", $data['nama'])) {
             $valid[] = 'Nama hanya boleh berisi karakter alpha, spasi, titik, koma, tanda petik dan strip';
@@ -1186,15 +1252,15 @@ class Penduduk extends BaseModel
 
         // Jenis peristiwa didapat dari form yang berbeda
         // Jika peristiwa lahir akan mengambil data dari field tanggal lahir
-        $x = [
+        $logPenduduk = [
+            'id_pend'                  => $penduduk->id,
             'tgl_peristiwa'            => $data['tgl_peristiwa'] . ' 00:00:00',
             'kode_peristiwa'           => $data['jenis_peristiwa'],
             'tgl_lapor'                => $data['tgl_lapor'],
-            'created_by'               => auth()->id,
             'maksud_tujuan_kedatangan' => $maksud_tujuan,
         ];
 
-        $penduduk->log()->create($x);
+        LogPenduduk::create($logPenduduk);
 
         return $penduduk;
     }
@@ -1217,7 +1283,7 @@ class Penduduk extends BaseModel
             // Kalau ada penduduk lain yg juga Kepala Keluarga, ubah menjadi hubungan Lainnya
             $lvl['kk_level']   = SHDKEnum::LAINNYA;
             $lvl['updated_at'] = Carbon::now();
-            $lvl['updated_by'] = auth()->id;
+            $lvl['updated_by'] = ci_auth()->id;
             Penduduk::where('id_kk', $this->id_kk)->where('id', '!=', $this->id)
                 ->where('kk_level', SHDKEnum::KEPALA_KELUARGA)
                 ->update($lvl);
@@ -1268,6 +1334,7 @@ class Penduduk extends BaseModel
         if ($data['tgl_lapor']) {
             $log['tgl_lapor'] = $tgl_lapor;
         }
+
         if ($data['tgl_peristiwa']) {
             if ($this->status_dasar == StatusDasarEnum::HIDUP) {
                 LogPenduduk::where('id_pend', $this->id)->whereIn('kode_peristiwa', [LogPenduduk::BARU_LAHIR, LogPenduduk::BARU_PINDAH_MASUK])->update($log);
@@ -1296,7 +1363,7 @@ class Penduduk extends BaseModel
             'id_pend'    => $this->id,
             'nik'        => $this->nik,
             'foto'       => $this->foto,
-            'deleted_by' => auth()->id,
+            'deleted_by' => ci_auth()->id,
             'deleted_at' => date('Y-m-d H:i:s'),
         ];
         LogHapusPenduduk::create($log);
@@ -1318,8 +1385,29 @@ class Penduduk extends BaseModel
         // ->whereStatus(StatusPendudukEnum::TETAP)->get();
     }
 
+    public function getLokasiAttribute()
+    {
+        if ($this->rtm->nik_kepala != null) {
+            $id = $this->rtm->nik_kepala;
+        } elseif ($this->keluarga != '[]' && $this->keluarga != null) {
+            $id = $this->keluarga->nik_kepala;
+        } else {
+            $id = $this->id;
+        }
+
+        return PendudukMap::find($id);
+    }
+
     protected function scopeWajibKtp($query)
     {
         return $query->batasiUmur(date('d-m-Y'), ['satuan' => 'tahun', 'min' => 17, 'max' => 9999])->orwhereIn('status_kawin', [StatusKawinEnum::KAWIN, StatusKawinEnum::CERAIHIDUP, StatusKawinEnum::CERAIMATI]);
+    }
+
+    public static function get_alamat_wilayah($data)
+    {
+        $dusun          = (setting('sebutan_dusun') == '-') ? '' : ucwords(strtolower(setting('sebutan_dusun'))) . ' ' . ucwords(strtolower($data['dusun']));
+        $alamat_wilayah = "{$data['alamat']} RT {$data['rt']} / RW {$data['rw']} " . $dusun;
+
+        return trim($alamat_wilayah);
     }
 }

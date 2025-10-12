@@ -144,7 +144,7 @@
                         <div class="input-group-addon">
                             <i class="fa fa-calendar"></i>
                         </div>
-                        <input class="form-control input-sm pull-right" id="tanggal_cetak_ktp" name="tanggal_cetak_ktp" type="text" value="{{ $penduduk['tanggal_cetak_ktp'] }}">
+                        <input class="form-control input-sm pull-right" id="tanggal_cetak_ktp" name="tanggal_cetak_ktp" type="text" value="{{ $penduduk['tanggal_cetak_ktp'] ? date('d-m-Y', strtotime($penduduk['tanggal_cetak_ktp'])) : '' }}">
                     </div>
                 </div>
             </div>
@@ -583,7 +583,7 @@
                             {{ 'KK' }}
                         @endif
                     </label>
-                    <select id="rw" class="form-control input-sm select2 required">
+                    <select id="rw" name="rw" class="form-control input-sm select2 required">
                         <option value="">Pilih RW</option>
                         @foreach ($wilayah as $keyDusun => $dusun)
                             <optgroup value="{{ $keyDusun }}" label="{{ ucwords(setting('sebutan_dusun')) . ' ' . $keyDusun }}" @disabled($penduduk['wilayah']['dusun'] != $keyDusun)>
@@ -755,7 +755,7 @@
                 <div class="input-group-addon">
                     <i class="fa fa-calendar"></i>
                 </div>
-                <input class="form-control input-sm pull-right" id="tgl_4" name="tanggalperceraian" type="text" value="{{ $penduduk['tanggalperceraian'] }}">
+                <input class="form-control input-sm pull-right tgl_indo" name="tanggalperceraian" type="text" value="{{ $penduduk['tanggalperceraian'] ? date('d-m-Y', strtotime($penduduk['tanggalperceraian'])) : '' }}">
             </div>
         </div>
     </div>
@@ -854,6 +854,17 @@
             ></input>
         </div>
     </div>
+    <div id="status_asuransi" class="col-sm-4">
+        <div class='form-group'>
+            <label>Status Kepersertaan Asuransi Kesehatan</label>
+            <select class="form-control input-sm" name="status_asuransi">
+                <option value="" @selected($penduduk['status_asuransi'] == null)>Pilih Kepersertaan Asuransi Kesehatan</option>
+                @foreach (\App\Enums\AktifEnum::all() as $key => $value)
+                    <option value="{{ $key }}" @selected(isset($penduduk['status_asuransi']) && $penduduk['status_asuransi'] == $key)>{{ strtoupper($value) }}</option>
+                @endforeach
+            </select>
+        </div>
+    </div>
     <div class="col-sm-12">
         <div class="row">
             <div class="col-sm-4">
@@ -947,6 +958,8 @@
 
                 if (selected == 2 || selected == 3) {
                     $("#status_perkawinan").val("2").change();
+                } else if (selected == 4 || selected == 6) {
+                    $("#status_perkawinan").val("1").change();
                 } else {
                     $("#status_perkawinan").val("").change();
                 }
@@ -1037,6 +1050,7 @@
         function show_hide_asuransi(asuransi) {
             if (asuransi == '1' || asuransi == '') {
                 $('#asuransi_pilihan').hide();
+                $('#status_asuransi').hide();
             } else {
                 if (asuransi == '99') {
                     $('#label-no-asuransi').text('Nama/nomor Asuransi');
@@ -1045,6 +1059,7 @@
                 }
 
                 $('#asuransi_pilihan').show();
+                $('#status_asuransi').show();
             }
         }
 

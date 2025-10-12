@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -41,20 +41,21 @@ defined('BASEPATH') || exit('No direct script access allowed');
 
 class SakitMenahunEnum extends BaseEnum
 {
-    public const JANTUNG           = 1;
-public const LEVER                 = 2;
-public const PARU_PARU             = 3;
-public const KANKER                = 4;
-public const STROKE                = 5;
-public const DIABETES_MELITUS      = 6;
-public const GINJAL                = 7;
-public const MALARIA               = 8;
-public const LEPRA_KUSTA           = 9;
-public const HIV_AIDS              = 10;
-public const GILA_STRESS           = 11;
-public const TBC                   = 12;
-public const ASTHMA                = 13;
-public const TIDAK_ADA_TIDAK_SAKIT = 14;
+    public const JANTUNG               = 1;
+    public const LEVER                 = 2;
+    public const PARU_PARU             = 3;
+    public const KANKER                = 4;
+    public const STROKE                = 5;
+    public const DIABETES_MELITUS      = 6;
+    public const GINJAL                = 7;
+    public const MALARIA               = 8;
+    public const LEPRA_KUSTA           = 9;
+    public const HIV_AIDS              = 10;
+    public const GILA_STRESS           = 11;
+    public const TBC                   = 12;
+    public const ASTHMA                = 13;
+    public const ZOONOTIK              = 15;
+    public const TIDAK_ADA_TIDAK_SAKIT = 14;
 
     /**
      * Override method all()
@@ -75,7 +76,23 @@ public const TIDAK_ADA_TIDAK_SAKIT = 14;
             self::GILA_STRESS           => 'GILA/STRESS',
             self::TBC                   => 'TBC',
             self::ASTHMA                => 'ASTHMA',
+            self::ZOONOTIK              => 'ZOONOTIK',
             self::TIDAK_ADA_TIDAK_SAKIT => 'TIDAK ADA/TIDAK SAKIT',
         ];
+    }
+
+    /**
+     * Dapatkan data dengan format id dan nama
+     */
+    public static function getData(): array
+    {
+        $collect = collect(self::all());
+
+        return $collect->map(static function ($value, $key) {
+            return [
+                'id'   => $key,
+                'nama' => $value,
+            ];
+        })->values()->toArray();
     }
 }

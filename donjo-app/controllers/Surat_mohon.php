@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -107,9 +107,10 @@ class Surat_mohon extends Admin_Controller
     {
         isCan('u');
 
-        if (SyaratSurat::create(static::validate($this->request))) {
+        if (SyaratSurat::create(static::validate())) {
             redirect_with('success', 'Berhasil Tambah Data');
         }
+
         redirect_with('error', 'Gagal Tambah Data');
     }
 
@@ -119,7 +120,7 @@ class Surat_mohon extends Admin_Controller
 
         $data = SyaratSurat::findOrFail($id);
 
-        if ($data->update(static::validate($this->request))) {
+        if ($data->update(static::validate())) {
             redirect_with('success', 'Berhasil Ubah Data');
         }
         redirect_with('error', 'Gagal Ubah Data');
@@ -148,11 +149,10 @@ class Surat_mohon extends Admin_Controller
         redirect_with('success', 'Berhasil Hapus Data');
     }
 
-    // Hanya filter inputan
-    protected static function validate($request = [])
+    protected function validate()
     {
-        return [
-            'ref_syarat_nama' => nama_terbatas($request['ref_syarat_nama']),
-        ];
+        return $this->validated(request(), [
+            'ref_syarat_nama' => 'required|min:3|max:255',
+        ]);
     }
 }

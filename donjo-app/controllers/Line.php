@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -89,16 +89,12 @@ class Line extends Admin_Controller
                     }
 
                     if (can('u')) {
-                        if ($row->tipe == LineModel::ROOT) {
-                            $aksi .= '<a href="' . ci_route('line.ajax_add_sub_line', $row->id) . '" class="btn bg-olive btn-sm"  title="Tambah Kategori  ' . $row->nama . '" data-remote="false" data-toggle="modal" data-target="#modalBox" data-title="Tambah Kategori ' . $row->nama . '"><i class="fa fa-plus"></i></a> ';
-                        }
-
                         if ($row->enabled == LineModel::UNLOCK) {
                             $aksi .= '<a href="' . ci_route('line.lock', implode('/', [$row->parrent, $row->id])) . '" class="btn bg-navy btn-sm" title="Aktifkan"><i class="fa fa-lock">&nbsp;</i></a> ';
                         }
 
                         if ($row->enabled == LineModel::LOCK) {
-                            $aksi .= '<a href="' . ci_route('line.unlock', implode('/', [$row->parrent, $row->id])) . '" class="btn bg-navy btn-sm" title="Non Aktifkan"><i class="fa fa-unlock"></i></a> ';
+                            $aksi .= '<a href="' . ci_route('line.unlock', implode('/', [$row->parrent, $row->id])) . '" class="btn bg-navy btn-sm" title="Nonaktifkan"><i class="fa fa-unlock"></i></a> ';
                         }
                     }
 
@@ -124,7 +120,7 @@ class Line extends Admin_Controller
 
         $data['aksi']        = 'Tambah';
         $data['line']        = null;
-        $data['form_action'] = ci_route('line.insert', $this->parent);
+        $data['form_action'] = ci_route('line.insert', [$this->parent, $this->input->get('tipe')]);
 
         if ($id) {
             $data['aksi']        = 'Ubah';
@@ -137,20 +133,11 @@ class Line extends Admin_Controller
         return view('admin.peta.line.form', $data);
     }
 
-    public function ajax_add_sub_line(int $parent = 0)
-    {
-        $data['form_action'] = ci_route("line.insert.{$parent}");
-        $data['tipe']        = LineModel::CHILD;
-
-        return view('admin.peta.line.ajax_form', $data);
-    }
-
-    public function insert(int $parent): void
+    public function insert(int $parent, $tipe): void
     {
         isCan('u');
         $dataInsert            = $this->validasi($this->input->post());
         $dataInsert['parrent'] = $parent;
-        $tipe                  = $this->input->post('tipe') ?? $this->tipe($parent);
         $dataInsert['tipe']    = $tipe;
 
         try {
@@ -221,7 +208,7 @@ class Line extends Admin_Controller
         }
     }
 
-    private function validasi($post)
+    private function validasi(array $post): array
     {
         return [
             'nama'  => nomor_surat_keputusan($post['nama']),
@@ -231,7 +218,7 @@ class Line extends Admin_Controller
         ];
     }
 
-    private function tipe($parent)
+    private function tipe($parent): int
     {
         return ($parent == 1) ? LineModel::ROOT : LineModel::CHILD;
     }

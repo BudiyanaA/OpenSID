@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -49,7 +49,6 @@ class Sosmed extends Admin_Controller
     {
         parent::__construct();
         isCan('b');
-        $this->load->model('web_sosmed_model');
     }
 
     public function index()
@@ -116,7 +115,7 @@ class Sosmed extends Admin_Controller
     {
         isCan('u');
 
-        if (MediaSosial::create(static::validated($this->request))) {
+        if (MediaSosial::create(static::validate($this->request))) {
             redirect_with('success', 'Berhasil Tambah Data');
         }
         redirect_with('error', 'Gagal Tambah Data');
@@ -128,7 +127,7 @@ class Sosmed extends Admin_Controller
 
         $data = MediaSosial::findOrFail($id);
 
-        if ($data->update(static::validated($this->request, $id))) {
+        if ($data->update(static::validate($this->request, $id))) {
             redirect_with('success', 'Berhasil Ubah Data');
         }
         redirect_with('error', 'Gagal Ubah Data');
@@ -148,6 +147,10 @@ class Sosmed extends Admin_Controller
     {
         isCan('h');
 
+        if (MediaSosial::where('id', $id)->whereNull('link')->orWhere('link', '')->exists()) {
+            redirect_with('error', 'Data ini tidak bisa diaktifkan karena belum memiliki link');
+        }
+
         if (MediaSosial::gantiStatus($id, 'enabled')) {
             redirect_with('success', 'Berhasil Ubah Status');
         }
@@ -155,11 +158,11 @@ class Sosmed extends Admin_Controller
         redirect_with('error', 'Gagal Ubah Status');
     }
 
-    protected static function validated(array $request = [], $id = null): array
+    protected static function validate(array $request = [], $id = null): array
     {
         $data = [
             'link'    => $request['link'],
-            'nama'    => htmlentities($request['nama']),
+            'nama'    => htmlentities((string) $request['nama']),
             'tipe'    => 1,
             'enabled' => $request['enabled'] ?? 0,
         ];
@@ -176,7 +179,7 @@ class Sosmed extends Admin_Controller
     protected static function unggah($jenis = '')
     {
         $CI = &get_instance();
-        $CI->load->library('MY_Upload', null, 'upload');
+        $CI->load->library('upload');
         folder(LOKASI_ICON_SOSMED);
 
         $CI->uploadConfig = [

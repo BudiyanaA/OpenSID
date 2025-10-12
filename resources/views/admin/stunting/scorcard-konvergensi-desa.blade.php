@@ -56,11 +56,21 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="col-md-2 no-padding">
+                        <div class="col-md-2">
                             <button type="button" class="btn btn-social btn-info btn-sm" id="cari">
                                 <i class="fa fa-search"></i> Cari
                             </button>
                         </div>
+                    </div>
+                    <div class="col-md-4">
+                        @includeIf('admin.layouts.components.buttons.cetak', [
+                            'modal' => true,
+                            'url' => 'stunting/dialog_sk/cetak?kuartal=' . $kuartal . '&tahun=' . $_tahun . '&id=' . $id,
+                        ])
+                        @includeIf('admin.layouts.components.buttons.unduh', [
+                            'modal' => true,
+                            'url' => 'stunting/dialog_sk/unduh?kuartal=' . $kuartal . '&tahun=' . $_tahun . '&id=' . $id,
+                        ])
                     </div>
                 </div>
                 <!-- /.box-header -->
@@ -376,22 +386,22 @@
                             @php
                                 $JLD_IbuHamil = $ibu_hamil['tingkatKonvergensiDesa'] == null ? '0' : $ibu_hamil['tingkatKonvergensiDesa']['jumlah_diterima'];
                                 $JLD_Anak = $bulanan_anak['tingkatKonvergensiDesa'] == null ? '0' : $bulanan_anak['tingkatKonvergensiDesa']['jumlah_diterima'];
-                                
+
                                 $JYSD_IbuHamil = $ibu_hamil['tingkatKonvergensiDesa'] == null ? '0' : $ibu_hamil['tingkatKonvergensiDesa']['jumlah_seharusnya'];
                                 $JYSD_Anak = $bulanan_anak['tingkatKonvergensiDesa'] == null ? '0' : $bulanan_anak['tingkatKonvergensiDesa']['jumlah_seharusnya'];
-                                
+
                                 $PERSEN_IbuHamil = $ibu_hamil['tingkatKonvergensiDesa'] == null ? '0' : $ibu_hamil['tingkatKonvergensiDesa']['persen'];
                                 $PERSEN_Anak = $bulanan_anak['tingkatKonvergensiDesa'] == null ? '0' : $bulanan_anak['tingkatKonvergensiDesa']['persen'];
-                                
+
                                 $JLD_TOTAL = (int) $JLD_IbuHamil + (int) $JLD_Anak;
                                 $JYSD_TOTAL = (int) $JYSD_IbuHamil + (int) $JYSD_Anak;
-                                
+
                                 if ($JYSD_TOTAL != 0) {
                                     $KONV_TOTAL = number_format(($JLD_TOTAL / $JYSD_TOTAL) * 100, 2);
                                 } else {
                                     $KONV_TOTAL = number_format(0, 2);
                                 }
-                                
+
                             @endphp
                             <tr>
                                 <th colspan="1" class="text-center" style="vertical-align: middle;">1</th>

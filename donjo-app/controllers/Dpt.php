@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,22 +29,22 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
  */
 
+use App\Enums\AgamaEnum;
+use App\Enums\PekerjaanEnum;
+use App\Enums\PendidikanKKEnum;
+use App\Enums\PendidikanSedangEnum;
 use App\Enums\StatusEnum;
-use App\Models\Agama;
-use App\Models\Pekerjaan;
+use App\Enums\StatusKawinEnum;
+use App\Enums\StatusPendudukEnum;
 use App\Models\Pemilihan;
-use App\Models\Pendidikan;
-use App\Models\PendidikanKK;
 use App\Models\Penduduk;
-use App\Models\PendudukStatus;
 use App\Models\Sex;
-use App\Models\StatusKawin;
 use App\Models\Wilayah;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Schema;
@@ -69,12 +69,12 @@ class Dpt extends Admin_Controller
         $data['wilayah']              = Wilayah::treeAccess();
         $data['tanggal_pemilihan']    = Schema::hasTable('pemilihan') ? Pemilihan::tanggalPemilihan() : Carbon::now()->format('Y-m-d');
         $data['input_umur']           = true;
-        $data['list_agama']           = Agama::get()->toArray();
-        $data['list_pendidikan']      = Pendidikan::get()->toArray();
-        $data['list_pendidikan_kk']   = PendidikanKK::get()->toArray();
-        $data['list_pekerjaan']       = Pekerjaan::get()->toArray();
-        $data['list_status_kawin']    = StatusKawin::get()->toArray();
-        $data['list_status_penduduk'] = PendudukStatus::get()->toArray();
+        $data['list_agama']           = AgamaEnum::all();
+        $data['list_pendidikan']      = PendidikanSedangEnum::all();
+        $data['list_pendidikan_kk']   = PendidikanKKEnum::all();
+        $data['list_pekerjaan']       = PekerjaanEnum::all();
+        $data['list_status_kawin']    = StatusKawinEnum::all();
+        $data['list_status_penduduk'] = StatusPendudukEnum::all();
         $data['list_tag_id_card']     = StatusEnum::all();
 
         view('admin.dpt.index', $data);
@@ -111,15 +111,16 @@ class Dpt extends Admin_Controller
         $umurFilter     = $advanceSearch['umur'];
         $filterKategori = [];
         $tagIdFilter    = null;
-        parse_str($advanceSearch['search'], $kategoriFilter);
+        parse_str((string) $advanceSearch['search'], $kategoriFilter);
 
         foreach ($kategoriFilter as $key => $val) {
             if (trim($val) !== '') {
                 $filterKategori[$key] = $val;
             }
         }
-        if (isset($filterKategori['tag_id_card'])) {
-            $tagIdFilter = $filterKategori['tag_id_card'];
+
+        if (in_array($filterKategori['tag_id_card'], StatusEnum::keys())) {
+            $tagIdFilter = (string) $filterKategori['tag_id_card'];
             unset($filterKategori['tag_id_card']);
         }
         $listCluster = [];
@@ -127,17 +128,23 @@ class Dpt extends Admin_Controller
             $cluster = new Wilayah();
             $cluster = $cluster->whereDusun($dusun);
             if ($rw) {
-                [, $namaRw] = explode('__', $rw);
+                [, $namaRw] = explode('__', (string) $rw);
                 $cluster    = $cluster->whereRw($namaRw);
                 if ($rt) {
-                    $cluster = $cluster->whereRt($rt);
+                    $cluster = $cluster->where('id', $rt);
                 }
             }
             $listCluster = $cluster->select(['id'])->get()->pluck('id', 'id')->toArray();
         }
 
         return Penduduk::batasiUmur($tglPemilihan, $umurFilter)->dpt($tglPemilihan)
-            ->when($tagIdFilter, static fn ($q) => $tagIdFilter == '1' ? $q->whereNotNull('tag_id_card') : $q->whereNull('tag_id_card'))
+            ->when(in_array($tagIdFilter, StatusEnum::keys()), static function ($q) use ($tagIdFilter) {
+                if ($tagIdFilter) {
+                    return $q->whereNotNull('tag_id_card');
+                }
+
+                return $q->whereNull('tag_id_card');
+            })
             ->when($filterKategori, static fn ($q) => $q->where($filterKategori))
             ->when($sex, static fn ($q) => $q->where('sex', $sex))
             ->when($listCluster, static fn ($q) => $q->whereIn('id_cluster', $listCluster))
@@ -146,7 +153,7 @@ class Dpt extends Admin_Controller
 
     public function cetak($aksi = 'cetak', $privasi_nik = 0): void
     {
-        $paramDatatable = json_decode($this->input->post('params'), 1);
+        $paramDatatable = json_decode((string) $this->input->post('params'), 1);
         $_GET           = $paramDatatable;
 
         $orderColumn = $paramDatatable['columns'][$paramDatatable['order'][0]['column']]['name'];

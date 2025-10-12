@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -89,10 +89,10 @@ class SuratDinas extends BaseModel
      * @var array
      */
     public const MARGINS = [
-        'kiri'  => 1.78,
-        'atas'  => 0.63,
-        'kanan' => 1.78,
-        'bawah' => 1.37,
+        'kiri'  => 3,
+        'atas'  => 2.5,
+        'kanan' => 2,
+        'bawah' => 2.5,
     ];
 
     /**
@@ -264,7 +264,7 @@ class SuratDinas extends BaseModel
      */
     public function getKodeIsianAttribute()
     {
-        return json_decode($this->attributes['kode_isian'], null);
+        return json_decode((string) $this->attributes['kode_isian'], null);
     }
 
     /**
@@ -274,7 +274,7 @@ class SuratDinas extends BaseModel
      */
     public function getFormIsianAttribute()
     {
-        return json_decode($this->attributes['form_isian'], null);
+        return json_decode((string) $this->attributes['form_isian'], null);
     }
 
     /**
@@ -305,12 +305,9 @@ class SuratDinas extends BaseModel
     /**
      * Scope query untuk IsExist
      *
-     * @param mixed $query
-     * @param mixed $value
-     *
      * @return Builder
      */
-    public function scopeIsExist($query, $value)
+    public function scopeIsExist(mixed $query, mixed $value)
     {
         return $query->where('url_surat', $value)->exists();
     }
@@ -318,25 +315,23 @@ class SuratDinas extends BaseModel
     /**
      * Scope query untuk Kunci Surat
      *
-     * @param mixed $query
-     * @param mixed $value
-     *
      * @return Builder
      */
-    public function scopeKunci($query, $value = self::KUNCI)
+    public function scopeKunci(mixed $query, mixed $value = self::KUNCI)
     {
+        if ($value == '') {
+            return $query;
+        }
+
         return $query->where('kunci', $value);
     }
 
     /**
      * Scope query untuk Favorit Surat
      *
-     * @param mixed $query
-     * @param mixed $value
-     *
      * @return Builder
      */
-    public function scopeFavorit($query, $value = self::FAVORIT)
+    public function scopeFavorit(mixed $query, mixed $value = self::FAVORIT)
     {
         return $query->where('favorit', $value);
     }
@@ -344,12 +339,9 @@ class SuratDinas extends BaseModel
     /**
      * Scope query untuk Jenis Surat
      *
-     * @param mixed $query
-     * @param mixed $value
-     *
      * @return Builder
      */
-    public function scopeJenis($query, $value)
+    public function scopeJenis(mixed $query, mixed $value)
     {
         if (empty($value)) {
             return $query->whereNotNull('jenis');
@@ -380,11 +372,11 @@ class SuratDinas extends BaseModel
         parent::boot();
     }
 
-    public static function format_penomoran_surat(array $data)
+    public static function format_penomoran_surat(array $data): array|string
     {
         $thn     = $data['surat']['cek_thn'] ?? date('Y');
         $bln     = $data['surat']['cek_bln'] ?? date('m');
-        $setting = $data['surat']['format_nomor_global'] ? setting('format_nomor_surat') : $data['surat']['format_nomor'];
+        $setting = format_penomoran_surat($data['surat']['format_nomor_global'], setting('format_nomor_surat_dinas'), $data['surat']['format_nomor']);
         self::substitusi_nomor_surat($data['input']['nomor'], $setting);
         $array_replace = [
             '[kode_surat]'   => $data['surat']['kode_surat'],
@@ -393,7 +385,7 @@ class SuratDinas extends BaseModel
             '[kode_desa]'    => identitas()->kode_desa,
         ];
 
-        return str_replace(array_keys($array_replace), array_values($array_replace), $setting);
+        return str_ireplace(array_keys($array_replace), array_values($array_replace), $setting);
     }
 
     public static function substitusi_nomor_surat($nomor, &$buffer): void
@@ -422,7 +414,7 @@ class SuratDinas extends BaseModel
      */
     public function getFormatNomorSuratAttribute()
     {
-        return $this->format_nomor_global === false && empty($this->format_nomor) ? setting('format_nomor_surat') : $this->format_nomor;
+        return format_penomoran_surat($this->format_nomor_global, setting('format_nomor_surat'), $this->format_nomor);
     }
 
     protected function scopeSistem(Builder $query)

@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -96,7 +96,7 @@ class Simbol extends Admin_Controller
         $outp    = true;
 
         foreach ($files as $file) {
-            if ($file !== '' && $file != '.' && $file != '..') {
+            if ($file !== '' && $file !== '.' && $file !== '..') {
                 $source      = $dir . '/' . $file;
                 $destination = $new_dir . '/' . $file;
                 if (! file_exists($destination)) {
@@ -121,9 +121,9 @@ class Simbol extends Admin_Controller
     {
         $config['upload_path']   = LOKASI_SIMBOL_LOKASI;
         $config['allowed_types'] = 'gif|jpg|png|jpeg';
-        $this->load->library('MY_Upload', null, 'upload');
+        $this->load->library('upload');
         $namaFile = $_FILES['simbol']['full_path'];
-        if (strlen($namaFile) > 27) {
+        if (strlen((string) $namaFile) > 27) {
             $config['file_name'] = 'simbol_' . time();   // maksimal 40 karakter di db
         }
         $this->upload->initialize($config);

@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -37,13 +37,16 @@
 
 namespace App\Models;
 
+use App\Traits\Author;
 use App\Traits\ConfigId;
+use Illuminate\Support\Facades\DB;
 
 defined('BASEPATH') || exit('No direct script access allowed');
 
 class InventarisAsset extends BaseModel
 {
     use ConfigId;
+    use Author;
 
     /**
      * The table associated with the model.
@@ -58,4 +61,57 @@ class InventarisAsset extends BaseModel
      * @var array
      */
     protected $guarded = [];
+
+    /**
+     * The hidden with the model.
+     *
+     * @var array
+     */
+    protected $hidden = [
+        'config_id',
+    ];
+
+    public function scopeVisible($query, $value = 1)
+    {
+        return $query->where('visible', $value);
+    }
+
+    public function scopeAktif($query)
+    {
+        return $query->visible();
+    }
+
+    public function scopeReg($query)
+    {
+        return $query->count();
+    }
+
+    public function scopeListKdRegister()
+    {
+        return $this->select('register')->get();
+    }
+
+    public function scopeSumInventaris()
+    {
+        return $this->aktif()->sum('harga');
+    }
+
+    public static function listInventaris()
+    {
+        return DB::table('inventaris_asset as u', 'm.id as mutasi')
+            ->leftJoin('mutasi_inventaris_asset as m', 'm.id_inventaris_asset', '=', 'u.id')
+            ->where('u.visible', 1)
+            ->get();
+    }
+
+    public function scopeCetak($query, $tahun = null)
+    {
+        return $query->when(! empty($tahun), static fn ($query) => $query->whereYear('tahun_pengadaan', $tahun));
+    }
+
+    // relasi ke mutasi_inventaris_asset
+    public function mutasi()
+    {
+        return $this->hasOne(MutasiInventarisAsset::class, 'id_inventaris_asset');
+    }
 }

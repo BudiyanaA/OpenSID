@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -72,12 +72,12 @@ class Token extends CI_Controller
             $this->session->unset_userdata('token_kosong');
         }
 
-        redirect('/');
+        redirect(site_url());
     }
 
     private function decodeTokenPayload($token)
     {
-        $tokenParts = explode('.', $token);
+        $tokenParts = explode('.', (string) $token);
 
         if (count($tokenParts) !== 3) {
             return redirect_with('error', 'Jumlah segmen token salah', 'token');
@@ -94,7 +94,7 @@ class Token extends CI_Controller
         return json_decode($tokenPayload, null);
     }
 
-    private function isPremiumVersionExpired($berakhir)
+    private function isPremiumVersionExpired($berakhir): bool
     {
         $date    = new DateTime('20' . str_replace('.', '-', currentVersion()) . '-01');
         $version = $date->format('Y-m-d');

@@ -23,11 +23,8 @@
     <div class="box box-info">
         {!! form_open_multipart($form_action, 'class="form-horizontal" id="validasi"') !!}
         <div class="box-header with-border">
-            <a href="#" onclick="window.history.back()" class="btn btn-social btn-info btn-sm btn-sm visible-xs-block visible-sm-inline-block visible-md-inline-block visible-lg-inline-block" title="Tambah Artikel">
-                <i class="fa fa-arrow-circle-left "></i>Kembali Ke Daftar
-                {{ $kat_nama }} Di
-                {{ ucwords(setting('sebutan_desa')) }}
-            </a>
+            @include('admin.layouts.components.tombol_kembali', ['url' => '#', 'label' => 'Daftar ' . $kat_nama . ' Di ' . ucwords(setting('sebutan_desa')), 'onclick' => 'window.history.back()'])
+
         </div>
         <div class="box-body">
             <div class="form-group">
@@ -45,12 +42,12 @@
                     </select>
                 </div>
             </div>
-            <div id="d-dokumen" style="display: {{ $dokumen['tipe'] == 2 ? 'none' : '' }};">
+            <div id="d-unggahn" style="display: {{ $dokumen['tipe'] == 2 ? 'none' : '' }};">
                 @if ($dokumen['satuan'])
                     <div class="form-group">
                         <label class="col-sm-4 control-label">Dokumen</label>
                         <div class="col-sm-4">
-                            <i class="fa fa-file-pdf-o pop-up-pdf" aria-hidden="true" style="font-size: 60px;" data-title="Berkas {{ $dokumen['nomor_surat'] }}" data-url="{{ ci_route('dokumen.tampilkan_berkas', $dokumen['id']) }}"></i>
+                            <i class="fa fa-file-pdf-o pop-up-pdf" aria-hidden="true" style="font-size: 60px;" data-title="Berkas {{ $dokumen['nomor_surat'] }}" data-url="{{ ci_route('dokumen.tampilkan_berkas', [$dokumen['id'], 0, 1]) }}"></i>
 
                         </div>
                     </div>
@@ -71,23 +68,6 @@
                         @endif
                     </div>
                 </div>
-                <div class="form-group">
-                    <label class="control-label col-sm-4" for="nama">Kategori Informasi Publik</label>
-                    <div class="col-sm-6">
-                        <select name="kategori_info_publik" class="form-control select2 input-sm required">
-                            <option value="">Pilih Kategori Informasi Publik</option>
-                            @foreach ($list_kategori_publik as $key => $value)
-                                <option value="{{ $key }}" @selected($dokumen['kategori_info_publik'] == $key)>{{ $value }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="control-label col-sm-4" for="nama">Tahun</label>
-                    <div class="col-sm-6">
-                        <input name="tahun" maxlength="4" class="form-control input-sm number required" type="text" placeholder="Contoh: 2019" value="<?= $dokumen['tahun'] ?>"></input>
-                    </div>
-                </div>
             </div>
             <div id="d-url" class="form-group" style="display: {{ $dokumen['tipe'] == 2 ? '' : 'none' }};">
                 <label class="control-label col-sm-4" for="nama">Link/URL Dokumen</label>
@@ -95,7 +75,23 @@
                     <input id="url" name="url" class="form-control input-sm {{ $dokumen['tipe'] == 2 ? 'required' : '' }}" type="text" value="{{ $dokumen['url'] }}"></input>
                 </div>
             </div>
-
+            <div class="form-group">
+                <label class="control-label col-sm-4" for="nama">Kategori Informasi Publik</label>
+                <div class="col-sm-6">
+                    <select name="kategori_info_publik" class="form-control select2 input-sm required">
+                        <option value="">Pilih Kategori Informasi Publik</option>
+                        @foreach ($list_kategori_publik as $key => $value)
+                            <option value="{{ $key }}" @selected($dokumen['kategori_info_publik'] == $key)>{{ $value }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-4" for="nama">Tahun</label>
+                <div class="col-sm-6">
+                    <input name="tahun" maxlength="4" class="form-control input-sm number required" type="text" placeholder="Contoh: 2019" value="<?= $dokumen['tahun'] ?>"></input>
+                </div>
+            </div>
         </div>
         <div class="box-footer">
             {!! batal() !!}
@@ -110,12 +106,12 @@
     <script>
         $('#tipe').on('change', function() {
             if (this.value == 1) {
-                $('#d-dokumen').show();
+                $('#d-unggahn').show();
                 $('#d-url').hide();
                 $("#file_path").addClass("required");
                 $("#url").removeClass("required");
             } else {
-                $('#d-dokumen').hide();
+                $('#d-unggahn').hide();
                 $('#d-url').show();
                 $("#file_path").removeClass("required");
                 $("#url").addClass("required");

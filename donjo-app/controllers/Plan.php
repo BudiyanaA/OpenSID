@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,12 +29,13 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
  */
 
+use App\Libraries\Checker;
 use App\Models\Area;
 use App\Models\Garis;
 use App\Models\Lokasi;
@@ -91,7 +92,7 @@ class Plan extends Admin_Controller
                         $aksi .= '<a href="' . ci_route('plan.form', implode('/', [$row->point->parent->id ?? $parent, $row->id])) . '" class="btn btn-warning btn-sm"  title="Ubah"><i class="fa fa-edit"></i></a> ';
                         $aksi .= '<a href="' . ci_route('plan.ajax_lokasi_maps', implode('/', [$row->point->parent->id ?? $parent, $row->id])) . '" class="btn bg-olive btn-sm" title="Lokasi ' . $row->nama . '"><i class="fa fa-map"></i></a> ';
                         if ($row->isLock()) {
-                            $aksi .= '<a href="' . ci_route('plan.unlock', implode('/', [$row->point->parent->id ?? $parent, $row->id])) . '" class="btn bg-navy btn-sm" title="Non Aktifkan"><i class="fa fa-unlock"></i></a> ';
+                            $aksi .= '<a href="' . ci_route('plan.unlock', implode('/', [$row->point->parent->id ?? $parent, $row->id])) . '" class="btn bg-navy btn-sm" title="Nonaktifkan"><i class="fa fa-unlock"></i></a> ';
                         } else {
                             $aksi .= '<a href="' . ci_route('plan.lock', implode('/', [$row->point->parent->id ?? $parent, $row->id])) . '" class="btn bg-navy btn-sm" title="Aktifkan"><i class="fa fa-lock">&nbsp;</i></a> ';
                         }
@@ -127,7 +128,7 @@ class Plan extends Admin_Controller
             $data['form_action'] = ci_route('plan.update', implode('/', [$parent, $id]));
         }
 
-        $data['list_point'] = empty($parent) ? Point::subPoint()->whereHas('parent')->get() : Point::child($parent)->whereHas('parent')->get();
+        $data['list_point'] = empty($parent) ? Point::root()->get() : Point::child($parent)->whereHas('parent')->get();
         $data['tip']        = $this->tip;
 
         return view('admin.peta.lokasi.form', $data);
@@ -137,9 +138,9 @@ class Plan extends Admin_Controller
     {
         isCan('u');
 
-        $data['lokasi']                 = Lokasi::findOrFail($id)->toArray();
-        $data['parent']                 = $parent;
-        $data['desa']                   = $this->header['desa'];
+        $data['lokasi'] = Lokasi::findOrFail($id)->toArray();
+        $data['parent'] = $parent;
+
         $data['wil_atas']               = $this->header['desa'];
         $data['dusun_gis']              = Wilayah::dusun()->get()->toArray();
         $data['rw_gis']                 = Wilayah::rw()->get()->toArray();
@@ -255,17 +256,18 @@ class Plan extends Admin_Controller
         return $this->form_validation->run();
     }
 
-    private function validasi($post)
+    private function validasi(array $post)
     {
         $data['nama']      = nomor_surat_keputusan($post['nama']);
         $data['ref_point'] = bilangan($post['ref_point']);
-        $data['desk']      = htmlentities($post['desk']);
+        $data['desk']      = htmlentities((string) $post['desk']);
         $data['enabled']   = bilangan($post['enabled']);
 
         $lokasi_file = $_FILES['foto']['tmp_name'];
         $nama_file   = $_FILES['foto']['name'];
         $nama_file   = time() . '-' . str_replace(' ', '-', $nama_file);      // normalkan nama file
         if (! empty($lokasi_file)) {
+            $nama_file    = (new Checker(get_app_key(), $nama_file))->encrypt();
             $data['foto'] = UploadPeta($nama_file, LOKASI_FOTO_LOKASI);
         } else {
             unset($data['foto']);

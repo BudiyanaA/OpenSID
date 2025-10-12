@@ -54,6 +54,41 @@
         });
 
         $(document).ready(function() {
+            var viewOnly = "{{ $viewOnly }}";
+
+            if (viewOnly) {
+                // Disable all input form elements
+                $('form :input')
+                    .prop('readonly', true);
+
+                $('input[type="checkbox"]').prop('disabled', true);
+
+                // Disable all button form elements
+                $('form :button')
+                    .not('#tutup-restore')
+                    .not('#preview')
+                    .prop('disabled', true);
+
+                // If using select2, disable it separately
+                $('select').prop('disabled', true).trigger('change');
+
+                // Disable all <a> links within the form
+                $('form a')
+                    .not('#tabs a')
+                    .not('#kembali')
+                    .not('#restore_surat_bawaan')
+                    .not('#ok-restore')
+                    .css({
+                        'opacity': '0.5',
+                        'pointer-events': 'none',
+                        'cursor': 'default',
+                    });
+
+                // Disable tinymce editor
+                tinymce.activeEditor.mode.set('readonly');
+                tinymce.activeEditor.mode.set('design');
+            }
+
             syarat($('input[name=mandiri]:checked').val());
             $('input[name="mandiri"]').change(function() {
                 syarat($(this).val());
@@ -110,7 +145,7 @@
                                     },
                                     title: 'Pratinjau',
                                     html: `
-                                            <object data="${downloadUrl}" style="width: 100%;min-height: 400px;" type="application/pdf"></object>
+                                            <object data="${downloadUrl}#toolbar=0" style="width: 100%;min-height: 400px;" type="application/pdf"></object>
                                         `,
                                     showCancelButton: true,
                                     showConfirmButton: false,

@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -47,7 +47,9 @@ class PendidikanSedangEnum extends BaseEnum
     public const SEDANG_SD_SEDERAJAT                              = 4;
     public const TIDAK_TAMAT_SD_SEDERAJAT                         = 5;
     public const SEDANG_SLTP_SEDERAJAT                            = 6;
+    public const TIDAK_TAMAT_SLTP_SEDERAJAT                       = 19;
     public const SEDANG_SLTA_SEDERAJAT                            = 7;
+    public const TIDAK_TAMAT_SLTA_SEDERAJAT                       = 20;
     public const SEDANG_D_1_SEDERAJAT                             = 8;
     public const SEDANG_D_2_SEDERAJAT                             = 9;
     public const SEDANG_D_3_SEDERAJAT                             = 10;
@@ -72,7 +74,9 @@ class PendidikanSedangEnum extends BaseEnum
             self::SEDANG_SD_SEDERAJAT                              => 'SEDANG SD/SEDERAJAT',
             self::TIDAK_TAMAT_SD_SEDERAJAT                         => 'TIDAK TAMAT SD/SEDERAJAT',
             self::SEDANG_SLTP_SEDERAJAT                            => 'SEDANG SLTP/SEDERAJAT',
+            self::TIDAK_TAMAT_SLTP_SEDERAJAT                       => 'TIDAK TAMAT SLTP/SEDERAJAT',
             self::SEDANG_SLTA_SEDERAJAT                            => 'SEDANG SLTA/SEDERAJAT',
+            self::TIDAK_TAMAT_SLTA_SEDERAJAT                       => 'TIDAK TAMAT SLTA/SEDERAJAT',
             self::SEDANG_D_1_SEDERAJAT                             => 'SEDANG  D-1/SEDERAJAT',
             self::SEDANG_D_2_SEDERAJAT                             => 'SEDANG D-2/SEDERAJAT',
             self::SEDANG_D_3_SEDERAJAT                             => 'SEDANG D-3/SEDERAJAT',

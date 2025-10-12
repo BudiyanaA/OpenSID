@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,13 +29,11 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
  */
-
-use App\Models\Config;
 
 defined('BASEPATH') || exit('No direct script access allowed');
 
@@ -47,7 +45,7 @@ defined('BASEPATH') || exit('No direct script access allowed');
  * @property CI_Input            $input
  * @property CI_Lang             $lang
  * @property CI_Loader           $loader
- * @property CI_log              $log
+ * @property CI_Log              $log
  * @property CI_Output           $output
  * @property CI_Router           $router
  * @property CI_Security         $security
@@ -94,7 +92,7 @@ class Install extends CI_Controller
         ]);
     }
 
-    private function check_server()
+    private function check_server(): bool
     {
         foreach ($this->config->item('server') as $check) {
             if (! $check['check']()) {
@@ -124,7 +122,7 @@ class Install extends CI_Controller
         ]);
     }
 
-    private function check_folders()
+    private function check_folders(): bool
     {
         foreach ($this->config->item('folders') as $check) {
             if (! $check['check']()) {
@@ -202,7 +200,7 @@ class Install extends CI_Controller
         return redirect('install/migrations');
     }
 
-    private function config_database($request = [])
+    private function config_database(array $request = []): array
     {
         if (! $this->session->has_userdata('hostname') && isset($request['database_hostname'])) {
             $this->session->set_userdata([
@@ -233,13 +231,21 @@ class Install extends CI_Controller
                 {$db}['default']['password'] = '{$this->session->password}';
                 {$db}['default']['port']     = {$this->session->port};
                 {$db}['default']['database'] = '{$this->session->database}';
-                {$db}['default']['dbcollat'] = 'utf8_general_ci';
+                {$db}['default']['dbcollat'] = 'utf8mb4_general_ci';
 
                 /*
                 | Untuk setting koneksi database 'Strict Mode'
                 | Sesuaikan dengan ketentuan hosting
                 */
                 {$db}['default']['stricton'] = true;
+
+                /*
+                | Konfigurasi options digunakan untuk menyisipkan opsi tambahan
+                | saat mengatur koneksi ke database.
+                */
+                {$db}['default']['options'] = [
+                    // PDO::ATTR_EMULATE_PREPARES => true,
+                ];
                 EOS
         );
 
@@ -256,8 +262,8 @@ class Install extends CI_Controller
             'db_debug' => true,
             'cache_on' => false,
             'cachedir' => '',
-            'char_set' => 'utf8',
-            'dbcollat' => 'utf8_general_ci',
+            'char_set' => 'utf8mb4',
+            'dbcollat' => 'utf8mb4_general_ci',
             'swap_pre' => '',
             'encrypt'  => false,
             'compress' => false,
@@ -292,13 +298,10 @@ class Install extends CI_Controller
 
         try {
             folder_desa();
-            require_once 'donjo-app/config/database.php';
 
-            app('config')->set('database', require app()->configPath('eloquent.php'));
+            app()->configure('database');
 
             $this->load->model('seeders/seeder');
-            // $this->load->model('migrations/data_awal', 'data_awal');
-            // $this->data_awal->up();
 
             return redirect('install/user');
         } catch (Exception $e) {
@@ -324,11 +327,6 @@ class Install extends CI_Controller
         ) {
             return redirect('install/migrations');
         }
-
-        app('config')->set('database', require app()->configPath('eloquent.php'));
-
-        // load driver cache sesudah ada folder desa
-        $this->load->driver('cache', ['adapter' => 'file', 'backup' => 'dummy']);
 
         // disable install jika sudah mengubah password default
         if (! password_verify('sid304', $this->db->where('config_id', identitas('id'))->get('user')->row()->password)) {
@@ -381,8 +379,8 @@ class Install extends CI_Controller
 
     public function syarat_sandi($password)
     {
-        if (! preg_match('/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9])(?!.*\s).{8,20}$/', $password)) {
-            $this->form_validation->set_message('syarat_sandi', 'Harus 6 sampai 20 karakter dan sekurangnya berisi satu angka dan satu huruf besar dan satu huruf kecil');
+        if (! preg_match('/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9])(?!.*\s).{8,20}$/', (string) $password)) {
+            $this->form_validation->set_message('syarat_sandi', SYARAT_SANDI);
 
             return false;
         }
@@ -395,5 +393,7 @@ class Install extends CI_Controller
         foreach (config_item('lainnya') as $folder => $lainnya) {
             folder($folder, $lainnya[0], $lainnya[1], $lainnya[2] ?? []);
         }
+
+        copyFavicon();
     }
 }

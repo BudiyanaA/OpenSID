@@ -20,9 +20,8 @@
     {!! form_open($form_action, 'class="form-horizontal" id="validasi"') !!}
     <div class="box box-info">
         <div class="box-header with-border">
-            <a href="{{ ci_route('teks_berjalan') }}" class="btn btn-social  btn-info btn-sm btn-sm visible-xs-block visible-sm-inline-block visible-md-inline-block visible-lg-inline-block" title="Kembali Ke Teks Berjalan">
-                <i class="fa fa-arrow-circle-left "></i>Kembali Ke Teks Berjalan
-            </a>
+            @include('admin.layouts.components.tombol_kembali', ['url' => ci_route('teks_berjalan'), 'label' => 'Teks Berjalan'])
+
         </div>
         <div class="box-body">
             <div class="col-md-12">
@@ -56,7 +55,7 @@
             <div class="col-md-12" id="eksternal" style="display: {{ in_array($teks['tipe'], [null, '1']) ? 'none' : '' }}">
                 <div class="form-group">
                     <label class="control-label">Tautan Luar</label>
-                    <input class="form-control input-sm required" placeholder="Contoh: https://opendesa.id" id="tautan_eksternal" name="tautan_eksternal" value="<?= $teks['tautan'] ?>" maxlength="150"></input>
+                    <input class="form-control input-sm required url short_url" placeholder="Contoh: https://opendesa.id" id="tautan_eksternal" name="tautan_eksternal" value="<?= $teks['tautan'] ?>"></input>
                 </div>
             </div>
             <div class="col-md-12" id="box_judul_tautan" style="display: {{ $teks['tautan'] ? '' : 'none' }}">

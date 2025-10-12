@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -71,6 +71,8 @@ class FlxZipArchive extends ZipArchive
             return $this->tmp_file;
         }
         echo 'Could not create a zip archive';
+
+        return null;
     }
 
     public function download(string $nama_file): never
@@ -98,16 +100,16 @@ class FlxZipArchive extends ZipArchive
         $dir = opendir($location);
 
         while ($file = readdir($dir)) {
-            if ($file == '.') {
+            if ($file === '.') {
                 continue;
             }
-            if ($file == '..') {
+            if ($file === '..') {
                 continue;
             }
             $do        = (filetype($location . $file) == 'dir') ? 'addDir' : 'addFile';
             $file_info = get_file_info($location . $file);
 
-            if ($this->waktu_backup_terakhir != null && ($do == 'addFile' && ! Carbon::createFromTimestamp($file_info['date'])->gt($this->waktu_backup_terakhir))) {
+            if ($this->waktu_backup_terakhir != null && ($do === 'addFile' && ! Carbon::createFromTimestamp($file_info['date'])->gt($this->waktu_backup_terakhir))) {
                 continue;
             }
 

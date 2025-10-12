@@ -4,7 +4,7 @@
     <?php include FCPATH . '/assets/css/lampiran-surat.css'; ?>
 </style>
 
-<page orientation="portrait" format="210x330" style="font-size: 10pt">
+<page orientation="portrait" format="F4" style="font-size: 11pt">
 
     <!-- Judul Lampiran -->
     <table align="right">
@@ -56,7 +56,7 @@
     </table>
 
     <br>
-    <p class="title">SURAT KETERANGAN WALI NIKAH</p>
+    <p class="title-nikah">SURAT KETERANGAN WALI NIKAH</p>
     <table align="center">
         <tr>
             <td><span>Nomor : [FOrmat_nomor_surat]</span></td>
@@ -64,7 +64,7 @@
     </table>
 
 
-    <p>Yang bertanda tangan dibawah ini, [SeButan_kepala_desa] [SeButan_desa] [NAma_desa], Kecamatan [NAma_kecamatan], Kabupaten [NAma_kabupaten], menerangkan dengan sesungguhnya bahwa :</p>
+    <p>Yang bertanda tangan di bawah ini, [SeButan_kepala_desa] [SeButan_desa] [NAma_desa], Kecamatan [NAma_kecamatan], Kabupaten [NAma_kabupaten], menerangkan dengan sesungguhnya bahwa :</p>
     <table id="kop" class="disdukcapil">
         <col span="48" style="width: 2.0833%;">
         <tr>
@@ -80,7 +80,7 @@
             <td colspan="1">&nbsp;</td>
             <td colspan="20">Bin</td>
             <td>: </td>
-            <td colspan="27">[Form_bin_wali_nikaH]</td>
+            <td colspan="27">[Form_bin_dwN]</td>
         </tr>
         <tr>
             <td colspan="1">&nbsp;</td>
@@ -141,7 +141,7 @@
             <td colspan="1">&nbsp;</td>
             <td colspan="10">Sebagai</td>
             <td>: </td>
-            <td colspan="27">[Form_hubungan_dengan_walI]</td>
+            <td colspan="27">[Form_hubungan_dwN]</td>
         </tr>
     </table>
 
@@ -152,29 +152,29 @@
     <table style="border-collapse: collapse; width: 100%; height: 144px;" border="0">
     <tbody>
     <tr style="height: 18px;">
-    <td style="width: 26.6281%; text-align: center; height: 18px;"> </td>
-    <td style="width: 2.75528%; height: 18px;"> </td>
-    <td style="width: 70.6166%; text-align: center; height: 18px;">[NAma_desa], [TgL_surat]</td>
+    <td style="width: 26.6281%; text-align: center; height: 18px;"> </td>
+    <td style="width: 2.75528%; height: 18px;"> </td>
+    <td style="width: 70.6166%; text-align: center; height: 18px;">[Nama_desA], [TgL_surat]</td>
     </tr>
     <tr style="height: 18px;">
-    <td style="width: 26.6281%; text-align: center; height: 18px;"> </td>
-    <td style="width: 2.75528%; height: 18px;"> </td>
+    <td style="width: 26.6281%; text-align: center; height: 18px;"> </td>
+    <td style="width: 2.75528%; height: 18px;"> </td>
     <td style="width: 70.6166%; text-align: center; height: 18px;">[Atas_namA]</td>
     </tr>
     <tr style="height: 72px;">
     <td style="width: 26.6281%; text-align: center; height: 72px;">[qr_code]</td>
     <td style="width: 2.75528%; height: 72px;"><br><br><br><br></td>
-    <td style="width: 70.6166%; height: 72px;"> </td>
+    <td style="width: 70.6166%; height: 72px;"> </td>
     </tr>
     <tr style="height: 18px;">
-    <td style="width: 26.6281%; text-align: center; height: 18px;"> </td>
-    <td style="width: 2.75528%; height: 18px;"> </td>
+    <td style="width: 26.6281%; text-align: center; height: 18px;"> </td>
+    <td style="width: 2.75528%; height: 18px;"> </td>
     <td style="width: 70.6166%; text-align: center; height: 18px;">[NAma_pamonG]</td>
     </tr>
     <tr style="height: 18px;">
-    <td style="width: 26.6281%; height: 18px;"> </td>
-    <td style="width: 2.75528%; height: 18px;"> </td>
-    <td style="width: 70.6166%; text-align: center; height: 18px;"> </td>
+    <td style="width: 26.6281%; height: 18px;"> </td>
+    <td style="width: 2.75528%; height: 18px;"> </td>
+    <td style="width: 70.6166%; text-align: center; height: 18px;"> </td>
     </tr>
     </tbody>
     </table>

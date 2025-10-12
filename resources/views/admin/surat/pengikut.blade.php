@@ -1,12 +1,12 @@
 <div class="form-group">
-    <label for="keperluan" class="col-sm-3 control-label">Anak usia dibawah 18 tahun</label>
+    <label for="keperluan" class="col-sm-3 control-label">Anak usia di bawah 18 tahun</label>
     <div class="col-sm-9">
         <div>
             <div class="table-responsive">
                 <table class="table table-bordered table-striped table-hover tabel-daftar">
                     <thead class="bg-gray disabled color-palette">
                         <tr>
-                            <th><input type="checkbox" id="checkall" onclick="checkAll()" /></th>
+                            <th class="padat"><input type="checkbox" id="checkall" onclick="checkAll()" /></th>
                             <th>NIK</th>
                             <th>Nama</th>
                             <th>Jenis Kelamin</th>
@@ -20,7 +20,7 @@
                     <tbody>
                         @foreach ($pengikut as $key => $data)
                             <tr>
-                                <td>
+                                <td class="padat">
                                     <input type="checkbox" name="id_pengikut[]" value="<?= $data->id ?>" onchange="ket_($(this).is(':unchecked'),'<?= $data->id ?>');" />
                                 </td>
                                 <td class="padat">{{ $data->nik }}</td>

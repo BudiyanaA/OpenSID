@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,13 +29,14 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
  */
 
 use App\Models\KlasifikasiSurat;
+use App\Models\LogSurat;
 use App\Models\SuratKeluar;
 
 defined('BASEPATH') || exit('No direct script access allowed');
@@ -51,7 +52,7 @@ class Surat_keluar extends Admin_Controller
         isCan('b');
         // Untuk bisa menggunakan helper force_download()
         $this->load->helper('download');
-        $this->load->model(['penomoran_surat_model']);
+        $this->load->library('upload', null, 'upload');
         $this->uploadConfig = [
             'upload_path'   => LOKASI_ARSIP,
             'allowed_types' => 'gif|jpg|jpeg|png|pdf',
@@ -131,13 +132,13 @@ class Surat_keluar extends Admin_Controller
             $data['form_action']  = site_url("surat_keluar/update/{$id}");
         } else {
             $data['action']                     = 'Tambah';
-            $last_surat                         = $this->penomoran_surat_model->get_surat_terakhir('surat_keluar');
+            $last_surat                         = LogSurat::suratTerakhir('surat_keluar');
             $data['surat_keluar']['nomor_urut'] = $last_surat['no_surat'] + 1;
             $data['form_action']                = site_url('surat_keluar/insert');
         }
 
         // Buang unique id pada link nama file
-        $berkas                              = explode('__sid__', $data['surat_keluar']['berkas_scan']);
+        $berkas                              = explode('__sid__', (string) $data['surat_keluar']['berkas_scan']);
         $namaFile                            = $berkas[0];
         $ekstensiFile                        = explode('.', end($berkas));
         $ekstensiFile                        = end($ekstensiFile);
@@ -162,7 +163,7 @@ class Surat_keluar extends Admin_Controller
 
         // Cek nama berkas user boleh lebih dari 80 karakter (+20 untuk unique id) karena -
         // karakter maksimal yang bisa ditampung kolom surat_keluar.berkas_scan hanya 100 karakter
-        if ($adaLampiran && ((strlen($_FILES['satuan']['name']) + 20) >= 100)) {
+        if ($adaLampiran && ((strlen((string) $_FILES['satuan']['name']) + 20) >= 100)) {
             redirect_with('error', ' -> Nama berkas yang coba Anda unggah terlalu panjang, batas maksimal yang diijinkan adalah 80 karakter');
         }
 
@@ -233,7 +234,7 @@ class Surat_keluar extends Admin_Controller
             }
             // Cek nama berkas tidak boleh lebih dari 80 karakter (+20 untuk unique id) karena -
             // karakter maksimal yang bisa ditampung kolom surat_keluar.berkas_scan hanya 100 karakter
-            if ((strlen($_FILES['satuan']['name']) + 20) >= 100) {
+            if ((strlen((string) $_FILES['satuan']['name']) + 20) >= 100) {
                 redirect_with('error', ' -> Nama berkas yang coba Anda unggah terlalu panjang, batas maksimal yang diijinkan adalah 80 karakter');
             }
             // Inisialisasi library 'upload'
@@ -288,9 +289,9 @@ class Surat_keluar extends Admin_Controller
         // Normalkan tanggal
         $data['tanggal_surat'] = tgl_indo_in($data['tanggal_surat']);
         // Bersihkan data
-        $data['nomor_surat'] = nomor_surat_keputusan(strip_tags($data['nomor_surat']));
-        $data['tujuan']      = strip_tags($data['tujuan']);
-        $data['isi_singkat'] = strip_tags($data['isi_singkat']);
+        $data['nomor_surat'] = nomor_surat_keputusan(strip_tags((string) $data['nomor_surat']));
+        $data['tujuan']      = strip_tags((string) $data['tujuan']);
+        $data['isi_singkat'] = strip_tags((string) $data['isi_singkat']);
     }
 
     public function delete($id): void
@@ -326,12 +327,11 @@ class Surat_keluar extends Admin_Controller
 
     public function cetak($aksi = '')
     {
-        $query          = $this->sumberData();
-        $data           = $this->modal_penandatangan();
-        $data['aksi']   = $aksi;
-        $data['main']   = $query->get()->toArray();
-        $data['config'] = $this->header['desa'];
-        $data['tahun']  = $this->input->post('tahun');
+        $query         = $this->sumberData();
+        $data          = $this->modal_penandatangan();
+        $data['aksi']  = $aksi;
+        $data['main']  = $query->get()->toArray();
+        $data['tahun'] = $this->input->post('tahun');
         if ($data['tahun']) {
             $data['main'] = $query->whereYear('tanggal_surat', $data['tahun'])->get()->toArray();
         }
@@ -359,7 +359,7 @@ class Surat_keluar extends Admin_Controller
         if ($this->input->post('nomor_urut') == $this->input->post('nomor_urut_lama')) {
             $hasil = false;
         } else {
-            $hasil = $this->penomoran_surat_model->nomor_surat_duplikat('surat_keluar', $this->input->post('nomor_urut'));
+            $hasil = LogSurat::isDuplikat('surat_keluar', $this->input->post('nomor_urut'));
         }
         echo $hasil ? 'false' : 'true';
     }

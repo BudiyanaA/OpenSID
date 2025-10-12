@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,7 +29,7 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
@@ -47,6 +47,7 @@ class Wilayah extends Admin_Controller
 {
     public $modul_ini              = 'info-desa';
     public $sub_modul_ini          = 'wilayah-administratif';
+    public $kategori_pengaturan    = 'Wilayah Administratif';
     private array $subordinatLevel = ['dusun' => 'rw', 'rw' => 'rt'];
     private int $parent;
 
@@ -81,7 +82,7 @@ class Wilayah extends Admin_Controller
         }
         $data = [
             'parent'       => $parent,
-            'wilayah'      => $level == 'dusun' ? ucwords(setting('sebutan_dusun')) : strtoupper($level),
+            'wilayah'      => $level == 'dusun' ? ucwords((string) setting('sebutan_dusun')) : strtoupper((string) $level),
             'jabatan'      => $level == 'dusun' ? 'Kepala' : 'Ketua',
             'level'        => $level,
             'title'        => $title,
@@ -124,7 +125,7 @@ class Wilayah extends Admin_Controller
                     break;
 
                 default:
-                    $model           = WilayahModel::dusun()->with(['kepala'])->orderBy('urut')->withCount('rts', 'rws', 'keluargaAktif', 'pendudukPria', 'pendudukWanita');
+                    $model           = WilayahModel::dusun()->with(['kepala'])->orderBy('urut')->withCount(['rts', 'rws' => static fn ($q) => $q->where('rw', '!=', '-'), 'keluargaAktif', 'pendudukPria', 'pendudukWanita']);
                     $cek_lokasi_peta = cek_lokasi_peta(collect(identitas())->toArray());
                     $mapKantor       = 'ajax_kantor_dusun_maps';
                     $mapWilayah      = 'ajax_wilayah_dusun_maps';
@@ -136,7 +137,7 @@ class Wilayah extends Admin_Controller
                 ->addColumn('aksi', static function ($row) use ($parent, $mapKantor, $mapWilayah, $level, $subOrdinat, $cek_lokasi_peta): string {
                     $aksi = '';
                     if ($level != 'rt') {
-                        $aksi .= '<a href="' . ci_route('wilayah.index') . '?parent=' . $row->id . '&level=' . $subOrdinat . '" class="btn bg-purple btn-sm" title="Rincian Sub Wilayah"><i class="fa fa-list"></i></a> ';
+                        $aksi .= '<a href="' . ci_route('wilayah.index') . '?parent=' . $row->id . '&level=' . $subOrdinat . '" class="btn bg-purple btn-sm" title="Rincian"><i class="fa fa-list"></i></a> ';
                     }
                     if (can('u')) {
                         if ($level == 'rw') {
@@ -148,28 +149,19 @@ class Wilayah extends Admin_Controller
                         }
                     }
                     if (can('h')) {
-                        $disabled = '';
-                        if (($row->penduduk_pria_count + $row->penduduk_wanita_count) > 0) {
-                            $disabled = 'disabled';
-                        }
-
-                        if ($row->keluarga_aktif_count > 0) {
-                            $disabled = 'disabled';
-                        }
-
                         if ($level == 'rw') {
                             if ($row->rw != '-') {
-                                $aksi .= '<a href="#" data-href="' . ci_route('wilayah.delete', "{$level}/{$row->id}") . '" class="btn bg-maroon btn-sm ' . $disabled . '" title="Hapus" data-toggle="modal" data-target="#confirm-delete"><i class="fa fa-trash-o"></i></a> ';
+                                $aksi .= '<a href="#" data-href="' . ci_route('wilayah.delete', "{$level}/{$row->id}/{$parent}") . '" class="btn bg-maroon btn-sm" title="Hapus" data-toggle="modal" data-target="#confirm-delete"><i class="fa fa-trash-o"></i></a> ';
                             }
                         } else {
-                            $aksi .= '<a href="#" data-href="' . ci_route('wilayah.delete', "{$level}/{$row->id}") . '" class="btn bg-maroon btn-sm ' . $disabled . '" title="Hapus" data-toggle="modal" data-target="#confirm-delete"><i class="fa fa-trash-o"></i></a> ';
+                            $aksi .= '<a href="#" data-href="' . ci_route('wilayah.delete', "{$level}/{$row->id}/{$parent}") . '" class="btn bg-maroon btn-sm" title="Hapus" data-toggle="modal" data-target="#confirm-delete"><i class="fa fa-trash-o"></i></a> ';
                         }
                     }
                     if ($level == 'dusun' && $row->dusun == '-') {
                         $cek_lokasi_peta = false;
                     }
                     if ($cek_lokasi_peta && can('u')) {
-                        $wilayah = $level == 'dusun' ? ucwords(setting('sebutan_dusun')) : strtoupper($level);
+                        $wilayah = $level == 'dusun' ? ucwords((string) setting('sebutan_dusun')) : strtoupper($level);
                         if (! ($level == 'rw' && $row->rw == '-')) {
                             $aksi .= '<div class="btn-group">
                                 <button type="button" class="btn btn-social btn-info btn-sm" data-toggle="dropdown"><i class="fa fa-arrow-circle-down"></i> Peta</button>
@@ -188,8 +180,8 @@ class Wilayah extends Admin_Controller
                     return $aksi;
                 })
                 ->addColumn('penduduk_count', static fn ($row): string => $level == 'dusun' ? '<a href="' . ci_route('wilayah.warga', $row->id) . '">' . ($row->penduduk_pria_count + $row->penduduk_wanita_count) . '</a>' : '<span>' . ($row->penduduk_pria_count + $row->penduduk_wanita_count) . '</span>')
-                ->editColumn('rts_count', static fn ($row): string => $level == 'rw' ? '<a href="' . ci_route('wilayah.index') . '?parent=' . $row->id . '&level=' . $subOrdinat . '" title="Rincian Sub Wilayah">' . ($row->rts_count ?? '') . '</a>' : '<span>' . ($row->rts_count ?? '') . '</span>')
-                ->editColumn('rws_count', static fn ($row): string => $level == 'dusun' ? '<a href="' . ci_route('wilayah.index') . '?parent=' . $row->id . '&level=' . $subOrdinat . '" title="Rincian Sub Wilayah">' . ($row->rws_count ?? '') . '</a>' : '<span>' . ($row->rws_count ?? '') . '</span>')
+                ->editColumn('rts_count', static fn ($row): string => $level == 'rw' ? '<a href="' . ci_route('wilayah.index') . '?parent=' . $row->id . '&level=' . $subOrdinat . '" title="Rincian">' . ($row->rts_count ?? '') . '</a>' : '<span>' . ($row->rts_count ?? '') . '</span>')
+                ->editColumn('rws_count', static fn ($row): string => $level == 'dusun' ? '<a href="' . ci_route('wilayah.index') . '?parent=' . $row->id . '&level=' . $subOrdinat . '" title="Rincian">' . ($row->rws_count ?? '') . '</a>' : '<span>' . ($row->rws_count ?? '') . '</span>')
                 ->editColumn('keluarga_aktif_count', static fn ($row): string => $level == 'dusun' ? '<a href="' . ci_route('wilayah.warga_kk', $row->id) . '">' . ($row->keluarga_aktif_count ?? '') . '</a>' : '<span>' . ($row->keluarga_aktif_count ?? '') . '</span>')
                 ->editColumn('penduduk_pria_count', static fn ($row): string => $level == 'dusun' ? '<a href="' . ci_route('wilayah.warga_l', $row->id) . '">' . ($row->penduduk_pria_count ?? '') . '</a>' : '<span>' . ($row->penduduk_pria_count ?? '') . '</span>')
                 ->editColumn('penduduk_wanita_count', static fn ($row): string => $level == 'dusun' ? '<a href="' . ci_route('wilayah.warga_p', $row->id) . '">' . ($row->penduduk_wanita_count ?? '') . '</a>' : '<span>' . ($row->penduduk_wanita_count ?? '') . '</span>')
@@ -204,6 +196,7 @@ class Wilayah extends Admin_Controller
 
     public function tukar()
     {
+        isCan('u');
         $wilayah = $this->input->post('data');
         if ($wilayah) {
             WilayahModel::setNewOrder($wilayah);
@@ -228,7 +221,6 @@ class Wilayah extends Admin_Controller
     {
         $data['pamong_ttd']     = Pamong::selectData()->where(['pamong_id' => $this->input->post('pamong_ttd')])->first()->toArray();
         $data['pamong_ketahui'] = Pamong::selectData()->where(['pamong_id' => $this->input->post('pamong_ketahui')])->first()->toArray();
-        $data['desa']           = $this->header['desa'];
         $data['dusuns']         = WilayahModel::dusun()->with([
             'kepala', 'rws' => static fn ($q) => $q->orderBy('urut')->with([
                 'kepala', 'rts' => static fn ($q) => $q->orderBy('urut')->with('kepala')->withCount([
@@ -237,7 +229,8 @@ class Wilayah extends Admin_Controller
             ])->withCount([
                 'rts' => static fn ($q) => $q->whereRaw(DB::raw('laravel_reserved_5.rw = tweb_wil_clusterdesa.rw')), 'keluargaAktif' => static fn ($q) => $q->whereRaw(DB::raw('laravel_reserved_6.rw = tweb_wil_clusterdesa.rw')), 'pendudukPria' => static fn ($q) => $q->whereRaw(DB::raw('laravel_reserved_7.rw = tweb_wil_clusterdesa.rw')), 'pendudukWanita' => static fn ($q) => $q->whereRaw(DB::raw('laravel_reserved_8.rw = tweb_wil_clusterdesa.rw')),
             ]),
-        ])->orderBy('urut')->withCount('rts', 'rws', 'keluargaAktif', 'pendudukPria', 'pendudukWanita')->get();
+        ])->orderBy('urut')->withCount(['rts', 'rws' => static fn ($q) => $q->where('rw', '!=', '-'), 'keluargaAktif', 'pendudukPria', 'pendudukWanita'])->get();
+
         if ($aksi == 'unduh') {
             header('Content-type: application/octet-stream');
             header('Content-Disposition: attachment; filename=wilayah_' . date('Y-m-d') . '.xls');
@@ -254,7 +247,7 @@ class Wilayah extends Admin_Controller
         $data   = [
             'wilayah'      => null,
             'form_action'  => ci_route("{$this->controller}.insert.{$level}.{$parent}"),
-            'wilayahLabel' => $level == 'dusun' ? ucwords(setting('sebutan_dusun')) : strtoupper($level),
+            'wilayahLabel' => $level === 'dusun' ? ucwords((string) setting('sebutan_dusun')) : strtoupper($level),
             'level'        => $level,
         ];
         if ($id) {
@@ -310,15 +303,15 @@ class Wilayah extends Admin_Controller
         return show_404();
     }
 
-    private function bersihkan_data($data)
+    private function bersihkan_data(array $data): array
     {
         if ((int) $data['id_kepala'] === 0) {
             unset($data['id_kepala']);
         }
 
         $data['dusun'] = nama_terbatas(trim(str_ireplace('DUSUN', '', $data['dusun'])));
-        $data['rw']    = nama_terbatas(trim($data['rw']));
-        $data['rt']    = nama_terbatas(trim($data['rt']));
+        $data['rw']    = nama_terbatas(trim((string) $data['rw'])) ?: 0;
+        $data['rt']    = nama_terbatas(trim((string) $data['rt'])) ?: 0;
 
         return $data;
     }
@@ -378,22 +371,28 @@ class Wilayah extends Admin_Controller
             $data = $this->bersihkan_data($this->request);
             $obj  = WilayahModel::find($id);
 
-            // update nama wilayah yang dibawahnya, karena hubungan parent - child diidentifikasi berdasarkan nama
+            // update nama wilayah yang di bawahnya, karena hubungan parent - child diidentifikasi berdasarkan nama
             switch ($level) {
                 case 'dusun':
-                    // update rw dan rt dibawahnya
+                    // update rw dan rt di bawahnya
                     WilayahModel::whereDusun($obj->dusun)->update(['dusun' => $data['dusun']]);
                     unset($data['rt'], $data['rw']);
 
                     $obj->update($data);
+
+                    // update data id_kepala di dusun
+                    WilayahModel::whereDusun($obj->dusun)->whereRw('-')->update(['id_kepala' => $data['id_kepala']]);
                     break;
 
                 case 'rw':
-                    // update rt dibawahnya
+                    // update rt di bawahnya
                     WilayahModel::whereDusun($obj->dusun)->whereRw($obj->rw)->update(['rw' => $data['rw']]);
                     unset($data['dusun'], $data['rt']);
 
                     $obj->update($data);
+
+                    // update data id_kepala di rw
+                    WilayahModel::whereDusun($obj->dusun)->whereRw($obj->rw)->whereRt('-')->update(['id_kepala' => $data['id_kepala']]);
                     break;
 
                 default:
@@ -410,7 +409,7 @@ class Wilayah extends Admin_Controller
     }
 
     //Delete dusun/rw/rt tergantung tipe
-    public function delete(string $level, int $id): void
+    public function delete(string $level, int $id, ?int $parent = null): void
     {
         isCan('h');
         // Perlu hapus berdasarkan nama, supaya baris RW dan RT juga terhapus
@@ -439,10 +438,24 @@ class Wilayah extends Admin_Controller
         $keluarga = Keluarga::whereIn('id_cluster', $id_cluster)->count();
 
         $this->session->dusun = $wilayah->dusun;
-        $url_penduduk         = ci_route('penduduk.index');
-        $url_keluarga         = ci_route('keluarga.index');
+
+        $url_penduduk = ci_route('penduduk', "?status_dasar=\"\"&dusun={$wilayah->dusun}");
+        $url_keluarga = ci_route('keluarga', "?dusun={$wilayah->dusun}");
+
         if ($penduduk + $keluarga != 0) {
-            redirect_with('error', $nama . ' tidak dapat dihapus karena hal berikut: <ol><li>Terdapat penduduk dengan status mati, pindah, hilang, pergi dan tidak valid </li><li>Terdapat kelurga dengan status KK Hilang/Pindah/Mati dan KK Kosong</li></ol>Silakan hapus data <a href="' . $url_penduduk . '" target="_blank">Penduduk</a> atau <a href="' . $url_keluarga . '" target="_blank">Keluarga</a> terlebih dahulu pada setiap status tersebut.', '', true);
+            redirect_with(
+                'error',
+                "
+                    {$nama} tidak dapat dihapus karena hal berikut:
+                    <ol>
+                        <li>Terdapat penduduk dengan status mati, pindah, hilang, pergi dan tidak valid</li>
+                        <li>Terdapat kelurga dengan status KK Hilang/Pindah/Mati dan KK Kosong</li>
+                    </ol>
+                    Silakan hapus data atau pindahkan data secara kolektif yang ada pada <a href='{$url_penduduk}' target='_blank'>Penduduk</a> atau <a href='{$url_keluarga}' target='_blank'>Keluarga</a> terlebih dahulu pada setiap status tersebut.
+                ",
+                ci_route('wilayah.index') . "?level={$level}&parent={$parent}",
+                true
+            );
         }
 
         WilayahModel::whereIn('id', $id_cluster)->delete();
@@ -518,8 +531,7 @@ class Wilayah extends Admin_Controller
     public function ajax_kantor_dusun_maps(int $id): void
     {
         $data['wil_atas'] = $this->header['desa'];
-        $data['desa']     = $this->header['desa'];
-        $sebutan_desa     = ucwords(setting('sebutan_desa'));
+        $sebutan_desa     = ucwords((string) setting('sebutan_desa'));
         $namadesa         = $data['wil_atas']['nama_desa'];
 
         $this->ubah_lokasi_peta($data['wil_atas'], 'index', "Lokasi Kantor {$sebutan_desa} {$namadesa} Belum Dilengkapi");
@@ -531,7 +543,7 @@ class Wilayah extends Admin_Controller
         $data['rw_gis']       = WilayahModel::rw()->get()->toArray();
         $data['rt_gis']       = WilayahModel::rt()->get()->toArray();
         $data['nama_wilayah'] = ucwords(setting('sebutan_dusun') . ' ' . $data['wil_ini']['dusun'] . ' ' . $sebutan_desa . ' ' . $data['wil_atas']['nama_desa']);
-        $data['wilayah']      = ucwords(setting('sebutan_dusun'));
+        $data['wilayah']      = ucwords((string) setting('sebutan_dusun'));
         $data['breadcrumb']   = [
             ['link' => ci_route('wilayah'), 'judul' => 'Daftar ' . $data['wilayah']],
         ];
@@ -544,8 +556,7 @@ class Wilayah extends Admin_Controller
     public function ajax_wilayah_dusun_maps(int $id): void
     {
         $data['wil_atas'] = $this->header['desa'];
-        $data['desa']     = $this->header['desa'];
-        $sebutan_desa     = ucwords(setting('sebutan_desa'));
+        $sebutan_desa     = ucwords((string) setting('sebutan_desa'));
         $namadesa         = $data['wil_atas']['nama_desa'];
         $this->ubah_lokasi_peta($data['wil_atas'], 'index', "Peta Wilayah {$sebutan_desa} {$namadesa} Belum Dilengkapi");
 
@@ -555,7 +566,7 @@ class Wilayah extends Admin_Controller
         $data['rw_gis']       = WilayahModel::rw()->get()->toArray();
         $data['rt_gis']       = WilayahModel::rt()->get()->toArray();
         $data['nama_wilayah'] = ucwords(setting('sebutan_dusun') . ' ' . $data['wil_ini']['dusun'] . ' ' . $sebutan_desa . ' ' . $data['wil_atas']['nama_desa']);
-        $data['wilayah']      = ucwords(setting('sebutan_dusun'));
+        $data['wilayah']      = ucwords((string) setting('sebutan_dusun'));
         $data['breadcrumb']   = [
             ['link' => ci_route('wilayah'), 'judul' => 'Daftar ' . $data['wilayah']],
         ];
@@ -567,9 +578,8 @@ class Wilayah extends Admin_Controller
 
     public function ajax_kantor_rw_maps(int $id, int $id_dusun): void
     {
-        $data['desa']     = $this->header['desa'];
         $data['wil_atas'] = WilayahModel::find($id_dusun)->toArray();
-        $sebutan_dusun    = ucwords(setting('sebutan_dusun'));
+        $sebutan_dusun    = ucwords((string) setting('sebutan_dusun'));
         $dusun            = $data['wil_atas']['dusun'];
         $this->ubah_lokasi_peta($data['wil_atas'], "index?level=rw&parent={$id_dusun}", "Lokasi Kantor {$sebutan_dusun} {$dusun} Belum Dilengkapi");
 
@@ -592,9 +602,8 @@ class Wilayah extends Admin_Controller
 
     public function ajax_wilayah_rw_maps(int $id, int $id_dusun): void
     {
-        $data['desa']     = $this->header['desa'];
         $data['wil_atas'] = WilayahModel::find($id_dusun)->toArray();
-        $sebutan_dusun    = ucwords(setting('sebutan_dusun'));
+        $sebutan_dusun    = ucwords((string) setting('sebutan_dusun'));
         $dusun            = $data['wil_atas']['dusun'];
         $this->ubah_lokasi_peta($data['wil_atas'], "index?level=rw&parent={$id_dusun}", "Peta Wilayah {$sebutan_dusun} {$dusun} Belum Dilengkapi");
 
@@ -618,13 +627,12 @@ class Wilayah extends Admin_Controller
     public function ajax_kantor_rt_maps(int $id, int $id_rw): void
     {
         $dataRW           = WilayahModel::find($id_rw)->toArray();
-        $data['desa']     = $this->header['desa'];
         $data['wil_atas'] = $dataRW;
         $id_dusun         = WilayahModel::dusun()->whereDusun($dataRW['dusun'])->first()->id;
         if ($dataRW['rw'] == '-') {
             $data['wil_atas'] = WilayahModel::find($id_dusun)->toArray();
         }
-        $sebutan_dusun = ucwords(setting('sebutan_dusun'));
+        $sebutan_dusun = ucwords((string) setting('sebutan_dusun'));
         $dusun         = $data['wil_atas']['dusun'];
         $this->ubah_lokasi_peta($data['wil_atas'], "index?level=rt&parent={$id_rw}", "Lokasi Kantor {$sebutan_dusun} {$dusun} Belum Dilengkapi");
 
@@ -649,13 +657,12 @@ class Wilayah extends Admin_Controller
     {
         $dataRW           = WilayahModel::find($id_rw)->toArray();
         $id_dusun         = WilayahModel::dusun()->whereDusun($dataRW['dusun'])->first()->id;
-        $data['desa']     = $this->header['desa'];
         $data['wil_atas'] = $dataRW;
         if ($dataRW['rw'] == '-') {
             $data['wil_atas'] = WilayahModel::find($id_dusun)->toArray();
         }
 
-        $sebutan_dusun = ucwords(setting('sebutan_dusun'));
+        $sebutan_dusun = ucwords((string) setting('sebutan_dusun'));
         $dusun         = $data['wil_atas']['dusun'];
         $this->ubah_lokasi_peta($data['wil_atas'], "index?level=rt&parent={$id_rw}", "Peta Wilayah {$sebutan_dusun} {$dusun} Belum Dilengkapi");
 
@@ -714,7 +721,7 @@ class Wilayah extends Admin_Controller
 
     public function list_rw($dusun = ''): void
     {
-        $dusun   = urldecode($dusun);
+        $dusun   = urldecode((string) $dusun);
         $list_rw = WilayahModel::rw()
             ->when($dusun, static fn ($q) => $q->whereDusun($dusun))
             ->get()
@@ -725,7 +732,7 @@ class Wilayah extends Admin_Controller
 
     public function list_rt($dusun = '', $rw = '-'): void
     {
-        $dusun   = urldecode($dusun);
+        $dusun   = urldecode((string) $dusun);
         $list_rt = WilayahModel::rt()
             ->when($dusun, static fn ($q) => $q->whereDusun($dusun))
             ->when($rw, static fn ($q) => $q->whereRw($rw))
@@ -746,7 +753,7 @@ class Wilayah extends Admin_Controller
         }
     }
 
-    private function validasi_koordinat($post)
+    private function validasi_koordinat(array $post): array
     {
         return [
             'zoom'     => $post['zoom'] ?: null,
@@ -758,7 +765,7 @@ class Wilayah extends Admin_Controller
         ];
     }
 
-    private function validasi_wilayah($post)
+    private function validasi_wilayah(array $post): array
     {
         return [
             'path'   => $post['path'],

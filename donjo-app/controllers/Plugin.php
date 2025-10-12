@@ -11,7 +11,7 @@
  * Aplikasi dan source code ini dirilis berdasarkan lisensi GPL V3
  *
  * Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  *
  * Dengan ini diberikan izin, secara gratis, kepada siapa pun yang mendapatkan salinan
  * dari perangkat lunak ini dan file dokumentasi terkait ("Aplikasi Ini"), untuk diperlakukan
@@ -29,22 +29,26 @@
  * @package   OpenSID
  * @author    Tim Pengembang OpenDesa
  * @copyright Hak Cipta 2009 - 2015 Combine Resource Institution (http://lumbungkomunitas.net/)
- * @copyright Hak Cipta 2016 - 2024 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
+ * @copyright Hak Cipta 2016 - 2025 Perkumpulan Desa Digital Terbuka (https://opendesa.id)
  * @license   http://www.gnu.org/licenses/gpl.html GPL V3
  * @link      https://github.com/OpenSID/OpenSID
  *
  */
 
+use App\Traits\Migrator;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 
 defined('BASEPATH') || exit('No direct script access allowed');
 
 class Plugin extends Admin_Controller
 {
+    use Migrator;
+
     public $modul_ini       = 'pengaturan';
     public $sub_modul_ini   = 'modul';
     public $aliasController = 'modul';
-    private $modulesDirectory;
+    private int|string $modulesDirectory;
 
     public function __construct()
     {
@@ -80,7 +84,10 @@ class Plugin extends Admin_Controller
         view('admin.plugin.index', $data);
     }
 
-    private function paketTerpasang()
+    /**
+     * @return mixed[]
+     */
+    private function paketTerpasang(): array
     {
         $terpasang         = [];
         $moduleDirectories = glob($this->modulesDirectory . '*', GLOB_ONLYDIR);
@@ -97,7 +104,7 @@ class Plugin extends Admin_Controller
 
     public function pasang(): void
     {
-        [$name, $url, $version] = explode('___', $this->request['pasang']);
+        [$name, $url, $version] = explode('___', (string) $this->request['pasang']);
         $pasangBaru             = true;
         if ($version !== '' && $version !== '0') {
             forceRemoveDir($this->modulesDirectory . $name);
@@ -116,42 +123,52 @@ class Plugin extends Admin_Controller
                 log_message('error', $e->getMessage());
             }
         }
-        // reset cache views_blade karena di MY_Controller diset cache rememberForever
-        cache()->forget('views_blade');
         redirect('plugin');
     }
 
-    private function pasangPaket(string $name, string $url): void
+    /**
+     * Fungsi untuk memasang paket
+     */
+    private function pasangPaket(string $name, string $url)
     {
         try {
-            // Destination path for the downloaded ZIP file
             $zipFilePath     = $this->modulesDirectory . $name . '.zip';
             $extractedDir    = $this->modulesDirectory . $name;
             $tmpExtractedDir = $this->modulesDirectory;
-            if (file_exists($extractedDir . '/modules.json')) {
-                set_session('error', 'Paket ' . $name . ' sudah ada');
-                redirect('plugin');
+
+            if (File::exists($extractedDir . '/modules.json')) {
+                return redirect_with('error', "Paket {$name} sudah ada", 'plugin');
             }
 
-            // Download the ZIP file
-            file_put_contents($zipFilePath, file_get_contents($url));
-            // Extract the ZIP file
-            $zip = new ZipArchive();
-            if ($zip->open($zipFilePath) == true) {
-                $subfolder = $zip->getNameIndex(0);
-                $zip->extractTo($tmpExtractedDir);
-                $zip->close();
-                rename($tmpExtractedDir . substr($subfolder, 0, -1), $extractedDir);
-                // jalankan migrasi dari paket
-                $this->jalankanMigrasi($name, 'up');
-                set_session('success', 'Paket tambahan ' . $name . ' berhasil diinstall, silakan aktifkan paket tersebut');
-                // Optional: Remove the downloaded ZIP file
-                unlink($zipFilePath);
-                // reset cache views_blade karena di MY_Controller diset cache rememberForever
-                cache()->forget('views_blade');
-            } else {
-                set_session('error', 'Gagal download paket ' . $url . ' atau gagal ekstract ke folder ' . $extractedDir);
+            if (file_put_contents($zipFilePath, file_get_contents($url)) === false) {
+                return redirect_with('error', "Gagal mengunduh paket dari {$url}", 'plugin');
             }
+
+            $zip = new ZipArchive();
+            if ($zip->open($zipFilePath) !== true) {
+                return redirect_with('error', "Gagal membuka file ZIP: {$zipFilePath}", 'plugin');
+            }
+
+            $subfolder = rtrim($zip->getNameIndex(0), '/');
+            $sourceDir = $tmpExtractedDir . $subfolder;
+            $zip->extractTo($tmpExtractedDir);
+            $zip->close();
+
+            if (File::exists($extractedDir)) {
+                File::deleteDirectory($extractedDir);
+            }
+
+            if (! File::exists($sourceDir)) {
+                return redirect_with('error', "Direktori sumber tidak ditemukan: {$sourceDir}", 'plugin');
+            }
+
+            if (! File::move($sourceDir, $extractedDir)) {
+                return redirect_with('error', "Gagal memindahkan direktori dari {$sourceDir} ke {$extractedDir}", 'plugin');
+            }
+
+            $this->jalankanMigrasiModule($name, 'up');
+            set_session('success', "Paket tambahan {$name} berhasil diinstall, silakan aktifkan paket tersebut");
+            unlink($zipFilePath);
         } catch (Exception $e) {
             log_message('error', $e->getMessage());
             set_session('error', $e->getMessage());
@@ -166,53 +183,13 @@ class Plugin extends Admin_Controller
                 set_session('error', 'Nama paket tidak boleh kosong');
                 redirect('plugin/installed');
             }
-            $this->jalankanMigrasi($name, 'down');
+            $this->jalankanMigrasiModule($name, 'down');
             forceRemoveDir($this->modulesDirectory . $name);
             set_session('success', 'Paket ' . $name . ' berhasil dihapus');
-            // reset cache views_blade karena di MY_Controller diset cache rememberForever
-            cache()->forget('views_blade');
         } catch (Exception $e) {
             log_message('error', $e->getMessage());
             set_session('error', 'Paket ' . $name . ' gagal dihapus (' . $e->getMessage() . ')');
         }
         redirect('plugin/installed');
-    }
-
-    private function jalankanMigrasi($name, string $action = 'up'): void
-    {
-        $this->load->helper('directory');
-        $directoryTable = $this->modulesDirectory . $name . '/Database/Migrations';
-        $migrations     = directory_map($directoryTable, 1);
-        if ($action == 'up') {
-            usort($migrations, static fn ($a, $b): int => strcmp($a, $b));
-        }
-
-        foreach ($migrations as $migrate) {
-            $migrateFile = require $directoryTable . DIRECTORY_SEPARATOR . $migrate;
-
-            switch($action) {
-                case 'down':
-                    $migrateFile->down();
-                    break;
-
-                default:
-                    $migrateFile->up();
-            }
-        }
-    }
-
-    public function dev($name, $action): void
-    {
-        if (ENVIRONMENT !== 'development') {
-            show_error('Hanya bisa dijalankan di development');
-        }
-
-        if (! is_dir($this->modulesDirectory . $name)) {
-            show_error('Modul ' . $name . ' tidak ditemukan');
-        }
-
-        $this->jalankanMigrasi($name, $action ?? 'up');
-
-        redirect_with('success', 'Migrasi Modul ' . $name . ' berhasil dijalankan');
     }
 }
