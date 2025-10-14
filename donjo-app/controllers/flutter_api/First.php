@@ -8,11 +8,11 @@ class First extends MY_Controller
 {
     public function index()
     {
-        $this->load->model('theme_model');
-        $this->load->model('first_menu_m');
-        $this->load->model('first_artikel_m');
-        $this->load->model('web_widget_model');
-        $this->load->model('laporan_penduduk_model');
+        $this->load->model('custom/theme_model');
+        $this->load->model('custom/first_menu_m');
+        $this->load->model('custom/first_artikel_m');
+        $this->load->model('custom/web_widget_model');
+        $this->load->model('custom/laporan_penduduk_model');
 
         $desa = identitas();
         $theme        = $this->theme_model->tema;
