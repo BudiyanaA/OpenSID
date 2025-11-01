@@ -194,6 +194,10 @@ Route::group('flutter_api', ['namespace' => 'flutter_api'], static function (): 
   Route::post('bantuan/insert', 'Bantuan@insert');
   Route::post('pendaftaran_kerjasama/insert', 'PendaftaranKerjasama@insert');
   Route::post('web/insert/{cat}', 'web@insert');
+
+  Route::group('admin', ['namespace' => 'admin'], static function (): void {
+      Route::get('menu', 'Menu@index');
+  });
 });
 // API Publik
 Route::group('', ['namespace' => 'fweb'], static function (): void {
