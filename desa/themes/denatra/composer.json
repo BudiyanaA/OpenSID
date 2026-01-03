@@ -1,0 +1,17 @@
+{
+    "name": "themes/denatra",
+    "type": "library",
+    "description": "Tema Pro OpenSID",
+    "homepage": "https://github.com/ariandii/denatra-blade",
+    "license": "GPL-3.0-or-later",
+    "keywords": [
+        "Themes",
+        "OpenSID"
+    ],
+    "authors": [
+        {
+            "name": "Ariandi Ryan Kahfi, S.Pd.",
+            "email": "ariandi@mail.com"
+        }
+    ]
+}
