@@ -32,7 +32,7 @@
 			},
 			text: {
 				title: "{{ ucwords(setting('sebutan_desa')) . ' ' . $desa['nama_desa'] }}",
-				description: "Tema {{ THEME_NAME }} {{ THEME_VERSION }}",
+				description: "",
 				message: "Halo 🙂<br>Ada yang bisa kami bantu?",
 				textbox: "Ketik di sini",
 				button: false

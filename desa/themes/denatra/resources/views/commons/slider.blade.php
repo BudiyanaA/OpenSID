@@ -45,7 +45,7 @@
         $img = str_replace('assets/', '', $slider_gambar['lokasi']) . 'sedang_' . $gambar['gambar'];
         @endphp
         <div class="carousel-item {{ $active ? 'active' : '' }}" style="max-height: {{ $tinggi_slider }};">
-        <img src="{{ $img }}" class="d-block img-responsive cover img-thumbnail img-fluid opacity-100" alt="{{ $gambar['judul'] }}">
+        <img src="{{ base_url($img) }}" class="d-block img-responsive cover img-thumbnail img-fluid opacity-100" alt="{{ $gambar['judul'] }}">
         @if ($slider_gambar['sumber'] != 3)
             <a href="{{ url('artikel/' . buat_slug($gambar)) }}">
             <div class="carousel-caption d-none d-md-block textgambar">

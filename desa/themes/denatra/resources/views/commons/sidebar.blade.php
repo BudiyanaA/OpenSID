@@ -195,7 +195,7 @@
                 <div class="col-12">
                     <p class="page-sub-title-small">
                         <span class="icon-circle"><i class="material-icons">router</i></span>
-                        OpenSID {{ AmbilVersi() }}
+                        SIMDESA {{ AmbilVersi() }}
                     </p>
                 </div>
             </div>
