@@ -319,7 +319,7 @@ class Str
         }
 
         foreach ($needles as $needle) {
-            if ((string) $needle !== '' && str_ends_with($haystack, $needle)) {
+            if ((string) $needle !== '' && str_ends_with($haystack ?? '', $needle)) {
                 return true;
             }
         }

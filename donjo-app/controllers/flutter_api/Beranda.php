@@ -11,17 +11,20 @@ class Beranda extends MY_Controller
     {
         parent::__construct();
         $this->isAdmin = $this->session->isAdmin->pamong;
-        $this->load->model('pelanggan_model');
+        // $this->load->model('pelanggan_model');
     }
     public function index(){
         get_pesan_opendk(); //ambil pesan baru di opendk
 
-        $this->load->library('saas');
+        // $this->load->library('saas');
         $data = [
-            'rilis'           => $this->getUpdate(),
-            'shortcut'        => Shortcut::querys()['data'],
-            'saas'            => $this->saas->peringatan(),
-            'notif_langganan' => $this->pelanggan_model->status_langganan(),
+            // 'rilis'           => $this->getUpdate(),
+            'shortcut' => Shortcut::querys()['data']->map(function ($item) {
+                $item->count = $item->count;
+                return $item;
+            }),
+            // 'saas'            => $this->saas->peringatan(),
+            // 'notif_langganan' => $this->pelanggan_model->status_langganan(),
         ];
         return json([
             'status' => 200,
