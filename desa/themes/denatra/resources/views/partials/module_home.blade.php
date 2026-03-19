@@ -1,9 +1,21 @@
 @includeIf('theme::partials.home.covid-data')
 @includeIf('theme::partials.video.index')
+<style>
+  .background-img {
+    width: 100%;
+    position: relative;
+    left: 0;
+    top: 0;
+    height: 100%;
+    overflow: hidden;
+    z-index: 0;
+  }
+</style>
+
 <div class="row">
     <div class="container-fluid mt-0 main-container z-index-1">
         <div class="row no-gutters box-shadow-large mb-1 bg-white rounded has-background-img mt-0">
-            <div class="col-12 col-md-6 col-lg-7 has-background-img min-height-300" style="min-height: 500px;">
+            <div class="col-12 col-md-6 col-lg-7 has-background-img min-height-300">
                 <div class="background-img {{ cekKondisiPink() }}-gradient">
                     <div class="align-self-center text-center mt-4">
                         <div class="logo-img-loader mb-2">
