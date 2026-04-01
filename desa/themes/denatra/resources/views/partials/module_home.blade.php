@@ -1,7 +1,7 @@
 @includeIf('theme::partials.home.covid-data')
 @includeIf('theme::partials.video.index')
 <style>
-  .background-img {
+  .background-img-kades {
     width: 100%;
     position: relative;
     left: 0;
@@ -16,7 +16,7 @@
     <div class="container-fluid mt-0 main-container z-index-1">
         <div class="row no-gutters box-shadow-large mb-1 bg-white rounded has-background-img mt-0">
             <div class="col-12 col-md-6 col-lg-7 has-background-img min-height-300">
-                <div class="background-img {{ cekKondisiPink() }}-gradient">
+                <div class="background-img background-img-kades {{ cekKondisiPink() }}-gradient">
                     <div class="align-self-center text-center mt-4">
                         <div class="logo-img-loader mb-2">
                             @if(!empty($aparatur_desa['daftar_perangkat']))
