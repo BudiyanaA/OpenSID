@@ -7,6 +7,16 @@
     <!-- DataTables JS-->
     <script src="{{ asset('bootstrap/js/jquery.dataTables.min.js') }}"></script>
     <script src="{{ asset('bootstrap/js/dataTables.bootstrap.min.js') }}"></script>
+<script>
+$(document).ready(function() {
+
+    $.ajaxSetup({
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    });
+});
+</script>
     <script>
         $.extend($.fn.dataTable.defaults, {
             responsive: true,
