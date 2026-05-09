@@ -32,7 +32,7 @@
 
     @include('admin.home.premium')
 
-    @include('admin.home.rilis')
+    {{-- @include('admin.home.rilis') --}}
 
     <div class="row">
         @foreach ($shortcut as $sc)
