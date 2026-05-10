@@ -38,6 +38,10 @@
 use App\Libraries\Release;
 use App\Libraries\Saas;
 use App\Models\Shortcut;
+use App\Models\Pembangunan;
+use App\Models\Pengaduan;
+use App\Models\Penduduk;
+use App\Enums\StatusPengaduanEnum;
 use Modules\Pelanggan\Services\CekService;
 use Modules\Pelanggan\Services\PelangganService;
 
@@ -59,11 +63,48 @@ class Beranda extends Admin_Controller
     {
         get_pesan_opendk(); //ambil pesan baru di opendk
 
+                $jenisKelamin = Penduduk::select(
+                'sex',
+                DB::raw('COUNT(*) as total')
+            )
+            ->with('jenisKelamin')
+            ->groupBy('sex')
+            ->get();
+                
+        $labelJenisKelamin = $jenisKelamin->map(function ($item) {
+            return $item->jenisKelamin?->nama ?? 'Tidak Diketahui';
+        });
+        
+        $dataJenisKelamin = $jenisKelamin->pluck('total');
+
+        $jenisPekerjaan = Penduduk::select(
+                'pekerjaan_id',
+                DB::raw('COUNT(*) as total')
+            )
+            ->with('pekerjaan')
+            ->groupBy('pekerjaan_id')
+            ->orderByDesc('total')
+            ->limit(10)
+            ->get();
+                
+        $labelPekerjaan = $jenisPekerjaan->map(function ($item) {
+            return $item->pekerjaan?->nama ?? 'Tidak Diketahui';
+        });
+        
+        $dataPekerjaan = $jenisPekerjaan->pluck('total');
+
         $data = [
             'rilis'           => $this->getUpdate(),
             'shortcut'        => Shortcut::querys()['data'],
             'saas'            => Saas::peringatan(),
             'notif_langganan' => PelangganService::statusLangganan(),
+            'pembangunan'     => Pembangunan::with(['pembangunanDokumentasi', 'wilayah'])->get(),
+            'pengaduan'       => Pengaduan::where('judul', '!=', null)->get(),
+            
+            'label_jenis_kelamin' => $labelJenisKelamin,
+            'data_jenis_kelamin'  => $dataJenisKelamin,
+            'label_pekerjaan'    => $labelPekerjaan,
+            'data_pekerjaan'     => $dataPekerjaan,
         ];
 
         return view('admin.home.index', $data);
