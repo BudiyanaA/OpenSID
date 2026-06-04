@@ -42,4 +42,56 @@ class First extends MY_Controller
           'data' => $data
         ]);
     }
+
+    public function config()
+    {
+        $desa = identitas();
+        $theme        = $this->theme_model->tema;
+        $theme_folder = $this->theme_model->folder;
+        
+        $data = [
+          'logo_desa' => gambar_desa($desa['logo']),
+          'header_bg' => base_url("$theme_folder/$theme/assets/img/header.jpg"),
+          'desa' => $desa,
+          'setting' => $this->setting,
+        ];
+
+        return json([
+          'status' => 200,
+          'data' => $data
+        ]);
+    }
+
+    public function headline()
+    {
+        $this->load->model('custom/first_artikel_m');
+        
+        return json([
+          'status' => 200,
+          'data' => $this->first_artikel_m->get_headline(),
+        ]);
+    }
+
+    public function articles()
+    {
+        $this->load->model('custom/first_artikel_m');
+        
+        $offset = 0; //$data['paging']->offset;
+        $per_page = 10; //$data['paging']->per_page;
+
+        return json([
+          'status' => 200,
+          'data' => $this->first_artikel_m->artikel_show($offset, $per_page),
+        ]);
+    }
+
+    public function laporan_penduduk()
+    {
+        $this->load->model('custom/laporan_penduduk_model');
+
+        return json([
+          'status' => 200,
+          'data' => $this->laporan_penduduk_model->list_data(4),
+        ]);
+    }
 }

@@ -159,6 +159,11 @@ Route::group('external_api', ['namespace' => 'external_api'], static function ()
 Route::group('flutter_api', ['namespace' => 'flutter_api'], static function (): void {
   // Wilayah
   Route::get('first', 'First@index');
+  Route::get('first/config', 'First@config');
+  Route::get('first/headline', 'First@headline');
+  Route::get('first/articles', 'First@articles');
+  Route::get('first/laporan_penduduk', 'First@laporan_penduduk');
+
   Route::get('wilayah', 'Wilayah@index');
   Route::get('identitas_desa', 'Identitas_desa@index');
   Route::get('pengurus', 'Pengurus@index');
