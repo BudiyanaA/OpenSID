@@ -6,6 +6,7 @@ defined('BASEPATH') || exit('No direct script access allowed');
 
 class First extends MY_Controller
 {
+  // TODO: Deprecated
     public function index()
     {
         $this->load->model('custom/theme_model');
@@ -92,6 +93,19 @@ class First extends MY_Controller
         return json([
           'status' => 200,
           'data' => $this->laporan_penduduk_model->list_data(4),
+        ]);
+    }
+
+    public function menu()
+    {
+        $this->load->model('custom/first_menu_m');
+
+        return json([
+          'status' => 200,
+          'data' => [
+            'menu_kiri' => $this->first_menu_m->list_menu_kiri(),
+            'menu_tema' => menu_tema(),
+          ],
         ]);
     }
 }
