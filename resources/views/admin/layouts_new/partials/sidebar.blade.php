@@ -34,6 +34,11 @@
             </a>
             <div class="collapse submenu" id="submenu<?= $index ?>">
                 <?php foreach ($mod['childrens'] as $submod): ?>
+                    
+                    <?php if ($submod['slug'] == 'pendaftaran-kerjasama'): ?>
+                    <?php continue; ?>
+                    <?php endif; ?>
+
                     <a href="<?= ci_route($submod['url']) ?>" class="submenu-item">
                         <i class="fa <?= $submod['ikon'] != null ? $submod['ikon'] : 'fa-circle-o' ?>"></i>
                         <span><?= $submod['modul'] ?></span>

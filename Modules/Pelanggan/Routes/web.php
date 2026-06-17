@@ -50,10 +50,10 @@ Route::group('pelanggan', ['namespace' => 'Pelanggan'], static function (): void
 });
 
 // Info Desa > Pendaftaran Kerjasama
-Route::group('pendaftaran_kerjasama', ['namespace' => 'Pelanggan'], static function (): void {
-    Route::get('/', 'PendaftaranKerjasamaController@index')->name('pendaftaran_kerjasama.index');
-    Route::post('/form', 'PendaftaranKerjasamaController@form')->name('pendaftaran_kerjasama.form');
-    Route::post('/terdaftar', 'PendaftaranKerjasamaController@terdaftar')->name('pendaftaran_kerjasama.terdaftar');
-    Route::post('/register', 'PendaftaranKerjasamaController@register')->name('pendaftaran_kerjasama.register');
-    Route::get('/dokumen_template', 'PendaftaranKerjasamaController@dokumenTemplate')->name('pendaftaran_kerjasama.dokumen_template');
-});
+// Route::group('pendaftaran_kerjasama', ['namespace' => 'Pelanggan'], static function (): void {
+//     Route::get('/', 'PendaftaranKerjasamaController@index')->name('pendaftaran_kerjasama.index');
+//     Route::post('/form', 'PendaftaranKerjasamaController@form')->name('pendaftaran_kerjasama.form');
+//     Route::post('/terdaftar', 'PendaftaranKerjasamaController@terdaftar')->name('pendaftaran_kerjasama.terdaftar');
+//     Route::post('/register', 'PendaftaranKerjasamaController@register')->name('pendaftaran_kerjasama.register');
+//     Route::get('/dokumen_template', 'PendaftaranKerjasamaController@dokumenTemplate')->name('pendaftaran_kerjasama.dokumen_template');
+// });

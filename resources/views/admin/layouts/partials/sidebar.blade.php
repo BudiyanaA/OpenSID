@@ -41,6 +41,7 @@
             <li class="header">MENU UTAMA</li>
             <?php $modul = admin_menu(); ?>
             <?php foreach ($modul as $mod): ?>
+
             <?php if (is_array($mod['childrens']) && count($mod['childrens']) > 0): ?>
             <li class="treeview <?= jecho($modul_ini, $mod['slug'], 'active') ?>">
                 <a href="<?= ci_route($mod['url']) ?>">
@@ -50,6 +51,11 @@
                 <ul class="treeview-menu <?= jecho($modul_ini, $mod['slug'], 'active') ?>">
 
                     <?php foreach ($mod['childrens'] as $submod): ?>
+                      
+                    <?php if ($submod['slug'] == 'pendaftaran-kerjasama'): ?>
+                    <?php continue; ?>
+                    <?php endif; ?>
+
                     <li class="<?= jecho($sub_modul_ini, $submod['slug'], 'active') ?>">
                         <a href="<?= ci_route($submod['url']) ?>">
                             <i class="fa <?= $submod['ikon'] != null ? $submod['ikon'] : 'fa-circle-o' ?> <?= jecho($sub_modul_ini, $submod['slug'], 'text-red') ?>"></i>
