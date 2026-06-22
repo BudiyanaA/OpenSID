@@ -108,7 +108,8 @@ if (is_file($extra_app_config)) {
  * Untuk menggunakan fitur ini, pastikan konfigurasi apache di server SID
  * mengizinkan penggunaan .htaccess
  */
-if (file_exists(FCPATH . '.htaccess') && ENVIRONMENT != 'development') {
+// if (file_exists(FCPATH . '.htaccess') && ENVIRONMENT != 'development') {
+if (ENVIRONMENT != 'development') {
     $config['index_page'] = '';
 }
 
