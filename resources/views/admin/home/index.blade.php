@@ -250,13 +250,13 @@
         @endforeach
     </div>
     
-    <div class="d-flex gap-4 flex-wrap">
+    <div class="dashboard-row">
     <!-- Charts -->
         <div class="section-card flex-fill">
             <div class="chart-header">
                 <h5>Statistik Desa</h5>
             </div>
-            <div class="d-flex gap-4">
+            <div class="chart-grid">
                 <!-- Donut Chart -->
                 <div>
                     <h6 class="text-center">Statistik Penduduk</h6>
@@ -295,7 +295,7 @@
             </div>
             </div>
 
-            <div class="d-flex gap-4 flex-wrap">
+            <div class="dashboard-row dashboard-row-2">
             <!-- Proyek Pembangunan -->
             <div class="section-card flex-fill">
                 <div class="section-header">
