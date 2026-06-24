@@ -1,3 +1,32 @@
+    <style>
+        .sidebar .brand {
+            padding: 18px 12px 16px !important;
+            text-align: center !important;
+        }
+    
+        .sidebar .brand > img.img-circle {
+            width: 95px !important;
+            height: 95px !important;
+            max-width: 95px !important;
+            max-height: 95px !important;
+            object-fit: contain !important;
+            display: block !important;
+            margin: 0 auto 12px !important;
+            border-radius: 0 !important;
+        }
+    
+        .sidebar .brand h4 {
+            font-size: 16px !important;
+            line-height: 1.25 !important;
+            margin: 6px 0 4px !important;
+            font-weight: 800 !important;
+        }
+    
+        .sidebar .brand {
+            font-size: 12px !important;
+            line-height: 1.3 !important;
+        }
+    </style>
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="brand">
