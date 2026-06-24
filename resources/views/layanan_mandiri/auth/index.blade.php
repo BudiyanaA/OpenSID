@@ -6,7 +6,6 @@
     <title>
         SIMDESA - Layanan Mandiri {{ ucwords(setting('sebutan_desa')) }} {{ $desa['nama_desa'] }}
     </title>
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -45,8 +44,7 @@
     @endphp
 
     <style>
-        html,
-        body {
+        html, body {
             min-height: 100%;
         }
 
@@ -55,10 +53,9 @@
             min-height: 100vh !important;
             font-family: "Source Sans Pro", "Segoe UI", Arial, sans-serif !important;
             background:
-                radial-gradient(circle at 90% 0%, rgba(0, 137, 255, .18), transparent 32%),
-                radial-gradient(circle at 0% 100%, rgba(0, 137, 255, .12), transparent 30%),
-                linear-gradient(120deg, #ffffff 0%, #f1f9ff 48%, #dff2ff 100%) !important;
-            background-image: none !important;
+                radial-gradient(circle at 100% 0%, rgba(0, 137, 255, 0.12), transparent 30%),
+                radial-gradient(circle at 0% 100%, rgba(0, 137, 255, 0.08), transparent 28%),
+                linear-gradient(120deg, #f8fcff 0%, #eff7ff 55%, #e0f1ff 100%) !important;
             overflow-x: hidden;
         }
 
@@ -67,142 +64,108 @@
             position: fixed;
             inset: 0;
             background:
-                linear-gradient(135deg, transparent 0%, transparent 68%, rgba(0, 137, 255, .08) 68%, rgba(0, 137, 255, .08) 100%);
+                linear-gradient(135deg, transparent 0%, transparent 72%, rgba(0, 137, 255, 0.05) 72%, rgba(0, 137, 255, 0.05) 100%);
             pointer-events: none;
             z-index: 0;
         }
 
-        .top-content,
-        .inner-bg,
-        .container,
-        .row,
-        .form-box,
-        .form-top,
-        .form-bottom {
-            all: unset;
-            box-sizing: border-box;
-        }
-
         .top-content {
-            display: block;
-            min-height: 100vh;
             position: relative;
             z-index: 1;
+            min-height: 100vh;
         }
 
         .inner-bg {
-            display: flex;
             min-height: 100vh;
+            display: flex;
             align-items: center;
             justify-content: center;
-            padding: 42px 56px;
+            padding: 40px 50px;
         }
 
-        .container {
+        .simdesa-wrapper {
             width: 100%;
             max-width: 1320px;
             margin: 0 auto;
-        }
-
-        .row {
-            display: block;
-        }
-
-        .form-box {
             display: grid;
-            grid-template-columns: minmax(0, 1.1fr) minmax(420px, .8fr);
-            gap: 72px;
+            grid-template-columns: minmax(0, 1.08fr) minmax(420px, 0.82fr);
+            gap: 70px;
             align-items: center;
-            width: 100%;
         }
 
-        .form-top {
-            display: block;
+        .simdesa-left {
             color: #0f172a;
         }
 
-        .simdesa-brand {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 8px;
-            margin-bottom: 58px;
+        .simdesa-logo-wrap {
+            margin-bottom: 42px;
         }
 
-        .simdesa-brand img {
-            width: 220px;
+        .simdesa-logo-wrap img {
+            width: 240px;
             max-width: 100%;
             height: auto;
             object-fit: contain;
-            border-radius: 0;
-            box-shadow: none;
+            display: block;
         }
 
-        .simdesa-brand-subtitle {
-            margin-top: 4px;
+        .simdesa-logo-wrap .subtitle {
+            margin-top: 8px;
+            color: #334155;
             font-size: 17px;
             font-weight: 700;
-            color: #334155;
         }
 
-        .login-footer-top {
-            text-align: left !important;
-        }
-
-        .login-footer-top h1 {
+        .simdesa-left h1 {
             margin: 0;
-            color: #0f172a !important;
-            font-size: 48px !important;
-            line-height: 1.12 !important;
-            font-weight: 900 !important;
+            color: #0f172a;
+            font-size: 58px;
+            line-height: 1.06;
+            font-weight: 900;
             letter-spacing: -1px;
-            text-transform: none !important;
         }
 
-        .login-footer-top h1 .blue {
+        .simdesa-left h1 .blue {
             color: #0877d8;
         }
 
         .simdesa-subheadline {
-            margin-top: 10px;
-            font-size: 29px;
+            margin-top: 12px;
+            font-size: 30px;
             line-height: 1.25;
             color: #334155;
             font-weight: 700;
         }
 
         .simdesa-line {
-            width: 74px;
+            width: 76px;
             height: 5px;
             border-radius: 999px;
             background: #0877d8;
-            margin: 28px 0 26px;
+            margin: 28px 0 24px;
         }
 
-        .login-footer-top h3 {
-            margin: 0 !important;
-            padding: 0 !important;
-            color: #334155 !important;
-            font-size: 18px !important;
-            line-height: 1.55 !important;
-            font-weight: 400 !important;
-            letter-spacing: 0 !important;
+        .simdesa-desc {
+            color: #334155;
+            font-size: 18px;
+            line-height: 1.7;
+            max-width: 720px;
         }
 
         .simdesa-features {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 18px;
-            margin-top: 42px;
-            max-width: 660px;
+            margin-top: 40px;
+            max-width: 700px;
         }
 
         .simdesa-feature-card {
-            min-height: 128px;
-            border-radius: 14px;
-            background: rgba(255, 255, 255, .88);
-            border: 1px solid rgba(8, 119, 216, .13);
-            box-shadow: 0 16px 36px rgba(15, 23, 42, .07);
+            min-height: 130px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid rgba(8, 119, 216, 0.12);
+            box-shadow: 0 16px 36px rgba(15, 23, 42, 0.07);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -212,22 +175,22 @@
         }
 
         .simdesa-feature-card i {
-            width: 44px;
-            height: 44px;
+            width: 46px;
+            height: 46px;
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #0877d8;
             background: #eef7ff;
-            font-size: 23px;
-            margin-bottom: 11px;
+            font-size: 22px;
+            margin-bottom: 12px;
         }
 
         .simdesa-feature-card span {
             color: #0f172a;
             font-size: 14px;
-            line-height: 1.25;
+            line-height: 1.3;
             font-weight: 800;
         }
 
@@ -236,13 +199,13 @@
             align-items: center;
             justify-content: space-between;
             gap: 14px;
-            max-width: 690px;
-            margin-top: 42px;
+            max-width: 720px;
+            margin-top: 38px;
             padding: 18px 22px;
             color: #ffffff;
-            border-radius: 14px;
+            border-radius: 16px;
             background: linear-gradient(135deg, #13a6f4 0%, #0868d8 100%);
-            box-shadow: 0 18px 38px rgba(8, 119, 216, .22);
+            box-shadow: 0 18px 38px rgba(8, 119, 216, 0.22);
         }
 
         .simdesa-benefit-bar span {
@@ -254,14 +217,28 @@
             white-space: nowrap;
         }
 
-        .form-bottom {
-            display: block;
+        .simdesa-visitor {
+            margin-top: 18px;
+            color: #64748b;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .simdesa-visitor a {
+            color: #0877d8 !important;
+        }
+
+        .simdesa-right {
             width: 100%;
-            background: #ffffff;
-            border-radius: 28px;
-            padding: 44px 42px 36px;
-            box-shadow: 0 26px 65px rgba(15, 23, 42, .12);
-            border: 1px solid rgba(8, 119, 216, .08);
+        }
+
+        .simdesa-card {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: 30px;
+            padding: 42px 38px 34px;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.10);
+            border: 1px solid rgba(8, 119, 216, 0.08);
         }
 
         .simdesa-card-header {
@@ -270,30 +247,27 @@
         }
 
         .simdesa-card-header img {
-            width: 165px;
+            width: 155px;
             max-width: 100%;
             height: auto;
-            object-fit: contain;
-            margin: 0 auto 18px;
             display: block;
-            border-radius: 0;
-            box-shadow: none;
+            margin: 0 auto 18px;
         }
 
         .simdesa-card-header h2 {
             margin: 0;
             color: #0877d8;
-            font-size: 30px;
+            font-size: 31px;
             line-height: 1.1;
             font-weight: 900;
-            letter-spacing: .5px;
+            letter-spacing: 0.5px;
             text-transform: uppercase;
         }
 
         .simdesa-card-header h4 {
-            margin: 8px 0 0;
+            margin: 10px 0 0;
             color: #0f172a;
-            font-size: 22px;
+            font-size: 21px;
             line-height: 1.2;
             font-weight: 900;
         }
@@ -302,6 +276,7 @@
             margin: 8px 0 0;
             color: #475569;
             font-size: 14px;
+            line-height: 1.6;
             font-weight: 600;
         }
 
@@ -366,8 +341,8 @@
         .login-form input[type="text"],
         .login-form input[type="password"],
         .login-form input[type="number"] {
-            height: 54px !important;
-            border-radius: 11px !important;
+            height: 56px !important;
+            border-radius: 12px !important;
             border: 1px solid #cfe0f5 !important;
             background: #f4f8ff !important;
             color: #0f172a !important;
@@ -382,7 +357,7 @@
         .login-form input:focus {
             border-color: #0b8fe8 !important;
             background: #ffffff !important;
-            box-shadow: 0 0 0 4px rgba(11, 143, 232, .13) !important;
+            box-shadow: 0 0 0 4px rgba(11, 143, 232, 0.13) !important;
         }
 
         .simdesa-options {
@@ -390,7 +365,7 @@
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-            margin: 4px 0 18px;
+            margin: 6px 0 18px;
             color: #334155;
             font-size: 14px;
         }
@@ -417,8 +392,8 @@
 
         .btn,
         .login-form .btn {
-            height: 54px !important;
-            border-radius: 11px !important;
+            height: 56px !important;
+            border-radius: 12px !important;
             font-size: 15px !important;
             font-weight: 900 !important;
             letter-spacing: .4px !important;
@@ -435,14 +410,14 @@
         .login-form button[type="submit"] {
             color: #ffffff !important;
             border: 1px solid #0877d8 !important;
-            background: linear-gradient(135deg, #12a8f5 0%, #0868d8 100%) !important;
+            background: linear-gradient(135deg, #17adf7 0%, #0868d8 100%) !important;
         }
 
         .simdesa-btn-primary:hover,
         .login-form button[type="submit"]:hover {
             color: #ffffff !important;
             transform: translateY(-1px);
-            box-shadow: 0 12px 24px rgba(8, 119, 216, .25) !important;
+            box-shadow: 0 12px 24px rgba(8, 119, 216, 0.25) !important;
         }
 
         .simdesa-btn-outline {
@@ -478,7 +453,6 @@
             text-align: center;
         }
 
-        .login-footer-bottom a,
         .login-footer-bottom span {
             color: #0877d8 !important;
             font-size: 16px;
@@ -494,17 +468,6 @@
             font-weight: 600;
         }
 
-        .simdesa-visitor {
-            margin-top: 20px;
-            color: #475569;
-            font-size: 13px;
-            line-height: 1.45;
-        }
-
-        .simdesa-visitor a {
-            color: #0877d8 !important;
-        }
-
         .thumbnail {
             border: 1px solid #dbe7f5 !important;
             border-radius: 14px !important;
@@ -518,24 +481,20 @@
                 padding: 28px 22px;
             }
 
-            .form-box {
+            .simdesa-wrapper {
                 grid-template-columns: 1fr;
-                gap: 32px;
+                gap: 34px;
             }
 
-            .simdesa-brand {
-                margin-bottom: 32px;
-            }
-
-            .login-footer-top h1 {
-                font-size: 38px !important;
+            .simdesa-left h1 {
+                font-size: 42px;
             }
 
             .simdesa-subheadline {
-                font-size: 23px;
+                font-size: 24px;
             }
 
-            .form-bottom {
+            .simdesa-card {
                 max-width: 560px;
                 margin: 0 auto;
             }
@@ -546,24 +505,24 @@
                 padding: 18px 14px;
             }
 
-            .simdesa-brand img {
-                width: 175px;
+            .simdesa-logo-wrap img {
+                width: 180px;
             }
 
-            .simdesa-brand-subtitle {
+            .simdesa-logo-wrap .subtitle {
                 font-size: 13px;
             }
 
-            .login-footer-top h1 {
-                font-size: 31px !important;
+            .simdesa-left h1 {
+                font-size: 34px;
             }
 
             .simdesa-subheadline {
                 font-size: 19px;
             }
 
-            .login-footer-top h3 {
-                font-size: 15px !important;
+            .simdesa-desc {
+                font-size: 16px;
             }
 
             .simdesa-features {
@@ -577,13 +536,13 @@
                 padding: 16px;
             }
 
-            .form-bottom {
+            .simdesa-card {
                 padding: 30px 20px 26px;
-                border-radius: 22px;
+                border-radius: 24px;
             }
 
             .simdesa-card-header img {
-                width: 135px;
+                width: 128px;
             }
 
             .simdesa-card-header h2 {
@@ -600,126 +559,122 @@
 <body class="login">
     <div class="top-content">
         <div class="inner-bg">
-            <div class="container">
-                <div class="row">
-                    <div class="form-box">
+            <div class="simdesa-wrapper">
 
-                        <div class="form-top">
-                            <div class="simdesa-brand">
-                                <a href="{{ base_url('/') }}">
-                                    <img src="{{ $logoSimdesa }}" alt="Logo SIMDESA" class="img-responsive" />
-                                </a>
-                                <div class="simdesa-brand-subtitle">Sistem Informasi Manajemen Desa</div>
-                            </div>
+                <div class="simdesa-left">
+                    <div class="simdesa-logo-wrap">
+                        <a href="{{ base_url('/') }}">
+                            <img src="{{ $logoSimdesa }}" alt="Logo SIMDESA">
+                        </a>
+                        <div class="subtitle">Sistem Informasi Manajemen Desa</div>
+                    </div>
 
-                            <div class="login-footer-top">
-                                <h1>
-                                    Layanan <span class="blue">Mandiri</span> Desa
-                                </h1>
+                    <h1>
+                        Layanan <span class="blue">Mandiri</span> Desa
+                    </h1>
 
-                                <div class="simdesa-subheadline">
-                                    lebih mudah, cepat, dan terintegrasi
-                                </div>
+                    <div class="simdesa-subheadline">
+                        lebih mudah, cepat, dan terintegrasi
+                    </div>
 
-                                <div class="simdesa-line"></div>
+                    <div class="simdesa-line"></div>
 
-                                <h3>
-                                    Layanan Mandiri Desa memudahkan warga untuk mengakses berbagai layanan dan informasi desa secara online kapan saja dan di mana saja.
-                                    <br />
-                                    Solusi digital untuk pelayanan desa yang lebih baik.
-                                </h3>
+                    <div class="simdesa-desc">
+                        Layanan Mandiri Desa memudahkan warga untuk mengakses berbagai layanan dan informasi desa secara online kapan saja dan di mana saja.
+                        <br>
+                        Solusi digital untuk pelayanan desa yang lebih baik.
+                    </div>
 
-                                <div class="simdesa-features">
-                                    <div class="simdesa-feature-card">
-                                        <i class="fa fa-users"></i>
-                                        <span>Administrasi<br>Kependudukan</span>
-                                    </div>
-                                    <div class="simdesa-feature-card">
-                                        <i class="fa fa-file-text"></i>
-                                        <span>Surat<br>Menyurat</span>
-                                    </div>
-                                    <div class="simdesa-feature-card">
-                                        <i class="fa fa-globe"></i>
-                                        <span>Informasi<br>Desa</span>
-                                    </div>
-                                    <div class="simdesa-feature-card">
-                                        <i class="fa fa-mobile"></i>
-                                        <span>Layanan<br>Warga</span>
-                                    </div>
-                                </div>
-
-                                <div class="simdesa-benefit-bar">
-                                    <span><i class="fa fa-link"></i> Terintegrasi</span>
-                                    <span><i class="fa fa-shield"></i> Aman</span>
-                                    <span><i class="fa fa-bolt"></i> Cepat</span>
-                                    <span><i class="fa fa-check-square-o"></i> Transparan</span>
-                                    <span><i class="fa fa-heart-o"></i> Melayani</span>
-                                </div>
-
-                                <div class="simdesa-visitor">
-                                    IP Address: {{ request()->ip() }}
-                                    <br>
-                                    ID Pengunjung:
-                                    <span id="pengunjung"></span>
-                                    <a href="#" class="copy" title="Copy"><i class="fa fa-copy"></i></a>
-
-                                    @if ($cek_anjungan)
-                                        @if ($cek_anjungan['mac_address'])
-                                            <br>Mac Address: {{ $cek_anjungan['mac_address'] }}
-                                        @endif
-                                        <br>Anjungan Mandiri
-                                        {!! jecho($cek_anjungan['keyboard'] == 1, true, ' | Virtual Keyboard : Aktif') !!}
-                                    @endif
-                                </div>
-                            </div>
+                    <div class="simdesa-features">
+                        <div class="simdesa-feature-card">
+                            <i class="fa fa-users"></i>
+                            <span>Administrasi<br>Kependudukan</span>
                         </div>
-
-                        <div class="form-bottom">
-                            <div class="simdesa-card-header">
-                                <img src="{{ $logoSimdesa }}" alt="Logo SIMDESA" />
-                                <h2>LAYANAN MANDIRI</h2>
-                                <h4>{{ ucwords(setting('sebutan_desa')) }} {{ $desa['nama_desa'] }}</h4>
-                                <p>
-                                    {{ ucwords(setting('sebutan_kecamatan')) }} {{ $desa['nama_kecamatan'] }},
-                                    {{ ucwords(setting('sebutan_kabupaten')) }} {{ $desa['nama_kabupaten'] }}
-                                </p>
-                            </div>
-
-                            <div class="simdesa-card-divider"><span></span></div>
-
-                            @php
-                                preg_match('/(\d+)/', $errors->first('email'), $matches);
-                                $second = $matches[0] ?? 0;
-                            @endphp
-
-                            @if ($errors->any())
-                                <div @if (!str_contains($errors->first('email'), 'Terlalu banyak upaya masuk.')) id="notif" @endif class="alert alert-danger">
-                                    @foreach ($errors->all() as $item)
-                                        @if (str_contains($item, 'Terlalu banyak upaya masuk.'))
-                                            <p id="countdown">{{ $item }}</p>
-                                        @else
-                                            <p>{{ $item }}</p>
-                                        @endif
-                                    @endforeach
-                                </div>
-                            @endif
-
-                            @if ($notif = $ci->session->flashdata('notif'))
-                                <div id="notif" class="alert alert-danger">
-                                    <p>{{ $notif }}</p>
-                                </div>
-                            @endif
-
-                            @yield('content')
-
-                            <div class="login-footer-bottom">
-                                <span>SIMDESA {{ $versiSimdesa }}</span>
-                                <small>Layanan Digitalisasi Desa</small>
-                            </div>
+                        <div class="simdesa-feature-card">
+                            <i class="fa fa-file-text"></i>
+                            <span>Surat<br>Menyurat</span>
                         </div>
+                        <div class="simdesa-feature-card">
+                            <i class="fa fa-globe"></i>
+                            <span>Informasi<br>Desa</span>
+                        </div>
+                        <div class="simdesa-feature-card">
+                            <i class="fa fa-mobile"></i>
+                            <span>Layanan<br>Warga</span>
+                        </div>
+                    </div>
 
+                    <div class="simdesa-benefit-bar">
+                        <span><i class="fa fa-link"></i> Terintegrasi</span>
+                        <span><i class="fa fa-shield"></i> Aman</span>
+                        <span><i class="fa fa-bolt"></i> Cepat</span>
+                        <span><i class="fa fa-check-square-o"></i> Transparan</span>
+                        <span><i class="fa fa-heart-o"></i> Melayani</span>
+                    </div>
+
+                    <div class="simdesa-visitor">
+                        IP Address: {{ request()->ip() }}
+                        <br>
+                        ID Pengunjung:
+                        <span id="pengunjung"></span>
+                        <a href="#" class="copy" title="Copy"><i class="fa fa-copy"></i></a>
+
+                        @if ($cek_anjungan)
+                            @if ($cek_anjungan['mac_address'])
+                                <br>Mac Address: {{ $cek_anjungan['mac_address'] }}
+                            @endif
+                            <br>Anjungan Mandiri
+                            {!! jecho($cek_anjungan['keyboard'] == 1, true, ' | Virtual Keyboard : Aktif') !!}
+                        @endif
                     </div>
                 </div>
+
+                <div class="simdesa-right">
+                    <div class="simdesa-card">
+                        <div class="simdesa-card-header">
+                            <img src="{{ $logoSimdesa }}" alt="Logo SIMDESA">
+                            <h2>LAYANAN MANDIRI</h2>
+                            <h4>{{ ucwords(setting('sebutan_desa')) }} {{ $desa['nama_desa'] }}</h4>
+                            <p>
+                                {{ ucwords(setting('sebutan_kecamatan')) }} {{ $desa['nama_kecamatan'] }},
+                                {{ ucwords(setting('sebutan_kabupaten')) }} {{ $desa['nama_kabupaten'] }}
+                            </p>
+                        </div>
+
+                        <div class="simdesa-card-divider"><span></span></div>
+
+                        @php
+                            preg_match('/(\d+)/', $errors->first('email'), $matches);
+                            $second = $matches[0] ?? 0;
+                        @endphp
+
+                        @if ($errors->any())
+                            <div @if (!str_contains($errors->first('email'), 'Terlalu banyak upaya masuk.')) id="notif" @endif class="alert alert-danger">
+                                @foreach ($errors->all() as $item)
+                                    @if (str_contains($item, 'Terlalu banyak upaya masuk.'))
+                                        <p id="countdown">{{ $item }}</p>
+                                    @else
+                                        <p>{{ $item }}</p>
+                                    @endif
+                                @endforeach
+                            </div>
+                        @endif
+
+                        @if ($notif = $ci->session->flashdata('notif'))
+                            <div id="notif" class="alert alert-danger">
+                                <p>{{ $notif }}</p>
+                            </div>
+                        @endif
+
+                        @yield('content')
+
+                        <div class="login-footer-bottom">
+                            <span>SIMDESA {{ $versiSimdesa }}</span>
+                            <small>Layanan Digitalisasi Desa</small>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
@@ -789,9 +744,7 @@
 
                 const text = $('#pengunjung').text();
 
-                if (!text) {
-                    return;
-                }
+                if (!text) return;
 
                 if (navigator.clipboard) {
                     navigator.clipboard.writeText(text);
