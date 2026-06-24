@@ -536,7 +536,7 @@
     <div class="simdesa-full-login">
         <div class="simdesa-left">
             <div class="simdesa-brand-row">
-                <img src="{{ base_url('assets/images/simdesa-logo.jpg') }}" alt="SIMDESA" onerror="this.style.display='none'">
+                <img src="{{ base_url('assets/images/simdesa-logo.png') }}" alt="SIMDESA" onerror="this.style.display='none'">
                 <div>
                     <div class="simdesa-brand-title">SIMDESA</div>
                     <div class="simdesa-brand-subtitle">Sistem Informasi Manajemen Desa</div>
@@ -589,7 +589,7 @@
         <div class="simdesa-right">
             <div class="simdesa-card">
                 <div class="simdesa-card-header">
-                    <img src="{{ base_url('assets/images/simdesa-logo.jpg') }}" class="simdesa-card-logo" alt="SIMDESA" onerror="this.style.display='none'">
+                    <img src="{{ base_url('assets/images/simdesa-logo.png') }}" class="simdesa-card-logo" alt="SIMDESA" onerror="this.style.display='none'">
 
                     <div class="simdesa-card-title">SIMDESA</div>
                     <div class="simdesa-card-subtitle">Sistem Informasi Manajemen Desa</div>
