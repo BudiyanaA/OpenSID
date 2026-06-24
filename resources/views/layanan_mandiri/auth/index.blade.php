@@ -40,10 +40,11 @@
     @include('admin.layouts.components.token')
 
     @php
-        $logoSimdesa = asset('images/logo-simdesa.png');
+        $logoSimdesa = asset('images/simdesa-logo.png');
+        $versiSimdesa = preg_replace('/[^0-9]/', '', explode('.', AmbilVersi())[0] ?? '') ?: '2510';
     @endphp
 
-    <style type="text/css">
+    <style>
         html,
         body {
             min-height: 100%;
@@ -71,63 +72,53 @@
             z-index: 0;
         }
 
+        .top-content,
+        .inner-bg,
+        .container,
+        .row,
+        .form-box,
+        .form-top,
+        .form-bottom {
+            all: unset;
+            box-sizing: border-box;
+        }
+
         .top-content {
-            min-height: 100vh !important;
+            display: block;
+            min-height: 100vh;
             position: relative;
             z-index: 1;
         }
 
         .inner-bg {
-            min-height: 100vh !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            padding: 42px 56px !important;
+            display: flex;
+            min-height: 100vh;
+            align-items: center;
+            justify-content: center;
+            padding: 42px 56px;
         }
 
         .container {
-            width: 100% !important;
-            max-width: 1320px !important;
-            margin: 0 auto !important;
-            padding-left: 0 !important;
-            padding-right: 0 !important;
+            width: 100%;
+            max-width: 1320px;
+            margin: 0 auto;
         }
 
         .row {
-            margin-left: 0 !important;
-            margin-right: 0 !important;
+            display: block;
         }
 
         .form-box {
-            float: none !important;
-            width: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-
-        .simdesa-auth-layout {
-            display: grid !important;
+            display: grid;
             grid-template-columns: minmax(0, 1.1fr) minmax(420px, .8fr);
             gap: 72px;
             align-items: center;
+            width: 100%;
         }
 
         .form-top {
-            background: transparent !important;
-            color: #0f172a !important;
-            text-align: left !important;
-            padding: 0 !important;
-            border: none !important;
-            box-shadow: none !important;
-        }
-
-        .form-bottom {
-            width: 100% !important;
-            background: #ffffff !important;
-            border-radius: 28px !important;
-            padding: 44px 42px 36px !important;
-            box-shadow: 0 26px 65px rgba(15, 23, 42, .12) !important;
-            border: 1px solid rgba(8, 119, 216, .08) !important;
+            display: block;
+            color: #0f172a;
         }
 
         .simdesa-brand {
@@ -135,19 +126,20 @@
             flex-direction: column;
             align-items: flex-start;
             gap: 8px;
-            margin-bottom: 54px;
+            margin-bottom: 58px;
         }
 
-        .simdesa-brand-logo {
-            width: 220px !important;
-            max-width: 100% !important;
-            height: auto !important;
-            object-fit: contain !important;
-            border-radius: 0 !important;
-            box-shadow: none !important;
+        .simdesa-brand img {
+            width: 220px;
+            max-width: 100%;
+            height: auto;
+            object-fit: contain;
+            border-radius: 0;
+            box-shadow: none;
         }
 
         .simdesa-brand-subtitle {
+            margin-top: 4px;
             font-size: 17px;
             font-weight: 700;
             color: #334155;
@@ -158,7 +150,7 @@
         }
 
         .login-footer-top h1 {
-            margin: 0 !important;
+            margin: 0;
             color: #0f172a !important;
             font-size: 48px !important;
             line-height: 1.12 !important;
@@ -168,7 +160,7 @@
         }
 
         .login-footer-top h1 .blue {
-            color: #0877d8 !important;
+            color: #0877d8;
         }
 
         .simdesa-subheadline {
@@ -208,7 +200,7 @@
         .simdesa-feature-card {
             min-height: 128px;
             border-radius: 14px;
-            background: rgba(255, 255, 255, .9);
+            background: rgba(255, 255, 255, .88);
             border: 1px solid rgba(8, 119, 216, .13);
             box-shadow: 0 16px 36px rgba(15, 23, 42, .07);
             display: flex;
@@ -262,15 +254,14 @@
             white-space: nowrap;
         }
 
-        .simdesa-visitor {
-            margin-top: 20px;
-            color: #475569;
-            font-size: 13px;
-            line-height: 1.45;
-        }
-
-        .simdesa-visitor a {
-            color: #0877d8 !important;
+        .form-bottom {
+            display: block;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 28px;
+            padding: 44px 42px 36px;
+            box-shadow: 0 26px 65px rgba(15, 23, 42, .12);
+            border: 1px solid rgba(8, 119, 216, .08);
         }
 
         .simdesa-card-header {
@@ -279,14 +270,14 @@
         }
 
         .simdesa-card-header img {
-            width: 165px !important;
-            max-width: 100% !important;
-            height: auto !important;
-            object-fit: contain !important;
-            margin: 0 auto 18px !important;
-            display: block !important;
-            border-radius: 0 !important;
-            box-shadow: none !important;
+            width: 165px;
+            max-width: 100%;
+            height: auto;
+            object-fit: contain;
+            margin: 0 auto 18px;
+            display: block;
+            border-radius: 0;
+            box-shadow: none;
         }
 
         .simdesa-card-header h2 {
@@ -344,15 +335,31 @@
         }
 
         .login-form {
-            margin: 0 !important;
+            margin: 0;
         }
 
         .form-group {
             margin-bottom: 14px !important;
         }
 
-        .form-login {
-            margin-bottom: 14px !important;
+        .simdesa-input-wrap {
+            position: relative;
+        }
+
+        .simdesa-input-wrap i {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #55708f;
+            font-size: 18px;
+            z-index: 2;
+        }
+
+        .simdesa-input-wrap .toggle-pin {
+            left: auto;
+            right: 18px;
+            cursor: pointer;
         }
 
         .form-control,
@@ -366,6 +373,7 @@
             color: #0f172a !important;
             font-size: 15px !important;
             font-weight: 600 !important;
+            padding-left: 52px !important;
             box-shadow: none !important;
             outline: none !important;
         }
@@ -377,16 +385,37 @@
             box-shadow: 0 0 0 4px rgba(11, 143, 232, .13) !important;
         }
 
-        .login-form label {
-            color: #334155 !important;
-            font-size: 14px !important;
-            font-weight: 600 !important;
+        .simdesa-options {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin: 4px 0 18px;
+            color: #334155;
+            font-size: 14px;
         }
 
-        .login-form input[type="checkbox"] {
+        .simdesa-options label {
+            margin: 0;
+            font-size: 14px;
+            color: #334155;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .simdesa-options input[type="checkbox"] {
+            display: inline-block !important;
+            margin: 0 6px 0 0;
             accent-color: #0877d8;
         }
 
+        .simdesa-options a {
+            color: #0877d8 !important;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+        .btn,
         .login-form .btn {
             height: 54px !important;
             border-radius: 11px !important;
@@ -394,41 +423,52 @@
             font-weight: 900 !important;
             letter-spacing: .4px !important;
             text-transform: uppercase !important;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
             transition: all .2s ease;
             box-shadow: none !important;
         }
 
-        .login-form button[type="submit"],
-        .login-form button[type="submit"].bg-green {
+        .simdesa-btn-primary,
+        .login-form button[type="submit"] {
             color: #ffffff !important;
             border: 1px solid #0877d8 !important;
             background: linear-gradient(135deg, #12a8f5 0%, #0868d8 100%) !important;
         }
 
-        .login-form button[type="submit"]:hover,
-        .login-form button[type="submit"].bg-green:hover {
+        .simdesa-btn-primary:hover,
+        .login-form button[type="submit"]:hover {
             color: #ffffff !important;
             transform: translateY(-1px);
             box-shadow: 0 12px 24px rgba(8, 119, 216, .25) !important;
         }
 
-        .login-form .bg-green {
+        .simdesa-btn-outline {
             color: #0877d8 !important;
             background: #ffffff !important;
             border: 2px solid #0877d8 !important;
+            text-decoration: none !important;
         }
 
-        .login-form .bg-green:hover {
+        .simdesa-btn-outline:hover {
             color: #065db0 !important;
             background: #eef7ff !important;
+            text-decoration: none !important;
         }
 
-        .thumbnail {
+        .simdesa-btn-muted {
+            color: #64748b !important;
+            background: #ffffff !important;
             border: 1px solid #dbe7f5 !important;
-            border-radius: 14px !important;
+            text-decoration: none !important;
+        }
+
+        .simdesa-btn-muted:hover {
+            color: #0f172a !important;
             background: #f8fbff !important;
-            padding: 18px !important;
-            margin-bottom: 16px !important;
+            text-decoration: none !important;
         }
 
         .login-footer-bottom {
@@ -438,6 +478,7 @@
             text-align: center;
         }
 
+        .login-footer-bottom a,
         .login-footer-bottom span {
             color: #0877d8 !important;
             font-size: 16px;
@@ -453,12 +494,31 @@
             font-weight: 600;
         }
 
+        .simdesa-visitor {
+            margin-top: 20px;
+            color: #475569;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        .simdesa-visitor a {
+            color: #0877d8 !important;
+        }
+
+        .thumbnail {
+            border: 1px solid #dbe7f5 !important;
+            border-radius: 14px !important;
+            background: #f8fbff !important;
+            padding: 18px !important;
+            margin-bottom: 16px !important;
+        }
+
         @media (max-width: 1100px) {
             .inner-bg {
-                padding: 28px 22px !important;
+                padding: 28px 22px;
             }
 
-            .simdesa-auth-layout {
+            .form-box {
                 grid-template-columns: 1fr;
                 gap: 32px;
             }
@@ -483,11 +543,11 @@
 
         @media (max-width: 700px) {
             .inner-bg {
-                padding: 18px 14px !important;
+                padding: 18px 14px;
             }
 
-            .simdesa-brand-logo {
-                width: 175px !important;
+            .simdesa-brand img {
+                width: 175px;
             }
 
             .simdesa-brand-subtitle {
@@ -518,12 +578,12 @@
             }
 
             .form-bottom {
-                padding: 30px 20px 26px !important;
-                border-radius: 22px !important;
+                padding: 30px 20px 26px;
+                border-radius: 22px;
             }
 
             .simdesa-card-header img {
-                width: 135px !important;
+                width: 135px;
             }
 
             .simdesa-card-header h2 {
@@ -542,12 +602,12 @@
         <div class="inner-bg">
             <div class="container">
                 <div class="row">
-                    <div class="form-box simdesa-auth-layout">
+                    <div class="form-box">
 
                         <div class="form-top">
                             <div class="simdesa-brand">
                                 <a href="{{ base_url('/') }}">
-                                    <img src="{{ $logoSimdesa }}" alt="Logo SIMDESA" class="simdesa-brand-logo">
+                                    <img src="{{ $logoSimdesa }}" alt="Logo SIMDESA" class="img-responsive" />
                                 </a>
                                 <div class="simdesa-brand-subtitle">Sistem Informasi Manajemen Desa</div>
                             </div>
@@ -616,7 +676,7 @@
 
                         <div class="form-bottom">
                             <div class="simdesa-card-header">
-                                <img src="{{ $logoSimdesa }}" alt="Logo SIMDESA">
+                                <img src="{{ $logoSimdesa }}" alt="Logo SIMDESA" />
                                 <h2>LAYANAN MANDIRI</h2>
                                 <h4>{{ ucwords(setting('sebutan_desa')) }} {{ $desa['nama_desa'] }}</h4>
                                 <p>
@@ -653,7 +713,7 @@
                             @yield('content')
 
                             <div class="login-footer-bottom">
-                                <span>SIMDESA {{ explode('.', AmbilVersi())[0] ?? '2510' }}</span>
+                                <span>SIMDESA {{ $versiSimdesa }}</span>
                                 <small>Layanan Digitalisasi Desa</small>
                             </div>
                         </div>
