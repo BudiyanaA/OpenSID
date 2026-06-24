@@ -6,6 +6,7 @@
     <title>
         SIMDESA - Layanan Mandiri {{ ucwords(setting('sebutan_desa')) }} {{ $desa['nama_desa'] }}
     </title>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -44,29 +45,51 @@
     @endphp
 
     <style>
-        html, body {
+        html,
+        body {
             min-height: 100%;
+            background-color: #f4faff !important;
         }
 
         body.login {
             margin: 0 !important;
             min-height: 100vh !important;
             font-family: "Source Sans Pro", "Segoe UI", Arial, sans-serif !important;
+            color: #0f172a !important;
             background:
-                radial-gradient(circle at 100% 0%, rgba(0, 137, 255, 0.12), transparent 30%),
-                radial-gradient(circle at 0% 100%, rgba(0, 137, 255, 0.08), transparent 28%),
-                linear-gradient(120deg, #f8fcff 0%, #eff7ff 55%, #e0f1ff 100%) !important;
+                radial-gradient(circle at 10% 10%, rgba(0, 137, 255, 0.12), transparent 30%),
+                radial-gradient(circle at 100% 0%, rgba(0, 137, 255, 0.16), transparent 32%),
+                radial-gradient(circle at 90% 90%, rgba(0, 137, 255, 0.08), transparent 30%),
+                linear-gradient(120deg, #ffffff 0%, #f4faff 52%, #e4f4ff 100%) !important;
+            background-image:
+                radial-gradient(circle at 10% 10%, rgba(0, 137, 255, 0.12), transparent 30%),
+                radial-gradient(circle at 100% 0%, rgba(0, 137, 255, 0.16), transparent 32%),
+                radial-gradient(circle at 90% 90%, rgba(0, 137, 255, 0.08), transparent 30%),
+                linear-gradient(120deg, #ffffff 0%, #f4faff 52%, #e4f4ff 100%) !important;
             overflow-x: hidden;
         }
 
-        body.login::before {
-            content: "";
-            position: fixed;
-            inset: 0;
-            background:
-                linear-gradient(135deg, transparent 0%, transparent 72%, rgba(0, 137, 255, 0.05) 72%, rgba(0, 137, 255, 0.05) 100%);
-            pointer-events: none;
-            z-index: 0;
+        body.login::before,
+        body.login::after,
+        .top-content::before,
+        .top-content::after,
+        .inner-bg::before,
+        .inner-bg::after {
+            display: none !important;
+            content: none !important;
+            background: transparent !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+        }
+
+        .top-content,
+        .inner-bg,
+        .container,
+        .row,
+        .simdesa-wrapper {
+            background: transparent !important;
+            opacity: 1 !important;
+            filter: none !important;
         }
 
         .top-content {
@@ -88,13 +111,15 @@
             max-width: 1320px;
             margin: 0 auto;
             display: grid;
-            grid-template-columns: minmax(0, 1.08fr) minmax(420px, 0.82fr);
+            grid-template-columns: minmax(0, 1.08fr) minmax(430px, 0.82fr);
             gap: 70px;
             align-items: center;
         }
 
         .simdesa-left {
             color: #0f172a;
+            opacity: 1 !important;
+            filter: none !important;
         }
 
         .simdesa-logo-wrap {
@@ -102,11 +127,14 @@
         }
 
         .simdesa-logo-wrap img {
-            width: 240px;
+            width: 250px;
             max-width: 100%;
             height: auto;
             object-fit: contain;
             display: block;
+            margin: 0;
+            box-shadow: none !important;
+            border-radius: 0 !important;
         }
 
         .simdesa-logo-wrap .subtitle {
@@ -118,22 +146,23 @@
 
         .simdesa-left h1 {
             margin: 0;
-            color: #0f172a;
+            color: #0f172a !important;
             font-size: 58px;
             line-height: 1.06;
             font-weight: 900;
             letter-spacing: -1px;
+            text-transform: none !important;
         }
 
         .simdesa-left h1 .blue {
-            color: #0877d8;
+            color: #0877d8 !important;
         }
 
         .simdesa-subheadline {
             margin-top: 12px;
             font-size: 30px;
             line-height: 1.25;
-            color: #334155;
+            color: #334155 !important;
             font-weight: 700;
         }
 
@@ -146,7 +175,7 @@
         }
 
         .simdesa-desc {
-            color: #334155;
+            color: #334155 !important;
             font-size: 18px;
             line-height: 1.7;
             max-width: 720px;
@@ -157,14 +186,14 @@
             grid-template-columns: repeat(4, 1fr);
             gap: 18px;
             margin-top: 40px;
-            max-width: 700px;
+            max-width: 720px;
         }
 
         .simdesa-feature-card {
-            min-height: 130px;
+            min-height: 132px;
             border-radius: 16px;
-            background: rgba(255, 255, 255, 0.92);
-            border: 1px solid rgba(8, 119, 216, 0.12);
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(8, 119, 216, 0.13);
             box-shadow: 0 16px 36px rgba(15, 23, 42, 0.07);
             display: flex;
             flex-direction: column;
@@ -175,15 +204,15 @@
         }
 
         .simdesa-feature-card i {
-            width: 46px;
-            height: 46px;
-            border-radius: 12px;
+            width: 48px;
+            height: 48px;
+            border-radius: 13px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #0877d8;
             background: #eef7ff;
-            font-size: 22px;
+            font-size: 23px;
             margin-bottom: 12px;
         }
 
@@ -199,12 +228,12 @@
             align-items: center;
             justify-content: space-between;
             gap: 14px;
-            max-width: 720px;
+            max-width: 740px;
             margin-top: 38px;
             padding: 18px 22px;
             color: #ffffff;
             border-radius: 16px;
-            background: linear-gradient(135deg, #13a6f4 0%, #0868d8 100%);
+            background: linear-gradient(135deg, #16aef7 0%, #0868d8 100%);
             box-shadow: 0 18px 38px rgba(8, 119, 216, 0.22);
         }
 
@@ -222,6 +251,8 @@
             color: #64748b;
             font-size: 13px;
             line-height: 1.5;
+            text-align: center;
+            max-width: 740px;
         }
 
         .simdesa-visitor a {
@@ -234,11 +265,13 @@
 
         .simdesa-card {
             width: 100%;
-            background: rgba(255, 255, 255, 0.96);
+            background: #ffffff !important;
             border-radius: 30px;
             padding: 42px 38px 34px;
             box-shadow: 0 24px 60px rgba(15, 23, 42, 0.10);
             border: 1px solid rgba(8, 119, 216, 0.08);
+            opacity: 1 !important;
+            filter: none !important;
         }
 
         .simdesa-card-header {
@@ -252,11 +285,14 @@
             height: auto;
             display: block;
             margin: 0 auto 18px;
+            object-fit: contain;
+            box-shadow: none !important;
+            border-radius: 0 !important;
         }
 
         .simdesa-card-header h2 {
             margin: 0;
-            color: #0877d8;
+            color: #0877d8 !important;
             font-size: 31px;
             line-height: 1.1;
             font-weight: 900;
@@ -266,7 +302,7 @@
 
         .simdesa-card-header h4 {
             margin: 10px 0 0;
-            color: #0f172a;
+            color: #0f172a !important;
             font-size: 21px;
             line-height: 1.2;
             font-weight: 900;
@@ -274,7 +310,7 @@
 
         .simdesa-card-header p {
             margin: 8px 0 0;
-            color: #475569;
+            color: #475569 !important;
             font-size: 14px;
             line-height: 1.6;
             font-weight: 600;
@@ -310,10 +346,14 @@
         }
 
         .login-form {
-            margin: 0;
+            margin: 0 !important;
         }
 
         .form-group {
+            margin-bottom: 14px !important;
+        }
+
+        .form-login {
             margin-bottom: 14px !important;
         }
 
@@ -351,6 +391,7 @@
             padding-left: 52px !important;
             box-shadow: none !important;
             outline: none !important;
+            text-align: left !important;
         }
 
         .form-control:focus,
@@ -358,6 +399,22 @@
             border-color: #0b8fe8 !important;
             background: #ffffff !important;
             box-shadow: 0 0 0 4px rgba(11, 143, 232, 0.13) !important;
+        }
+
+        .login-form center {
+            display: block;
+            text-align: center;
+            margin: 4px 0 16px;
+        }
+
+        .login-form label {
+            color: #334155 !important;
+            font-size: 14px !important;
+            font-weight: 700 !important;
+        }
+
+        .login-form input[type="checkbox"] {
+            accent-color: #0877d8;
         }
 
         .simdesa-options {
@@ -374,7 +431,7 @@
             margin: 0;
             font-size: 14px;
             color: #334155;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
         }
 
@@ -404,6 +461,7 @@
             gap: 9px;
             transition: all .2s ease;
             box-shadow: none !important;
+            width: 100%;
         }
 
         .simdesa-btn-primary,
@@ -420,14 +478,16 @@
             box-shadow: 0 12px 24px rgba(8, 119, 216, 0.25) !important;
         }
 
-        .simdesa-btn-outline {
+        .simdesa-btn-outline,
+        .login-form .bg-green {
             color: #0877d8 !important;
             background: #ffffff !important;
             border: 2px solid #0877d8 !important;
             text-decoration: none !important;
         }
 
-        .simdesa-btn-outline:hover {
+        .simdesa-btn-outline:hover,
+        .login-form .bg-green:hover {
             color: #065db0 !important;
             background: #eef7ff !important;
             text-decoration: none !important;
@@ -476,6 +536,10 @@
             margin-bottom: 16px !important;
         }
 
+        .thumbnail img {
+            margin: 0 auto;
+        }
+
         @media (max-width: 1100px) {
             .inner-bg {
                 padding: 28px 22px;
@@ -498,6 +562,10 @@
                 max-width: 560px;
                 margin: 0 auto;
             }
+
+            .simdesa-visitor {
+                text-align: left;
+            }
         }
 
         @media (max-width: 700px) {
@@ -506,7 +574,7 @@
             }
 
             .simdesa-logo-wrap img {
-                width: 180px;
+                width: 185px;
             }
 
             .simdesa-logo-wrap .subtitle {
@@ -570,19 +638,16 @@
                     </div>
 
                     <h1>
-                        Layanan <span class="blue">Mandiri</span> Desa
+                        Digitalisasi Pelayanan Desa
+                        <br>
+                        <span class="blue">dalam Satu Sistem</span>
                     </h1>
-
-                    <div class="simdesa-subheadline">
-                        lebih mudah, cepat, dan terintegrasi
-                    </div>
 
                     <div class="simdesa-line"></div>
 
                     <div class="simdesa-desc">
-                        Layanan Mandiri Desa memudahkan warga untuk mengakses berbagai layanan dan informasi desa secara online kapan saja dan di mana saja.
-                        <br>
-                        Solusi digital untuk pelayanan desa yang lebih baik.
+                        SIMDESA hadir untuk membantu pemerintah desa mengelola administrasi,
+                        pelayanan warga, data desa, dan informasi desa secara terintegrasi dan mudah.
                     </div>
 
                     <div class="simdesa-features">
@@ -591,16 +656,16 @@
                             <span>Administrasi<br>Kependudukan</span>
                         </div>
                         <div class="simdesa-feature-card">
-                            <i class="fa fa-file-text"></i>
-                            <span>Surat<br>Menyurat</span>
+                            <i class="fa fa-file-text-o"></i>
+                            <span>Surat<br>Menyurat Desa</span>
                         </div>
                         <div class="simdesa-feature-card">
                             <i class="fa fa-globe"></i>
-                            <span>Informasi<br>Desa</span>
+                            <span>Informasi &<br>Website Desa</span>
                         </div>
                         <div class="simdesa-feature-card">
                             <i class="fa fa-mobile"></i>
-                            <span>Layanan<br>Warga</span>
+                            <span>Layanan<br>Digital Warga</span>
                         </div>
                     </div>
 
@@ -608,7 +673,7 @@
                         <span><i class="fa fa-link"></i> Terintegrasi</span>
                         <span><i class="fa fa-shield"></i> Aman</span>
                         <span><i class="fa fa-bolt"></i> Cepat</span>
-                        <span><i class="fa fa-check-square-o"></i> Transparan</span>
+                        <span><i class="fa fa-line-chart"></i> Transparan</span>
                         <span><i class="fa fa-heart-o"></i> Melayani</span>
                     </div>
 
@@ -744,7 +809,9 @@
 
                 const text = $('#pengunjung').text();
 
-                if (!text) return;
+                if (!text) {
+                    return;
+                }
 
                 if (navigator.clipboard) {
                     navigator.clipboard.writeText(text);
