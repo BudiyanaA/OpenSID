@@ -220,6 +220,7 @@
         }
     }
 </style>
+    <div class="simdesa-dashboard-v2">
     @include('admin.layouts.components.notifikasi')
 
     @include('admin.home.saas')
@@ -415,6 +416,7 @@
                     </div>
                 </a>
             </div>
+        </div>
 @endsection
 
 @push('scripts')
