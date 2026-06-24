@@ -11,6 +11,215 @@
 @endsection
 
 @section('content')
+<style>
+    /* SIMDESA Compact Home Dashboard */
+    .content-wrapper {
+        background: #f8fafc !important;
+    }
+
+    .content {
+        padding: 10px 16px 12px !important;
+    }
+
+    .content-header,
+    .page-header {
+        padding: 10px 16px 4px !important;
+    }
+
+    .content-header h1,
+    .content-header h2,
+    h2 {
+        font-size: 22px !important;
+        margin: 0 !important;
+        font-weight: 800 !important;
+    }
+
+    .stats-grid {
+        display: grid !important;
+        grid-template-columns: repeat(8, minmax(120px, 1fr)) !important;
+        gap: 10px !important;
+        margin-bottom: 14px !important;
+    }
+
+    .stat-card {
+        min-height: 92px !important;
+        padding: 12px 13px !important;
+        border-radius: 10px !important;
+    }
+
+    .stat-header {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: flex-start !important;
+        gap: 8px !important;
+    }
+
+    .stat-info h6 {
+        font-size: 11px !important;
+        margin-bottom: 6px !important;
+        line-height: 1.2 !important;
+    }
+
+    .stat-number {
+        font-size: 23px !important;
+        line-height: 1 !important;
+        margin-bottom: 6px !important;
+    }
+
+    .stat-change {
+        font-size: 10px !important;
+    }
+
+    .stat-icon {
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+        border-radius: 8px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 15px !important;
+    }
+
+    .d-flex.gap-4 {
+        gap: 12px !important;
+        margin-bottom: 12px !important;
+    }
+
+    .section-card {
+        border-radius: 10px !important;
+        padding: 14px 16px !important;
+        margin-bottom: 0 !important;
+        min-height: 215px !important;
+        max-height: 260px !important;
+        overflow: hidden !important;
+    }
+
+    .section-header,
+    .chart-header {
+        padding-bottom: 8px !important;
+        margin-bottom: 10px !important;
+    }
+
+    .section-header h5,
+    .chart-header h5,
+    .section-card h5 {
+        font-size: 15px !important;
+        margin: 0 !important;
+        font-weight: 800 !important;
+    }
+
+    .section-card h6 {
+        font-size: 12px !important;
+        margin-bottom: 6px !important;
+    }
+
+    #donutChart {
+        max-width: 150px !important;
+        max-height: 150px !important;
+    }
+
+    #barChart {
+        max-width: 190px !important;
+        max-height: 150px !important;
+    }
+
+    .complaint-item,
+    .project-item,
+    .agenda-item {
+        padding: 10px 12px !important;
+        border-radius: 8px !important;
+        margin-bottom: 8px !important;
+    }
+
+    .complaint-content h6,
+    .project-header h6 {
+        font-size: 12px !important;
+        margin-bottom: 4px !important;
+    }
+
+    .complaint-meta,
+    .project-info {
+        font-size: 10px !important;
+    }
+
+    .project-budget {
+        font-size: 11px !important;
+        padding: 5px 9px !important;
+        border-radius: 6px !important;
+    }
+
+    .section-card .py-5 {
+        padding-top: 26px !important;
+        padding-bottom: 26px !important;
+    }
+
+    .section-card .bi-tools {
+        font-size: 34px !important;
+    }
+
+    .menu-cards {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 12px !important;
+        margin-top: 14px !important;
+    }
+
+    .menu-card {
+        min-height: 74px !important;
+        padding: 15px 18px !important;
+        border-radius: 10px !important;
+    }
+
+    .menu-card-icon {
+        width: 38px !important;
+        height: 38px !important;
+        min-width: 38px !important;
+        font-size: 22px !important;
+    }
+
+    .menu-card h5 {
+        font-size: 15px !important;
+        margin-bottom: 3px !important;
+    }
+
+    .menu-card p {
+        font-size: 11px !important;
+        margin: 0 !important;
+    }
+
+    footer,
+    .main-footer {
+        padding: 8px 14px !important;
+        font-size: 11px !important;
+        margin-top: 10px !important;
+    }
+
+    @media (max-width: 1400px) {
+        .stats-grid {
+            grid-template-columns: repeat(4, 1fr) !important;
+        }
+    }
+
+    @media (max-width: 991px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+        }
+
+        .d-flex.gap-4 {
+            display: block !important;
+        }
+
+        .section-card {
+            margin-bottom: 12px !important;
+            max-height: none !important;
+        }
+
+        .menu-cards {
+            grid-template-columns: 1fr !important;
+        }
+    }
+</style>
     @include('admin.layouts.components.notifikasi')
 
     @include('admin.home.saas')
@@ -51,12 +260,12 @@
                 <!-- Donut Chart -->
                 <div>
                     <h6 class="text-center">Statistik Penduduk</h6>
-                    <canvas id="donutChart" style="width: 75%"></canvas>
+                    <canvas id="donutChart" width="150" height="150"></canvas>
                 </div>
                 <!-- Bar Chart -->
                 <div>
                     <h6 class="text-center">Perkembangan Desa</h6>
-                    <canvas id="barChart" height="300" style="width: 75%"></canvas>
+                    <canvas id="barChart" width="190" height="150"></canvas>
                 </div>
             </div>
         </div>
@@ -234,8 +443,8 @@
                 }]
             },
             options: {
-                // responsive: true,
-                // maintainAspectRatio: false,
+                responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
                     legend: {
                         position: 'bottom',
@@ -267,7 +476,7 @@
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: true,
+                maintainAspectRatio: false,
                 plugins: {
                     legend: {
                         position: 'top',
