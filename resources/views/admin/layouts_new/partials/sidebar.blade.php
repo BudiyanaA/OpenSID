@@ -5,10 +5,10 @@
         }
     
         .sidebar .brand > img.img-circle {
-            width: 75px !important;
-            height: 75px !important;
-            max-width: 75px !important;
-            max-height: 75px !important;
+            width: 65px !important;
+            height: 65px !important;
+            max-width: 65px !important;
+            max-height: 65px !important;
             object-fit: contain !important;
             display: block !important;
             margin: 0 auto 12px !important;
