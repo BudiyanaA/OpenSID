@@ -39,6 +39,10 @@
 
     @include('admin.layouts.components.token')
 
+    @php
+        $logoSimdesa = asset('images/logo-simdesa.png');
+    @endphp
+
     <style type="text/css">
         html,
         body {
@@ -117,10 +121,6 @@
             box-shadow: none !important;
         }
 
-        .form-top img {
-            box-shadow: none !important;
-        }
-
         .form-bottom {
             width: 100% !important;
             background: #ffffff !important;
@@ -132,28 +132,22 @@
 
         .simdesa-brand {
             display: flex;
-            align-items: center;
-            gap: 18px;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
             margin-bottom: 54px;
         }
 
-        .simdesa-brand img {
-            width: 86px !important;
-            height: 86px !important;
+        .simdesa-brand-logo {
+            width: 220px !important;
+            max-width: 100% !important;
+            height: auto !important;
             object-fit: contain !important;
-            border-radius: 18px;
-        }
-
-        .simdesa-brand-title {
-            font-size: 48px;
-            line-height: .95;
-            font-weight: 900;
-            color: #0877d8;
-            letter-spacing: 1px;
+            border-radius: 0 !important;
+            box-shadow: none !important;
         }
 
         .simdesa-brand-subtitle {
-            margin-top: 10px;
             font-size: 17px;
             font-weight: 700;
             color: #334155;
@@ -285,12 +279,14 @@
         }
 
         .simdesa-card-header img {
-            width: 78px !important;
-            height: 78px !important;
+            width: 165px !important;
+            max-width: 100% !important;
+            height: auto !important;
             object-fit: contain !important;
-            margin: 0 auto 14px !important;
+            margin: 0 auto 18px !important;
             display: block !important;
-            border-radius: 16px;
+            border-radius: 0 !important;
+            box-shadow: none !important;
         }
 
         .simdesa-card-header h2 {
@@ -490,17 +486,8 @@
                 padding: 18px 14px !important;
             }
 
-            .simdesa-brand {
-                gap: 12px;
-            }
-
-            .simdesa-brand img {
-                width: 58px !important;
-                height: 58px !important;
-            }
-
-            .simdesa-brand-title {
-                font-size: 34px;
+            .simdesa-brand-logo {
+                width: 175px !important;
             }
 
             .simdesa-brand-subtitle {
@@ -535,6 +522,10 @@
                 border-radius: 22px !important;
             }
 
+            .simdesa-card-header img {
+                width: 135px !important;
+            }
+
             .simdesa-card-header h2 {
                 font-size: 24px;
             }
@@ -556,12 +547,9 @@
                         <div class="form-top">
                             <div class="simdesa-brand">
                                 <a href="{{ base_url('/') }}">
-                                    <img src="{{ gambar_desa($desa['logo']) }}" alt="Logo SIMDESA" class="img-responsive" />
+                                    <img src="{{ $logoSimdesa }}" alt="Logo SIMDESA" class="simdesa-brand-logo">
                                 </a>
-                                <div>
-                                    <div class="simdesa-brand-title">SIMDESA</div>
-                                    <div class="simdesa-brand-subtitle">Sistem Informasi Manajemen Desa</div>
-                                </div>
+                                <div class="simdesa-brand-subtitle">Sistem Informasi Manajemen Desa</div>
                             </div>
 
                             <div class="login-footer-top">
@@ -628,7 +616,7 @@
 
                         <div class="form-bottom">
                             <div class="simdesa-card-header">
-                                <img src="{{ gambar_desa($desa['logo']) }}" alt="Logo SIMDESA" />
+                                <img src="{{ $logoSimdesa }}" alt="Logo SIMDESA">
                                 <h2>LAYANAN MANDIRI</h2>
                                 <h4>{{ ucwords(setting('sebutan_desa')) }} {{ $desa['nama_desa'] }}</h4>
                                 <p>
