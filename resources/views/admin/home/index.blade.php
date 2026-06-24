@@ -12,42 +12,55 @@
 
 @section('content')
 <style>
+    /* ==============================
+       SIMDESA DASHBOARD COMPACT V3
+       Target: Chrome 100% tetap muat
+    ============================== */
+
     .content {
-        padding: 18px 22px !important;
+        padding: 12px 18px 10px !important;
         background: #f4f8fd !important;
     }
 
     .content-header {
-        padding: 16px 22px 6px !important;
+        padding: 10px 18px 4px !important;
         background: #f4f8fd !important;
     }
 
+    .content-header h1,
     .content-header h2,
+    h1,
     h2 {
-        font-size: 26px !important;
+        font-size: 22px !important;
         font-weight: 900 !important;
         color: #0f2747 !important;
         margin: 0 !important;
+        line-height: 1.25 !important;
     }
 
     .simdesa-dashboard-v2 {
-        display: block;
-        width: 100%;
+        display: block !important;
+        width: 100% !important;
     }
+
+    /* ==============================
+       CARD STATISTIK ATAS
+       8 card jadi 1 baris
+    ============================== */
 
     .stats-grid {
         display: grid !important;
-        grid-template-columns: repeat(4, 1fr) !important;
-        gap: 14px !important;
-        margin-bottom: 18px !important;
+        grid-template-columns: repeat(8, minmax(115px, 1fr)) !important;
+        gap: 10px !important;
+        margin-bottom: 12px !important;
     }
 
     .stat-card {
         background: #ffffff !important;
-        border-radius: 14px !important;
-        padding: 16px 18px !important;
-        min-height: 105px !important;
-        box-shadow: 0 8px 24px rgba(15, 39, 71, 0.08) !important;
+        border-radius: 12px !important;
+        padding: 11px 12px !important;
+        min-height: 82px !important;
+        box-shadow: 0 6px 18px rgba(15, 39, 71, 0.06) !important;
         border: 1px solid #e8eef7 !important;
         overflow: visible !important;
     }
@@ -56,47 +69,58 @@
         display: flex !important;
         justify-content: space-between !important;
         align-items: flex-start !important;
-        gap: 12px !important;
+        gap: 8px !important;
+    }
+
+    .stat-info {
+        min-width: 0 !important;
     }
 
     .stat-info h6 {
-        font-size: 13px !important;
+        font-size: 11px !important;
         color: #475569 !important;
         font-weight: 800 !important;
-        margin-bottom: 8px !important;
+        margin: 0 0 5px !important;
+        line-height: 1.15 !important;
+        min-height: 24px !important;
     }
 
     .stat-number {
-        font-size: 28px !important;
+        font-size: 22px !important;
         line-height: 1 !important;
         color: #0f2747 !important;
         font-weight: 900 !important;
-        margin-bottom: 8px !important;
+        margin-bottom: 5px !important;
     }
 
     .stat-change {
-        font-size: 12px !important;
+        font-size: 10px !important;
         color: #059669 !important;
         font-weight: 700 !important;
         text-decoration: none !important;
+        line-height: 1 !important;
     }
 
     .stat-icon {
-        width: 42px !important;
-        height: 42px !important;
-        min-width: 42px !important;
-        border-radius: 10px !important;
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+        border-radius: 8px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        font-size: 18px !important;
+        font-size: 14px !important;
     }
+
+    /* ==============================
+       ROW SECTION
+    ============================== */
 
     .dashboard-row {
         display: grid !important;
         grid-template-columns: 1fr 0.92fr !important;
-        gap: 16px !important;
-        margin-bottom: 16px !important;
+        gap: 12px !important;
+        margin-bottom: 12px !important;
         align-items: stretch !important;
     }
 
@@ -106,40 +130,45 @@
 
     .section-card {
         background: #ffffff !important;
-        border-radius: 16px !important;
-        padding: 18px 20px !important;
-        box-shadow: 0 8px 24px rgba(15, 39, 71, 0.08) !important;
+        border-radius: 14px !important;
+        padding: 14px 16px !important;
+        box-shadow: 0 6px 18px rgba(15, 39, 71, 0.06) !important;
         border: 1px solid #e8eef7 !important;
-        min-height: 245px !important;
+        min-height: 205px !important;
         max-height: none !important;
         overflow: visible !important;
     }
 
     .section-header,
     .chart-header {
-        padding-bottom: 12px !important;
-        margin-bottom: 14px !important;
+        padding-bottom: 8px !important;
+        margin-bottom: 10px !important;
         border-bottom: 1px solid #e5e7eb !important;
     }
 
     .section-header h5,
     .chart-header h5,
     .section-card h5 {
-        font-size: 18px !important;
+        font-size: 16px !important;
         font-weight: 900 !important;
         color: #0f2747 !important;
         margin: 0 !important;
+        line-height: 1.25 !important;
     }
+
+    /* ==============================
+       CHART
+    ============================== */
 
     .chart-grid {
         display: grid !important;
         grid-template-columns: 0.9fr 1.1fr !important;
-        gap: 18px !important;
+        gap: 12px !important;
         align-items: center !important;
     }
 
     .chart-grid > div {
-        min-height: 180px !important;
+        min-height: 135px !important;
         display: flex !important;
         flex-direction: column !important;
         align-items: center !important;
@@ -147,105 +176,166 @@
     }
 
     .chart-grid h6 {
-        font-size: 13px !important;
+        font-size: 12px !important;
         font-weight: 800 !important;
         color: #334155 !important;
-        margin-bottom: 10px !important;
+        margin-bottom: 8px !important;
+        line-height: 1.2 !important;
     }
 
     #donutChart {
-        width: 160px !important;
-        height: 160px !important;
-        max-width: 160px !important;
-        max-height: 160px !important;
+        width: 125px !important;
+        height: 125px !important;
+        max-width: 125px !important;
+        max-height: 125px !important;
     }
 
     #barChart {
-        width: 230px !important;
-        height: 160px !important;
-        max-width: 230px !important;
-        max-height: 160px !important;
+        width: 180px !important;
+        height: 125px !important;
+        max-width: 180px !important;
+        max-height: 125px !important;
     }
+
+    /* ==============================
+       PENGADUAN
+    ============================== */
 
     .complaint-item {
         display: flex !important;
-        gap: 12px !important;
-        padding: 12px 0 !important;
+        gap: 10px !important;
+        padding: 10px 0 !important;
         border-bottom: 1px solid #eef2f7 !important;
     }
 
+    .complaint-item:last-child {
+        border-bottom: none !important;
+    }
+
     .complaint-icon {
-        width: 38px !important;
-        height: 38px !important;
-        min-width: 38px !important;
-        border-radius: 9px !important;
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+        border-radius: 8px !important;
         background: #e0f2fe !important;
         color: #0284c7 !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
+        font-size: 15px !important;
     }
 
-    .complaint-content h6,
-    .project-header h6 {
-        font-size: 14px !important;
+    .complaint-content h6 {
+        font-size: 13px !important;
         font-weight: 900 !important;
         color: #0f2747 !important;
-        margin-bottom: 5px !important;
+        margin: 0 0 4px !important;
+        line-height: 1.25 !important;
     }
 
-    .complaint-meta,
-    .project-info {
-        font-size: 12px !important;
+    .complaint-meta {
+        font-size: 11px !important;
         color: #64748b !important;
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+        align-items: center !important;
     }
+
+    .status-badge {
+        font-size: 10px !important;
+        padding: 4px 8px !important;
+        border-radius: 999px !important;
+        line-height: 1 !important;
+    }
+
+    /* ==============================
+       PROYEK PEMBANGUNAN
+    ============================== */
 
     .project-item {
         background: #f8fafc !important;
         border: 1px solid #e5e7eb !important;
-        border-radius: 12px !important;
-        padding: 14px 16px !important;
-        margin-bottom: 12px !important;
+        border-radius: 10px !important;
+        padding: 11px 13px !important;
+        margin-bottom: 8px !important;
     }
 
     .project-header {
         display: flex !important;
         justify-content: space-between !important;
         align-items: center !important;
-        gap: 12px !important;
-        margin-bottom: 10px !important;
+        gap: 10px !important;
+        margin-bottom: 8px !important;
+    }
+
+    .project-header h6 {
+        font-size: 13px !important;
+        font-weight: 900 !important;
+        color: #0f2747 !important;
+        margin: 0 !important;
+        line-height: 1.25 !important;
+    }
+
+    .project-info {
+        font-size: 11px !important;
+        color: #64748b !important;
     }
 
     .project-budget {
         background: #dcfce7 !important;
         color: #16a34a !important;
         font-weight: 900 !important;
-        padding: 6px 10px !important;
+        padding: 5px 9px !important;
         border-radius: 8px !important;
-        font-size: 12px !important;
+        font-size: 11px !important;
         white-space: nowrap !important;
     }
 
+    /* ==============================
+       AGENDA DESA
+    ============================== */
+
     .section-card .py-5 {
-        padding-top: 38px !important;
-        padding-bottom: 38px !important;
+        padding-top: 24px !important;
+        padding-bottom: 24px !important;
     }
+
+    .section-card .bi-tools {
+        font-size: 36px !important;
+        color: #64748b !important;
+    }
+
+    .section-card .text-center h5 {
+        font-size: 16px !important;
+        margin-top: 10px !important;
+        margin-bottom: 3px !important;
+    }
+
+    .section-card .text-center p {
+        font-size: 13px !important;
+        margin-bottom: 0 !important;
+    }
+
+    /* ==============================
+       MENU BAWAH
+    ============================== */
 
     .menu-cards {
         display: grid !important;
         grid-template-columns: repeat(3, 1fr) !important;
-        gap: 16px !important;
-        margin-top: 4px !important;
+        gap: 12px !important;
+        margin-top: 2px !important;
     }
 
     .menu-card {
-        min-height: 86px !important;
-        border-radius: 14px !important;
-        padding: 20px 22px !important;
+        min-height: 66px !important;
+        border-radius: 12px !important;
+        padding: 14px 18px !important;
         color: #ffffff !important;
         text-decoration: none !important;
         background: linear-gradient(135deg, #1d4ed8, #0ea5e9) !important;
-        box-shadow: 0 10px 24px rgba(15, 39, 71, 0.12) !important;
+        box-shadow: 0 8px 18px rgba(15, 39, 71, 0.10) !important;
     }
 
     .menu-card.green {
@@ -257,27 +347,36 @@
     }
 
     .menu-card-icon {
-        width: 44px !important;
-        height: 44px !important;
-        min-width: 44px !important;
-        font-size: 28px !important;
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+        font-size: 22px !important;
         color: #ffffff !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
 
     .menu-card h5 {
-        font-size: 18px !important;
+        font-size: 15px !important;
         font-weight: 900 !important;
         color: #ffffff !important;
-        margin-bottom: 4px !important;
+        margin: 0 0 2px !important;
+        line-height: 1.25 !important;
     }
 
     .menu-card p {
-        font-size: 13px !important;
+        font-size: 11px !important;
         color: rgba(255,255,255,0.9) !important;
         margin: 0 !important;
+        line-height: 1.2 !important;
     }
 
-    @media (max-width: 1400px) {
+    /* ==============================
+       RESPONSIVE
+    ============================== */
+
+    @media (max-width: 1200px) {
         .stats-grid {
             grid-template-columns: repeat(4, 1fr) !important;
         }
@@ -293,6 +392,10 @@
 
         .chart-grid {
             grid-template-columns: 1fr !important;
+        }
+
+        .section-card {
+            min-height: auto !important;
         }
     }
 </style>
