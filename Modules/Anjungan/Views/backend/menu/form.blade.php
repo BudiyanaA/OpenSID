@@ -127,7 +127,7 @@
                     </select>
                     <span id="eksternal" class="jenis_link" style="@if ($menu['link_tipe'] != 99) display:none; @endif">
                         <input name="{{ jecho($menu['link_tipe'], 99, 'link') }}" class="form-control input-sm" type="text" value="{{ $menu['link'] }}" />
-                        <span class="text-sm text-red">(misalnya: https://opendesa.id)</span>
+                        <span class="text-sm text-red">(misalnya: https://simdesa.id)</span>
                     </span>
                 </div>
             </div>

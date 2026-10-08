@@ -608,15 +608,15 @@ $config['proxy_ips'] = '';
 | - Youtube OpenDesa
 |
 */
-$config['nama_aplikasi']  = 'OpenSID';
-$config['nama_lembaga']   = 'OpenDesa';
-$config['fb_opendesa']    = 'https://www.facebook.com/groups/komunitasopendesa';
-$config['tg_opendesa']    = 'https://t.me/komunitasopensidstop';
+$config['nama_aplikasi']  = 'Simdesa';
+$config['nama_lembaga']   = 'Simdesa';
+$config['fb_opendesa']    = 'https://www.facebook.com/groups/komunitassimdesa';
+$config['tg_opendesa']    = 'https://t.me/komunitassimdesastop';
 $config['tg_kontributor'] = 'https://t.me/+mi5ydVtVfmw0YWY1';
-$config['github']         = 'https://github.com/OpenSID/OpenSID';
-$config['website']        = 'https://opendesa.id';
-$config['forum']          = 'https://forum.opendesa.id';
-$config['youtube']        = 'https://www.youtube.com/KomunitasOpenSID-OpenDesa';
+$config['github']         = 'https://github.com/Simdesa/Simdesa';
+$config['website']        = 'https://simdesa.id';
+$config['forum']          = 'https://forum.simdesa.id';
+$config['youtube']        = 'https://www.youtube.com/KomunitasSimdesa-Simdesa';
 
 /*
 |--------------------------------------------------------------------------
@@ -627,7 +627,7 @@ $config['youtube']        = 'https://www.youtube.com/KomunitasOpenSID-OpenDesa';
 | - Token Pantau (Default)
 |
 */
-$config['server_pantau'] = 'https://pantau.opensid.my.id';
+$config['server_pantau'] = 'https://pantau.simdesa.my.id';
 $config['token_pantau']  = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6bnVsbCwidGltZXN0YW1wIjoxNjAzNDY2MjM5fQ.HVCNnMLokF2tgHwjQhSIYo6-2GNXB4-Kf28FSIeXnZw';
 
 /*
@@ -638,7 +638,7 @@ $config['token_pantau']  = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6bnVsbCw
 | - Server layanan (Default)
 |
 */
-$config['server_layanan'] = 'https://layanan.opendesa.id';
+$config['server_layanan'] = 'https://layanan.simdesa.id';
 
 /*
 |--------------------------------------------------------------------------
@@ -646,8 +646,8 @@ $config['server_layanan'] = 'https://layanan.opendesa.id';
 |--------------------------------------------------------------------------
 |
 */
-$config['rilis_umum']    = 'https://api.github.com/repos/opensid/opensid/releases/latest';
-$config['rilis_premium'] = 'https://api.github.com/repos/opensid/rilis-premium/releases/latest';
+$config['rilis_umum']    = 'https://api.github.com/repos/simdesa/simdesa/releases/latest';
+$config['rilis_premium'] = 'https://api.github.com/repos/simdesa/rilis-premium/releases/latest';
 
 /*
 |--------------------------------------------------------------------------

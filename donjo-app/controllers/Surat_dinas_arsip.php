@@ -324,7 +324,7 @@ class Surat_dinas_arsip extends Admin_Controller
             ];
 
             $pesanFCM              = $pesan;
-            $pesanFCM['[melalui]'] = 'aplikasi OpenSID Admin';
+            $pesanFCM['[melalui]'] = 'aplikasi Simdesa Admin';
 
             // buat log notifikasi mobile admin
             $kirimPesan = setting('notifikasi_pengajuan_surat');

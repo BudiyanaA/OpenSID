@@ -345,7 +345,7 @@ class Mandiri extends Admin_Controller
             // TODO: OpenKab - Perlu disesuaikan ulang setelah semua modul selesai
             $message = view('admin.layanan_mandiri.daftar.email.verifikasi-berhasil', ['nama' => $data->nama], [], true);
 
-            $this->email->from($this->email->smtp_user, 'OpenSID')
+            $this->email->from($this->email->smtp_user, 'Simdesa')
                 ->to($data->email)
                 ->subject('Verifikasi Akun Layanan Mandiri')
                 ->set_mailtype('html')

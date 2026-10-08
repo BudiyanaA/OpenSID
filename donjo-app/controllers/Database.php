@@ -247,7 +247,7 @@ class Database extends Admin_Controller
 
             // Validasi app_key dari file SQL.gz
             if (! $this->validateAppKeyFromSqlFile($filename)) {
-                throw new Exception('File backup tidak dapat di-restore. File backup berasal dari instalasi OpenSID yang berbeda (App Key tidak cocok). Pastikan Anda menggunakan file backup dari instalasi yang sama.');
+                throw new Exception('File backup tidak dapat di-restore. File backup berasal dari instalasi Simdesa yang berbeda (App Key tidak cocok). Pastikan Anda menggunakan file backup dari instalasi yang sama.');
             }
 
             $connection = DB::connection();

@@ -6,8 +6,8 @@
     <meta name='viewport' content='width=device-width, initial-scale=1.0, user-scalable=0'>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="description" content="Buku Tamu">
-    <meta name="author" content="OpenDesa">
-    <meta name="keywords" content="buku tamu, tamu, buku, opensid, desa">
+    <meta name="author" content="Simdesa">
+    <meta name="keywords" content="buku tamu, tamu, buku, simdesa, desa">
     <title>Buku Tamu</title>
 
     <link rel="shortcut icon" href="{{ favico_desa() }}" />

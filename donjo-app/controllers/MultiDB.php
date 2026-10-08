@@ -570,7 +570,7 @@ class MultiDB extends Admin_Controller
         $version = $backupData['info']['versi'];
 
         if (substr((string) $version, 0, 4) !== substr(VERSION, 0, 4)) {
-            redirect_with('error', 'Proses restore dari backup gagal. <br>Versi opensid tidak sama', 'database');
+            redirect_with('error', 'Proses restore dari backup gagal. <br>Versi simdesa tidak sama', 'database');
         }
 
         $config_backup   = $backupData['tabel']['config']['data'][0];

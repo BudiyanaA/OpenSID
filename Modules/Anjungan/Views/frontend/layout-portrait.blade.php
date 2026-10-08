@@ -6,8 +6,8 @@
     <meta name='viewport' content='width=device-width, initial-scale=1.0, user-scalable=0'>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="description" content="{{ setting('sebutan_anjungan_mandiri') }}">
-    <meta name="author" content="OpenDesa">
-    <meta name="keywords" content="anjungan, opensid, mandiri, desa">
+    <meta name="author" content="Simdesa">
+    <meta name="keywords" content="anjungan, simdesa, mandiri, desa">
     <title>{{ setting('sebutan_anjungan_mandiri') }}</title>
     <link rel="shortcut icon" type="image/x-icon" href="{{ favico_desa() }}">
 
