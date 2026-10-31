@@ -49,7 +49,6 @@ class ProgramBantuanOpendkExport
         'ndesc',
         'sdate',
         'edate',
-        'status',
         'asaldana',
     ];
 
@@ -64,7 +63,11 @@ class ProgramBantuanOpendkExport
         $dataExport = Bantuan::get($this->fields)->map(static function ($item) use ($kodeDesa) {
             $data = collect($item->toArray());
             $data->prepend(kode_wilayah($kodeDesa), 'desa_id');
-            $data->put('status', $data->get('status') ? 1 : 0);
+            // Kolom program.status sudah dihapus OpenSID; status dihitung dari masa aktif (sdate-edate).
+            // Sisipkan sebelum asaldana supaya urutan kolom tetap seperti format OpenDK.
+            $asaldana = $data->pull('asaldana');
+            $data->put('status', $item->status_masa_aktif === 'Aktif' ? 1 : 0);
+            $data->put('asaldana', $asaldana);
 
             return $data->toArray();
         })->toArray();

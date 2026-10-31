@@ -218,7 +218,7 @@ class Laravel extends Container
      */
     public function version(): string
     {
-        return sprintf('OpenSID (%s) (Illuminate Components ^10.0)', VERSION);
+        return sprintf('SIMDESA (%s) (Illuminate Components ^10.0)', VERSION);
     }
 
     /**

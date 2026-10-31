@@ -1,0 +1,10 @@
+{
+    "name": "SmartDesaAi",
+    "alias": "Smart Desa AI",
+    "description": "Generator artikel Website Desa berbasis AI (BYOK: token API milik desa)",
+    "keywords": ["ai", "artikel", "website desa"],
+    "priority": 0,
+    "providers": [],
+    "files": [],
+    "version": "2609.0.0"
+}

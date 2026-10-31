@@ -84,12 +84,12 @@ class Database
         if (! PREMIUM) {
             $versiSetara = SettingAplikasi::where(['key' => 'compatible_version_general'])->first()?->value;
             if ($versiSetara && $currentVersion < $versiSetara) {
-                show_error('<h2>OpenSID bisa diupgrade dengan minimal versi ' . $versiSetara . '</h2>');
+                show_error('<h2>SIMDESA bisa diupgrade dengan minimal versi ' . $versiSetara . '</h2>');
             }
         }
 
         if (! $install && $version < $minimumVersion) {
-            show_error('<h2>Silakan upgrade dulu ke OpenSID dengan minimal versi ' . $this->minimumVersion . '</h2>');
+            show_error('<h2>Silakan upgrade dulu ke SIMDESA dengan minimal versi ' . $this->minimumVersion . '</h2>');
         }
 
         $migrations = File::files('donjo-app/models/migrations');

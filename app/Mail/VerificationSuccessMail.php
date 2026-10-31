@@ -52,7 +52,7 @@ class VerificationSuccessMail extends Mailable
 
     public function build()
     {
-        return $this->from(config('mail.from.address'), 'OpenSID')
+        return $this->from(config('mail.from.address'), 'SIMDESA')
             ->subject('Berhasil Verifikasi Email')
             ->view('email.verifikasi-berhasil', ['nama' => $this->name]);
     }

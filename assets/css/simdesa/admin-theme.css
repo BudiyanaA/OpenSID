@@ -1,0 +1,1035 @@
+/*
+ * SIMDESA Admin Theme
+ * ------------------------------------------------------------------
+ * Lapisan tampilan di atas AdminLTE 2 / Bootstrap 3. HANYA mengubah
+ * presentasi: markup, menu, route, dan JS AdminLTE tidak disentuh.
+ *
+ * Semua selector diawali `body.sd-admin` agar menang atas skin
+ * AdminLTE (`.skin-*`) tanpa !important. Pengecualian: AdminLTE memakai
+ * !important pada .alert-* / .callout-* / .bg-*, jadi di sana wajib.
+ *
+ * Dimuat SETELAH tokens.css, components.css, AdminLTE, skin, dan
+ * admin-style.css di resources/views/admin/layouts/index.blade.php.
+ * Dokumentasi: assets/css/simdesa/README.md
+ */
+
+/* ================= App shell ================= */
+body.sd-admin {
+    font-family: var(--simdesa-font-sans);
+    color: var(--simdesa-text);
+    background: var(--simdesa-background);
+    -webkit-font-smoothing: antialiased;
+}
+
+body.sd-admin .wrapper,
+body.sd-admin .content-wrapper {
+    background: var(--simdesa-background);
+}
+
+body.sd-admin a {
+    color: var(--simdesa-primary);
+}
+
+body.sd-admin a:hover,
+body.sd-admin a:focus {
+    color: var(--simdesa-primary-dark);
+}
+
+body.sd-admin h1,
+body.sd-admin h2,
+body.sd-admin h3,
+body.sd-admin h4,
+body.sd-admin h5,
+body.sd-admin h6 {
+    font-family: var(--simdesa-font-sans);
+}
+
+/* ================= Header: logo ================= */
+body.sd-admin .main-header {
+    box-shadow: none;
+}
+
+body.sd-admin .main-header .logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: var(--simdesa-primary-darker);
+    color: #fff;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    font-family: var(--simdesa-font-sans);
+    text-decoration: none;
+}
+
+body.sd-admin .main-header .logo:hover {
+    background: var(--simdesa-primary-darker);
+    color: #fff;
+}
+
+body.sd-admin .main-header .logo .logo-lg,
+body.sd-admin .main-header .logo .logo-mini {
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+body.sd-admin .main-header .logo .logo-lg {
+    display: flex;
+}
+
+body.sd-admin .sd-logo-tile {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: #fff;
+}
+
+body.sd-admin .sd-logo-tile img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+}
+
+body.sd-admin .sd-logo-text {
+    font-size: 19px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: #fff;
+}
+
+/* ================= Header: navbar (topbar) ================= */
+body.sd-admin .main-header .navbar {
+    background: var(--simdesa-surface);
+    border-bottom: 1px solid var(--simdesa-border);
+    box-shadow: var(--simdesa-shadow-sm);
+}
+
+body.sd-admin .main-header .navbar .nav > li > a,
+body.sd-admin .main-header .navbar .sidebar-toggle {
+    color: var(--simdesa-text-muted);
+    transition: background-color var(--simdesa-transition), color var(--simdesa-transition);
+}
+
+body.sd-admin .main-header .navbar .nav > li > a:hover,
+body.sd-admin .main-header .navbar .nav > li > a:focus,
+body.sd-admin .main-header .navbar .nav > .active > a,
+body.sd-admin .main-header .navbar .nav .open > a,
+body.sd-admin .main-header .navbar .sidebar-toggle:hover {
+    background: var(--simdesa-primary-lighter);
+    color: var(--simdesa-primary);
+}
+
+body.sd-admin .main-header .navbar .sidebar-toggle {
+    border-right: 1px solid var(--simdesa-border);
+}
+
+body.sd-admin .main-header .navbar .nav > li > a > .label,
+body.sd-admin .main-header .navbar .nav > li > a > .badge {
+    top: 8px;
+    right: 5px;
+    min-width: 18px;
+    padding: 2px 5px;
+    border: 2px solid var(--simdesa-surface);
+    border-radius: var(--simdesa-radius-pill);
+    background: var(--simdesa-danger);
+    color: #fff;
+    font-size: 10px;
+    line-height: 1.2;
+}
+
+body.sd-admin .navbar-nav > .user-menu > a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+body.sd-admin .navbar-nav > .user-menu .user-image {
+    float: none;
+    width: 30px;
+    height: 30px;
+    margin: -4px 0;
+    border: 2px solid var(--simdesa-primary-light);
+    object-fit: cover;
+}
+
+body.sd-admin .navbar-nav > .user-menu > a > span {
+    color: var(--simdesa-text);
+    font-weight: var(--simdesa-font-weight-semibold);
+}
+
+/* Dropdown topbar (notifikasi & profil) */
+body.sd-admin .main-header .dropdown-menu {
+    overflow: hidden;
+    padding: 0;
+    border: 1px solid var(--simdesa-border);
+    border-radius: var(--simdesa-radius-lg);
+    box-shadow: var(--simdesa-shadow-md);
+}
+
+body.sd-admin .navbar-nav > .notifications-menu > .dropdown-menu > li.header,
+body.sd-admin .navbar-nav > .notifications-menu > .dropdown-menu > li.footer > a {
+    padding: 10px 14px;
+    background: var(--simdesa-surface-muted);
+    border-color: var(--simdesa-border);
+    font-size: var(--simdesa-font-size-sm);
+    color: var(--simdesa-text-muted);
+}
+
+body.sd-admin .navbar-nav > .notifications-menu > .dropdown-menu > li.header {
+    font-weight: var(--simdesa-font-weight-semibold);
+    color: var(--simdesa-text);
+}
+
+body.sd-admin .navbar-nav > .notifications-menu > .dropdown-menu > li.footer > a {
+    color: var(--simdesa-primary);
+    font-weight: var(--simdesa-font-weight-semibold);
+}
+
+body.sd-admin .navbar-nav > .user-menu > .dropdown-menu {
+    width: 260px;
+}
+
+body.sd-admin .navbar-nav > .user-menu > .dropdown-menu > li.user-header {
+    height: auto;
+    padding: 20px 16px 16px;
+    background: var(--simdesa-gradient-brand);
+}
+
+body.sd-admin .navbar-nav > .user-menu > .dropdown-menu > li.user-header > img {
+    width: 72px;
+    height: 72px;
+    border: 3px solid rgba(255, 255, 255, 0.4);
+    object-fit: cover;
+}
+
+body.sd-admin .navbar-nav > .user-menu > .dropdown-menu > li.user-header > p {
+    margin-top: 8px;
+    font-size: var(--simdesa-font-size-md);
+    font-weight: var(--simdesa-font-weight-semibold);
+    color: #fff;
+}
+
+body.sd-admin .navbar-nav > .user-menu > .dropdown-menu > li.user-header > p > small {
+    color: rgba(255, 255, 255, 0.75);
+    font-weight: var(--simdesa-font-weight-regular);
+}
+
+body.sd-admin .navbar-nav > .user-menu > .dropdown-menu > .user-footer {
+    padding: 12px;
+    background: var(--simdesa-surface);
+}
+
+body.sd-admin .navbar-nav > .user-menu > .dropdown-menu > .user-footer .btn {
+    min-width: 96px;
+    border: 1px solid var(--simdesa-border-strong) !important;
+    background: var(--simdesa-surface) !important;
+    color: var(--simdesa-text) !important;
+}
+
+body.sd-admin .navbar-nav > .user-menu > .dropdown-menu > .user-footer .btn:hover {
+    border-color: var(--simdesa-primary) !important;
+    color: var(--simdesa-primary) !important;
+}
+
+/* ================= Sidebar ================= */
+body.sd-admin .main-sidebar,
+body.sd-admin .left-side {
+    background: linear-gradient(180deg, var(--simdesa-primary-darker) 0%, var(--simdesa-primary-dark) 100%);
+    box-shadow: 1px 0 0 rgba(15, 31, 61, 0.06);
+}
+
+body.sd-admin .main-sidebar .sidebar {
+    padding-bottom: var(--simdesa-space-6);
+}
+
+/* Panel desa */
+body.sd-admin .main-sidebar .user-panel {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 14px 12px 6px;
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: var(--simdesa-radius-lg);
+    background: rgba(255, 255, 255, 0.07);
+}
+
+body.sd-admin .main-sidebar .user-panel::before,
+body.sd-admin .main-sidebar .user-panel::after {
+    display: none;
+}
+
+body.sd-admin .main-sidebar .user-panel > .image {
+    float: none;
+    flex: 0 0 auto;
+    padding: 0;
+}
+
+body.sd-admin .main-sidebar .user-panel > .image > img {
+    width: 44px;
+    max-width: none;
+    height: 44px;
+    padding: 4px;
+    border-radius: var(--simdesa-radius);
+    background: rgba(255, 255, 255, 0.95);
+    object-fit: contain;
+}
+
+body.sd-admin .main-sidebar .user-panel > .info {
+    position: static;
+    float: none;
+    left: auto;
+    min-width: 0;
+    padding: 0;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+body.sd-admin .main-sidebar .user-panel > .info > strong {
+    color: #fff;
+    font-size: var(--simdesa-font-size-sm);
+}
+
+/* Pencarian menu */
+body.sd-admin .main-sidebar .sidebar-form {
+    margin: 10px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: var(--simdesa-radius);
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+}
+
+body.sd-admin .main-sidebar .sidebar-form input[type="text"],
+body.sd-admin .main-sidebar .sidebar-form .btn {
+    height: 36px;
+    border: 0;
+    background: transparent;
+    color: #fff;
+    box-shadow: none;
+}
+
+body.sd-admin .main-sidebar .sidebar-form input[type="text"]::placeholder {
+    color: rgba(255, 255, 255, 0.55);
+}
+
+body.sd-admin .main-sidebar .sidebar-form input[type="text"]:focus,
+body.sd-admin .main-sidebar .sidebar-form input[type="text"]:focus + .input-group-btn .btn {
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+}
+
+body.sd-admin .main-sidebar .sidebar-form .btn {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Menu */
+body.sd-admin .sidebar-menu > li.header {
+    padding: 16px 24px 6px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 11px;
+    font-weight: var(--simdesa-font-weight-semibold);
+    letter-spacing: 0.08em;
+}
+
+body.sd-admin .sidebar-menu > li > a {
+    margin: 1px 10px;
+    padding: 9px 10px 9px 12px;
+    border-left: 0;
+    border-radius: var(--simdesa-radius);
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 13.5px;
+    font-weight: var(--simdesa-font-weight-medium);
+    transition: background-color var(--simdesa-transition), color var(--simdesa-transition);
+}
+
+body.sd-admin .sidebar-menu > li > a > .fa,
+body.sd-admin .sidebar-menu > li > a > .glyphicon,
+body.sd-admin .sidebar-menu > li > a > .ion {
+    width: 22px;
+    margin-right: 6px;
+    color: rgba(255, 255, 255, 0.62);
+    text-align: center;
+}
+
+body.sd-admin .sidebar-menu > li:hover > a,
+body.sd-admin .sidebar-menu > li > a:focus {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+body.sd-admin .sidebar-menu > li.active > a,
+body.sd-admin .sidebar-menu > li.menu-open > a {
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+    box-shadow: inset 3px 0 0 var(--simdesa-secondary-light);
+}
+
+body.sd-admin .sidebar-menu > li.active > a > .fa,
+body.sd-admin .sidebar-menu > li.menu-open > a > .fa,
+body.sd-admin .sidebar-menu > li:hover > a > .fa {
+    color: var(--simdesa-secondary-light);
+}
+
+/* Submenu */
+body.sd-admin .sidebar-menu > li > .treeview-menu {
+    margin: 2px 10px 6px;
+    padding: 2px 0;
+    background: transparent;
+}
+
+body.sd-admin .sidebar-menu .treeview-menu > li > a {
+    margin: 1px 0;
+    padding: 7px 10px 7px 38px;
+    border-radius: var(--simdesa-radius);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 13px;
+}
+
+body.sd-admin .sidebar-menu .treeview-menu > li > a > .fa {
+    width: 18px;
+    color: rgba(255, 255, 255, 0.45);
+    font-size: 12px;
+}
+
+body.sd-admin .sidebar-menu .treeview-menu > li > a:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+}
+
+body.sd-admin .sidebar-menu .treeview-menu > li.active > a {
+    background: rgba(255, 255, 255, 0.10);
+    color: #fff;
+    font-weight: var(--simdesa-font-weight-semibold);
+}
+
+body.sd-admin .sidebar-menu .treeview-menu > li.active > a > .fa {
+    color: var(--simdesa-secondary-light);
+}
+
+/* Warna ikon bawaan (text-aqua / text-red) diganti aksen SIMDESA */
+body.sd-admin .main-sidebar .text-aqua,
+body.sd-admin .main-sidebar .text-red {
+    color: var(--simdesa-secondary-light) !important;
+}
+
+/* Sidebar mini (collapse): kembalikan ukuran AdminLTE agar flyout tetap presisi */
+@media (min-width: 768px) {
+    body.sd-admin.sidebar-mini.sidebar-collapse .main-header .logo .logo-mini {
+        display: flex;
+    }
+
+    body.sd-admin.sidebar-mini.sidebar-collapse .main-header .logo .logo-lg {
+        display: none;
+    }
+
+    body.sd-admin.sidebar-mini.sidebar-collapse .main-sidebar .user-panel {
+        margin: 10px 4px;
+        padding: 4px;
+        border: 0;
+        background: transparent;
+    }
+
+    body.sd-admin.sidebar-mini.sidebar-collapse .main-sidebar .user-panel > .image > img {
+        width: 36px;
+        height: 36px;
+    }
+
+    body.sd-admin.sidebar-mini.sidebar-collapse .sidebar-menu > li > a {
+        margin: 1px 0;
+        border-radius: 0;
+    }
+
+    body.sd-admin.sidebar-mini.sidebar-collapse .sidebar-menu > li:hover > a > span:not(.pull-right),
+    body.sd-admin.sidebar-mini.sidebar-collapse .sidebar-menu > li:hover > .treeview-menu {
+        background: var(--simdesa-primary-dark);
+        box-shadow: var(--simdesa-shadow-md);
+    }
+
+    body.sd-admin.sidebar-mini.sidebar-collapse .sidebar-menu > li:hover > .treeview-menu {
+        margin: 0;
+        padding: 4px;
+        border-radius: 0 0 var(--simdesa-radius) 0;
+    }
+
+    body.sd-admin.sidebar-mini.sidebar-collapse .sidebar-menu .treeview-menu > li > a {
+        padding-left: 14px;
+    }
+}
+
+/* Scrollbar sidebar */
+body.sd-admin .main-sidebar ::-webkit-scrollbar { width: 6px; }
+body.sd-admin .main-sidebar ::-webkit-scrollbar-thumb { border-radius: 6px; background: rgba(255, 255, 255, 0.22); }
+body.sd-admin .main-sidebar ::-webkit-scrollbar-track { background: transparent; }
+body.sd-admin .main-sidebar .slimScrollBar { background: rgba(255, 255, 255, 0.35) !important; }
+
+/* ================= Content header & breadcrumb ================= */
+body.sd-admin .content-header {
+    padding: 22px 20px 4px;
+}
+
+body.sd-admin .content-header > h1 {
+    font-size: 22px;
+    font-weight: var(--simdesa-font-weight-bold);
+    letter-spacing: -0.01em;
+    color: var(--simdesa-text);
+}
+
+body.sd-admin .content-header > h1 > small {
+    color: var(--simdesa-text-muted);
+    font-size: var(--simdesa-font-size-sm);
+}
+
+body.sd-admin .content-header > .breadcrumb {
+    top: 20px;
+    right: 20px;
+    padding: 6px 12px;
+    border: 1px solid var(--simdesa-border);
+    border-radius: var(--simdesa-radius-pill);
+    background: var(--simdesa-surface);
+    font-size: 12.5px;
+    color: var(--simdesa-text-muted);
+}
+
+body.sd-admin .content-header > .breadcrumb > li > a {
+    color: var(--simdesa-primary);
+    font-weight: var(--simdesa-font-weight-medium);
+}
+
+body.sd-admin .content-header > .breadcrumb > li > a > .fa {
+    margin-right: 5px;
+}
+
+body.sd-admin .content-header > .breadcrumb > li + li::before {
+    content: "\203A\00a0";
+    padding: 0 4px;
+    color: var(--simdesa-text-subtle);
+}
+
+body.sd-admin .content-header > .breadcrumb > .active {
+    color: var(--simdesa-text);
+}
+
+@media (max-width: 991px) {
+    body.sd-admin .content-header > .breadcrumb {
+        position: relative;
+        top: 0;
+        right: auto;
+        left: 0;
+        float: none;
+        display: inline-block;
+        margin-top: 8px;
+    }
+}
+
+body.sd-admin .content {
+    padding: 16px 20px 24px;
+}
+
+/* ================= Box (card) ================= */
+body.sd-admin .box {
+    margin-bottom: 20px;
+    border: 1px solid var(--simdesa-border);
+    border-top-width: 1px;
+    border-top-color: var(--simdesa-border);
+    border-radius: var(--simdesa-radius-lg);
+    background: var(--simdesa-surface);
+    box-shadow: var(--simdesa-shadow-sm);
+}
+
+body.sd-admin .box.box-danger { border-top: 3px solid var(--simdesa-danger); }
+body.sd-admin .box.box-warning { border-top: 3px solid var(--simdesa-warning); }
+body.sd-admin .box.box-success { border-top: 3px solid var(--simdesa-success); }
+body.sd-admin .box.box-solid { border: 1px solid var(--simdesa-border); }
+
+body.sd-admin .box.box-solid > .box-header,
+body.sd-admin .box.box-solid[class*="box-"] > .box-header {
+    background: var(--simdesa-surface-muted);
+    color: var(--simdesa-text);
+}
+
+body.sd-admin .box-header {
+    padding: 14px 16px;
+    color: var(--simdesa-text);
+}
+
+body.sd-admin .box-header.with-border {
+    border-bottom: 1px solid var(--simdesa-border);
+}
+
+body.sd-admin .box-header .box-title {
+    font-size: 16px;
+    font-weight: var(--simdesa-font-weight-semibold);
+    color: var(--simdesa-text);
+}
+
+body.sd-admin .box-body {
+    padding: 16px;
+}
+
+body.sd-admin .box-footer {
+    padding: 12px 16px;
+    border-top: 1px solid var(--simdesa-border);
+    border-radius: 0 0 var(--simdesa-radius-lg) var(--simdesa-radius-lg);
+    background: var(--simdesa-surface);
+}
+
+body.sd-admin .box .overlay {
+    border-radius: var(--simdesa-radius-lg);
+}
+
+body.sd-admin .small-box,
+body.sd-admin .info-box {
+    border-radius: var(--simdesa-radius-lg);
+    box-shadow: var(--simdesa-shadow-sm);
+    overflow: hidden;
+}
+
+body.sd-admin .info-box-icon {
+    border-radius: var(--simdesa-radius-lg) 0 0 var(--simdesa-radius-lg);
+}
+
+/* ================= Button ================= */
+body.sd-admin .btn {
+    border-radius: var(--simdesa-radius);
+    font-weight: var(--simdesa-font-weight-medium);
+    box-shadow: none;
+    transition: background-color var(--simdesa-transition), border-color var(--simdesa-transition), color var(--simdesa-transition), filter var(--simdesa-transition);
+}
+
+body.sd-admin .btn:focus-visible {
+    outline: 0;
+    box-shadow: var(--simdesa-focus-ring);
+}
+
+body.sd-admin .btn-xs { border-radius: var(--simdesa-radius-sm); }
+
+body.sd-admin .btn-default {
+    border-color: var(--simdesa-border-strong);
+    background: var(--simdesa-surface);
+    color: var(--simdesa-text);
+}
+
+body.sd-admin .btn-default:hover,
+body.sd-admin .btn-default:focus,
+body.sd-admin .btn-default.active {
+    border-color: var(--simdesa-primary);
+    background: var(--simdesa-primary-lighter);
+    color: var(--simdesa-primary);
+}
+
+/* Palet tombol dirampingkan: biru (utama), hijau, oranye, merah */
+body.sd-admin .btn-primary,
+body.sd-admin .btn-info,
+body.sd-admin .btn.bg-blue,
+body.sd-admin .btn.bg-light-blue,
+body.sd-admin .btn.bg-aqua,
+body.sd-admin .btn.bg-purple,
+body.sd-admin .btn.bg-teal {
+    border-color: var(--simdesa-primary) !important;
+    background: var(--simdesa-primary) !important;
+    color: #fff !important;
+}
+
+body.sd-admin .btn.bg-navy {
+    border-color: var(--simdesa-primary-darker) !important;
+    background: var(--simdesa-primary-darker) !important;
+    color: #fff !important;
+}
+
+body.sd-admin .btn-success,
+body.sd-admin .btn.bg-green,
+body.sd-admin .btn.bg-olive {
+    border-color: var(--simdesa-success) !important;
+    background: var(--simdesa-success) !important;
+    color: #fff !important;
+}
+
+body.sd-admin .btn-warning,
+body.sd-admin .btn.bg-orange,
+body.sd-admin .btn.bg-yellow {
+    border-color: var(--simdesa-warning) !important;
+    background: var(--simdesa-warning) !important;
+    color: #fff !important;
+}
+
+body.sd-admin .btn-danger,
+body.sd-admin .btn.bg-red,
+body.sd-admin .btn.bg-maroon {
+    border-color: var(--simdesa-danger) !important;
+    background: var(--simdesa-danger) !important;
+    color: #fff !important;
+}
+
+body.sd-admin .btn-primary:hover,
+body.sd-admin .btn-info:hover,
+body.sd-admin .btn-success:hover,
+body.sd-admin .btn-warning:hover,
+body.sd-admin .btn-danger:hover,
+body.sd-admin .btn[class*="bg-"]:hover {
+    filter: brightness(0.9);
+}
+
+body.sd-admin .btn-social > :first-child {
+    border-right-color: rgba(255, 255, 255, 0.22);
+}
+
+body.sd-admin .btn[disabled],
+body.sd-admin .btn.disabled {
+    opacity: 0.55;
+}
+
+/* ================= Form ================= */
+body.sd-admin .form-control {
+    border-color: var(--simdesa-border-strong);
+    border-radius: var(--simdesa-radius);
+    color: var(--simdesa-text);
+    box-shadow: none;
+    transition: border-color var(--simdesa-transition), box-shadow var(--simdesa-transition);
+}
+
+body.sd-admin .form-control::placeholder {
+    color: var(--simdesa-text-subtle);
+}
+
+body.sd-admin .form-control:focus {
+    border-color: var(--simdesa-primary);
+    box-shadow: var(--simdesa-focus-ring);
+}
+
+body.sd-admin .form-control[disabled],
+body.sd-admin .form-control[readonly],
+body.sd-admin fieldset[disabled] .form-control {
+    background: var(--simdesa-surface-muted);
+}
+
+body.sd-admin .input-sm,
+body.sd-admin .input-group-sm > .form-control {
+    border-radius: var(--simdesa-radius-sm);
+}
+
+body.sd-admin .input-group-addon {
+    border-color: var(--simdesa-border-strong);
+    background: var(--simdesa-surface-muted);
+    color: var(--simdesa-text-muted);
+}
+
+body.sd-admin label,
+body.sd-admin .control-label {
+    color: var(--simdesa-text);
+    font-weight: var(--simdesa-font-weight-semibold);
+}
+
+body.sd-admin .has-error .form-control { border-color: var(--simdesa-danger); }
+body.sd-admin .has-error .help-block,
+body.sd-admin .has-error .control-label,
+body.sd-admin label.error { color: var(--simdesa-danger); }
+body.sd-admin .has-success .form-control { border-color: var(--simdesa-success); }
+
+/* Select2 */
+body.sd-admin .select2-container--default .select2-selection--single,
+body.sd-admin .select2-container--default .select2-selection--multiple {
+    border-color: var(--simdesa-border-strong);
+    border-radius: var(--simdesa-radius);
+}
+
+body.sd-admin .select2-container--default.select2-container--focus .select2-selection--multiple,
+body.sd-admin .select2-container--default.select2-container--open .select2-selection--single,
+body.sd-admin .select2-container--default .select2-selection--single:focus {
+    border-color: var(--simdesa-primary);
+}
+
+body.sd-admin .select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background: var(--simdesa-primary);
+}
+
+body.sd-admin .select2-container--default .select2-selection--multiple .select2-selection__choice {
+    border-color: var(--simdesa-primary-dark);
+    border-radius: var(--simdesa-radius-sm);
+    background: var(--simdesa-primary);
+}
+
+body.sd-admin .select2-dropdown {
+    border-color: var(--simdesa-border-strong);
+    border-radius: var(--simdesa-radius);
+    box-shadow: var(--simdesa-shadow-md);
+}
+
+/* ================= Table ================= */
+body.sd-admin .table {
+    color: var(--simdesa-text);
+}
+
+body.sd-admin .table > thead > tr > th,
+body.sd-admin .table > thead > tr > td {
+    background: var(--simdesa-surface-muted);
+    border-bottom: 1px solid var(--simdesa-border-strong);
+    color: var(--simdesa-text);
+    font-weight: var(--simdesa-font-weight-semibold);
+    vertical-align: middle;
+}
+
+body.sd-admin .table > thead > tr > th,
+body.sd-admin .table > tbody > tr > td,
+body.sd-admin .table > tbody > tr > th,
+body.sd-admin .table > tfoot > tr > td,
+body.sd-admin .table > tfoot > tr > th {
+    border-color: var(--simdesa-border);
+}
+
+/* admin-style.css memaksa #d2d6de !important di header tabel bordered */
+body.sd-admin .table-bordered > thead > tr > th,
+body.sd-admin .table-bordered > thead > tr > td {
+    background-color: var(--simdesa-primary-lighter) !important;
+    color: var(--simdesa-primary-darker);
+    font-size: 12px;
+    letter-spacing: 0.03em;
+}
+
+body.sd-admin .table > tbody > tr > td {
+    vertical-align: middle;
+}
+
+body.sd-admin .table-bordered,
+body.sd-admin .table-bordered > thead > tr > th,
+body.sd-admin .table-bordered > thead > tr > td,
+body.sd-admin .table-bordered > tbody > tr > th,
+body.sd-admin .table-bordered > tbody > tr > td,
+body.sd-admin .table-bordered > tfoot > tr > th,
+body.sd-admin .table-bordered > tfoot > tr > td {
+    border-color: var(--simdesa-border);
+}
+
+body.sd-admin .table-striped > tbody > tr:nth-of-type(odd) {
+    background: #fafcff;
+}
+
+body.sd-admin .table-hover > tbody > tr:hover,
+body.sd-admin table.dataTable.hover tbody tr:hover,
+body.sd-admin table.dataTable.display tbody tr:hover {
+    background: var(--simdesa-primary-lighter);
+}
+
+body.sd-admin .table-responsive {
+    border-color: var(--simdesa-border);
+}
+
+/* DataTables */
+body.sd-admin .dataTables_wrapper .dataTables_info {
+    color: var(--simdesa-text-muted);
+    font-size: var(--simdesa-font-size-sm);
+}
+
+body.sd-admin .dataTables_wrapper .dataTables_filter input,
+body.sd-admin .dataTables_wrapper .dataTables_length select {
+    border: 1px solid var(--simdesa-border-strong);
+    border-radius: var(--simdesa-radius);
+}
+
+/* ================= Pagination ================= */
+body.sd-admin .pagination > li > a,
+body.sd-admin .pagination > li > span {
+    margin: 0 2px;
+    border-color: var(--simdesa-border);
+    border-radius: var(--simdesa-radius-sm) !important;
+    color: var(--simdesa-text);
+}
+
+body.sd-admin .pagination > li > a:hover,
+body.sd-admin .pagination > li > span:hover {
+    border-color: var(--simdesa-primary);
+    background: var(--simdesa-primary-lighter);
+    color: var(--simdesa-primary);
+}
+
+body.sd-admin .pagination > .active > a,
+body.sd-admin .pagination > .active > a:hover,
+body.sd-admin .pagination > .active > span,
+body.sd-admin .pagination > .active > span:hover {
+    border-color: var(--simdesa-primary);
+    background: var(--simdesa-primary);
+    color: #fff;
+}
+
+body.sd-admin .pagination > .disabled > a,
+body.sd-admin .pagination > .disabled > span {
+    color: var(--simdesa-text-subtle);
+}
+
+/* ================= Label & badge ================= */
+body.sd-admin .label {
+    padding: 0.25em 0.6em;
+    border-radius: var(--simdesa-radius-sm);
+    font-weight: var(--simdesa-font-weight-semibold);
+}
+
+body.sd-admin .badge {
+    border-radius: var(--simdesa-radius-pill);
+    font-weight: var(--simdesa-font-weight-semibold);
+}
+
+body.sd-admin .label-primary,
+body.sd-admin .label-info { background-color: var(--simdesa-primary) !important; }
+body.sd-admin .label-success { background-color: var(--simdesa-success) !important; }
+body.sd-admin .label-warning { background-color: var(--simdesa-warning) !important; }
+body.sd-admin .label-danger { background-color: var(--simdesa-danger) !important; }
+body.sd-admin .label-default { background-color: var(--simdesa-primary-light) !important; color: var(--simdesa-primary-dark) !important; }
+
+/* ================= Alert & callout ================= */
+body.sd-admin .alert,
+body.sd-admin .callout {
+    border: 1px solid transparent;
+    border-left-width: 4px;
+    border-radius: var(--simdesa-radius-lg);
+    box-shadow: none;
+}
+
+body.sd-admin .alert .icon,
+body.sd-admin .alert h4 {
+    color: inherit;
+}
+
+body.sd-admin .alert a:not(.btn),
+body.sd-admin .callout a:not(.btn) {
+    color: inherit;
+    font-weight: var(--simdesa-font-weight-semibold);
+}
+
+body.sd-admin .alert .close {
+    color: inherit;
+    opacity: 0.5;
+}
+
+body.sd-admin .alert-info,
+body.sd-admin .callout.callout-info {
+    border-color: var(--simdesa-secondary-light) !important;
+    border-left-color: var(--simdesa-primary) !important;
+    background-color: var(--simdesa-info-light) !important;
+    color: var(--simdesa-primary-darker) !important;
+}
+
+body.sd-admin .alert-success,
+body.sd-admin .callout.callout-success {
+    border-color: #c8e6c9 !important;
+    border-left-color: var(--simdesa-success) !important;
+    background-color: var(--simdesa-success-light) !important;
+    color: #1b5e20 !important;
+}
+
+body.sd-admin .alert-warning,
+body.sd-admin .callout.callout-warning {
+    border-color: #ffe0b2 !important;
+    border-left-color: var(--simdesa-warning) !important;
+    background-color: var(--simdesa-warning-light) !important;
+    color: #8a3d00 !important;
+}
+
+body.sd-admin .alert-danger,
+body.sd-admin .alert-error,
+body.sd-admin .callout.callout-danger {
+    border-color: #f5c6c6 !important;
+    border-left-color: var(--simdesa-danger) !important;
+    background-color: var(--simdesa-danger-light) !important;
+    color: #8e1c1c !important;
+}
+
+/* ================= Modal ================= */
+body.sd-admin .modal-content {
+    overflow: hidden;
+    border: 0;
+    border-radius: var(--simdesa-radius-lg);
+    box-shadow: var(--simdesa-shadow-lg);
+}
+
+body.sd-admin .modal-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--simdesa-border);
+}
+
+body.sd-admin .modal-title {
+    font-size: var(--simdesa-font-size-md);
+    font-weight: var(--simdesa-font-weight-semibold);
+    color: var(--simdesa-text);
+}
+
+body.sd-admin .modal-footer {
+    padding: 12px 18px;
+    border-top: 1px solid var(--simdesa-border);
+    background: var(--simdesa-surface-muted);
+}
+
+body.sd-admin .modal-backdrop.in {
+    opacity: 0.45;
+}
+
+/* ================= Dropdown & tabs ================= */
+body.sd-admin .dropdown-menu {
+    border-color: var(--simdesa-border);
+    border-radius: var(--simdesa-radius);
+    box-shadow: var(--simdesa-shadow-md);
+}
+
+body.sd-admin .dropdown-menu > li > a {
+    color: var(--simdesa-text);
+}
+
+body.sd-admin .dropdown-menu > li > a:hover {
+    background: var(--simdesa-primary-lighter);
+    color: var(--simdesa-primary-dark);
+}
+
+body.sd-admin .nav-tabs-custom {
+    border: 1px solid var(--simdesa-border);
+    border-radius: var(--simdesa-radius-lg);
+    box-shadow: var(--simdesa-shadow-sm);
+}
+
+body.sd-admin .nav-tabs-custom > .nav-tabs {
+    border-bottom-color: var(--simdesa-border);
+    border-radius: var(--simdesa-radius-lg) var(--simdesa-radius-lg) 0 0;
+}
+
+body.sd-admin .nav-tabs-custom > .nav-tabs > li > a {
+    color: var(--simdesa-text-muted);
+    font-weight: var(--simdesa-font-weight-medium);
+}
+
+body.sd-admin .nav-tabs-custom > .nav-tabs > li.active {
+    border-top-color: var(--simdesa-primary);
+}
+
+body.sd-admin .nav-tabs-custom > .nav-tabs > li.active > a {
+    color: var(--simdesa-primary);
+}
+
+body.sd-admin .nav-pills > li.active > a,
+body.sd-admin .nav-pills > li.active > a:hover {
+    border-left-color: var(--simdesa-primary);
+    background: var(--simdesa-primary-lighter);
+    color: var(--simdesa-primary);
+}
+
+/* ================= Footer ================= */
+body.sd-admin .main-footer {
+    border-top: 1px solid var(--simdesa-border);
+    background: var(--simdesa-surface);
+    color: var(--simdesa-text-muted);
+    font-size: var(--simdesa-font-size-sm);
+}
+
+/* Komponen dashboard (Beranda) ada di assets/css/simdesa/dashboard.css */
+
+@media (max-width: 767px) {
+    body.sd-admin .content {
+        padding: 12px 12px 20px;
+    }
+
+    body.sd-admin .content-header {
+        padding: 16px 12px 4px;
+    }
+}

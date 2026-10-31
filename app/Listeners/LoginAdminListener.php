@@ -77,7 +77,8 @@ class LoginAdminListener
         $login->user->save();
 
         $ip    = $this->app['ci']->input->ip_address();
-        $geoip = geoip_info($ip);
+        // Tidak mengirim IP admin ke layanan geoip pihak ketiga (api.ipbase.com)
+        $geoip = null;
 
         if (Schema::hasTable('log_activity')) {
             activity()

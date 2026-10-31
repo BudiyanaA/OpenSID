@@ -287,7 +287,10 @@ class SettingAplikasiRepository
 
     private function notifikasiTracker($value): bool
     {
-        if ($value == 0) {
+        if ($value == 0 && ! config_item('tracking_eksternal')) {
+            // Tracking eksternal dinonaktifkan di config, jangan tampilkan ajakan menghidupkan tracking
+            $notif = ['aktif' => 0];
+        } elseif ($value == 0) {
             // Notifikasi tracker dimatikan
             $notif = [
                 'updated_at'     => date('Y-m-d H:i:s'),

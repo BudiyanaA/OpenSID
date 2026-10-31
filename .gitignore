@@ -89,6 +89,8 @@ Modules/*
 !Modules/Lapak/**
 !Modules/Pelanggan/
 !Modules/Pelanggan/**
+!Modules/SmartDesaAi/
+!Modules/SmartDesaAi/**
 
 # Do not ignore specific files
 !Modules/.gitkeep

@@ -228,7 +228,11 @@ if (! function_exists('decrypt')) {
      */
     function decrypt($value)
     {
-        return app('encrypter')->decrypt($value);
+        // Jangan biarkan unserialize() membuat objek dari payload terenkripsi:
+        // APP_KEY yang bocor + unserialize objek = RCE (gadget chain, mis. Guzzle FileCookieJar).
+        $decrypted = app('encrypter')->decrypt($value, false);
+
+        return unserialize($decrypted, ['allowed_classes' => false]);
     }
 }
 

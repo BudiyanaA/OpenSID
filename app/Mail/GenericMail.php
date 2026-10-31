@@ -52,7 +52,7 @@ class GenericMail extends Mailable
 
     public function build()
     {
-        return $this->from(config('mail.from.address'), 'OpenSID')
+        return $this->from(config('mail.from.address'), 'SIMDESA')
             ->subject($this->subject)
             ->view('email.template', ['isi' => $this->content]);
     }

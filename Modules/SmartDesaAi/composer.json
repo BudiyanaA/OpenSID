@@ -1,0 +1,11 @@
+{
+	"name": "simdesa-modules/smart-desa-ai",
+	"description": "Modul Smart Desa AI (generator artikel Website Desa) untuk SIMDESA",
+	"license": "GPL-3.0-or-later",
+	"type": "library",
+	"keywords": ["ai", "artikel", "simdesa"],
+	"require": {
+		"php": "^8.1",
+		"anthropic-ai/sdk": "^0.51"
+	}
+}

@@ -582,7 +582,7 @@ class HeuristicDetector
     {
         $report   = [];
         $report[] = '═══════════════════════════════════════════════════════';
-        $report[] = '        OPENSID SECURITY SCAN REPORT';
+        $report[] = '        SIMDESA SECURITY SCAN REPORT';
         $report[] = '═══════════════════════════════════════════════════════';
         $report[] = '';
         $report[] = 'Scan Time: ' . date('Y-m-d H:i:s');

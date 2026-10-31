@@ -52,7 +52,7 @@ class VerifyMail extends Mailable
 
     public function build()
     {
-        return $this->from(config('mail.from.address'), 'OpenSID')
+        return $this->from(config('mail.from.address'), 'SIMDESA')
             ->subject('Verifikasi Akun Email')
             ->view('email.verifikasi', ['token' => $this->otp]);
     }

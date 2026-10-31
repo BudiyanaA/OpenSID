@@ -82,7 +82,7 @@ class PembangunanOpendkExport
 
         $limit            = 100;
         $p                = $this->p;
-        $tgl_sinkronisasi = LogSinkronisasi::where('modul', '=', 'program-bantuan')->first()->updated_at ?? null;
+        $tgl_sinkronisasi = LogSinkronisasi::where('modul', '=', 'pembangunan')->first()->updated_at ?? null;
 
         $dataExport = Pembangunan::when($tgl_sinkronisasi != null, static fn ($q) => $q->where('updated_at', '>', $tgl_sinkronisasi))
             ->when($tgl_sinkronisasi == null, static fn ($q) => $q->skip($p * $limit)->take($limit))

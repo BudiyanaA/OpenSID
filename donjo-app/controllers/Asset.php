@@ -42,6 +42,16 @@ use League\Flysystem\PathTraversalDetected;
 class Asset extends CI_Controller
 {
     private const ALLOWED_DISKS    = ['assets', 'desa', 'public'];
+
+    /**
+     * Hanya file aset statis yang boleh dilayani controller ini.
+     * Mencegah pembacaan file rahasia (mis. desa/app_key, desa/config/database.php).
+     */
+    private const ALLOWED_EXTENSIONS = [
+        'css', 'js', 'map',
+        'png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'ico', 'bmp',
+        'woff', 'woff2', 'ttf', 'eot', 'otf',
+    ];
     private const SECURITY_HEADERS = [
         'Cache-Control'           => 'no-store, no-cache, must-revalidate, max-age=0',
         'Content-Security-Policy' => "default-src 'none'; style-src 'unsafe-inline'; sandbox",
@@ -65,6 +75,10 @@ class Asset extends CI_Controller
 
     public function serveModule($moduleName)
     {
+        if (! is_string($moduleName) || ! preg_match('/^[A-Za-z][A-Za-z0-9]*$/', $moduleName)) {
+            show_404();
+        }
+
         $moduleName = $this->getOriginalModule($moduleName);
         $diskRoot   = base_path("Modules/{$moduleName}/Views/assets");
 
@@ -75,6 +89,10 @@ class Asset extends CI_Controller
     {
         $request = request();
         $path    = $this->cleanFilePath($request->query('file', ''));
+
+        if (! $this->isAllowedAssetPath($path)) {
+            show_404();
+        }
 
         try {
             $primaryDisk = Storage::build([
@@ -110,7 +128,13 @@ class Asset extends CI_Controller
         $defaultPath = $request->query('default');
         $diskName    = $request->query('defaultDisk', 'desa');
 
-        if (! in_array($diskName, self::ALLOWED_DISKS) || ! $defaultPath) {
+        if (! is_string($defaultPath) || ! is_string($diskName) || ! in_array($diskName, self::ALLOWED_DISKS, true)) {
+            show_404();
+        }
+
+        $defaultPath = $this->cleanFilePath($defaultPath);
+
+        if (! $this->isAllowedAssetPath($defaultPath)) {
             show_404();
         }
 
@@ -140,6 +164,29 @@ class Asset extends CI_Controller
 
         // Hapus trailing whitespace atau karakter ? yang tersisa
         return rtrim($cleanPath, " \t\n\r\0\x0B?");
+    }
+
+    /**
+     * Validasi path aset: hanya ekstensi statis yang diizinkan, tanpa segmen
+     * kosong/tersembunyi/relatif (., .., .git, .env), backslash, atau karakter kontrol.
+     *
+     * @param mixed $path
+     */
+    private function isAllowedAssetPath($path): bool
+    {
+        if (! is_string($path) || $path === '' || preg_match('/[\x00-\x1F\x7F\\\\]/', $path)) {
+            return false;
+        }
+
+        foreach (explode('/', $path) as $segment) {
+            if ($segment === '' || $segment[0] === '.') {
+                return false;
+            }
+        }
+
+        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
+        return in_array($extension, self::ALLOWED_EXTENSIONS, true);
     }
 
     private function getOriginalModule($moduleName)

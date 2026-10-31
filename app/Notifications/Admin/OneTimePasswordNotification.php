@@ -49,7 +49,7 @@ class OneTimePasswordNotification extends \Spatie\OneTimePasswords\Notifications
     public function toMail($notifiable)
     {
         return (new MailMessage())
-            ->subject('Kode Verifikasi 2FA - OpenSID')
+            ->subject('Kode Verifikasi 2FA - SIMDESA')
             ->from(identitas('email_desa'), identitas('nama_desa'))
             ->view('admin.auth.notifikasi_otp', [
                 'oneTimePassword' => $this->oneTimePassword,

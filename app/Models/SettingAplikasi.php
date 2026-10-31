@@ -97,6 +97,7 @@ class SettingAplikasi extends BaseModel
         'email_smtp_port',
         'google_recaptcha_site_key',
         'google_recaptcha_secret_key',
+        'smart_desa_ai_token',
     ];
 
     /**

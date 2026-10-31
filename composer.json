@@ -15,6 +15,7 @@
     ],
     "require": {
         "php": "^8.1",
+        "anthropic-ai/sdk": "^0.51",
         "codeigniter/framework": "^3.1",
         "cviebrock/eloquent-sluggable": "^10.0",
         "dg/mysql-dump": "^1.6",
@@ -102,7 +103,8 @@
     },
     "config": {
         "allow-plugins": {
-            "ergebnis/composer-normalize": true
+            "ergebnis/composer-normalize": true,
+            "php-http/discovery": false
         },
         "sort-packages": true
     },

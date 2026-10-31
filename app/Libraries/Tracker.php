@@ -59,7 +59,7 @@ class Tracker
 {
     public function trackDesa(): void
     {
-        if (setting('enable_track') == false || null === identitas()) {
+        if (! config_item('tracking_eksternal') || setting('enable_track') == false || null === identitas()) {
             return;
         }
         // Track web dan admin masing2 maksimum sekali sehari
@@ -80,7 +80,7 @@ class Tracker
          * Jangan kirim data ke pantau jika versi demo
          * cegah error karena tabel belum ada
          */
-        if (config_item('demo_mode')) {
+        if (! config_item('tracking_eksternal') || config_item('demo_mode')) {
             return;
         }
 

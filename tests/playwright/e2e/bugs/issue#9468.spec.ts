@@ -49,7 +49,7 @@ test.describe('Peta lokasi pelapak tidak tampil dengan benar pada layanan mandir
 
       await page.goto('layanan-mandiri/lapak');
       await page.getByText('Lokasi').click();
-      await expect(page.locator('div').filter({ hasText: /^\+−Leaflet \| © OpenStreetMap \| OpenSID$/ }).first()).toBeVisible();
+      await expect(page.locator('div').filter({ hasText: /^\+−Leaflet \| © OpenStreetMap \| SIMDESA$/ }).first()).toBeVisible();
     } catch {
     }
   });

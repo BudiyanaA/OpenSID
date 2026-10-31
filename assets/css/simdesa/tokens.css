@@ -1,0 +1,109 @@
+/*
+ * SIMDESA Design Tokens
+ * ------------------------------------------------------------------
+ * Sumber tunggal untuk warna, tipografi, spasi, radius, shadow, dan
+ * motion SIMDESA. Semua komponen (components.css) dan halaman baru
+ * WAJIB memakai variabel di bawah ini, bukan nilai warna/ukuran acak.
+ *
+ * Dokumentasi: assets/css/simdesa/README.md
+ */
+
+:root {
+    /* ---------- Brand ---------- */
+    --simdesa-primary: #1565c0;          /* SIMDESA Blue */
+    --simdesa-primary-dark: #0d47a1;
+    --simdesa-primary-darker: #0a3478;
+    --simdesa-primary-light: #e3f0fd;    /* Light Blue (secondary) */
+    --simdesa-primary-lighter: #f3f8fe;
+    --simdesa-primary-contrast: #ffffff; /* teks di atas primary */
+    --simdesa-secondary: #42a5f5;        /* Light Blue aksen */
+    --simdesa-secondary-light: #bbdefb;
+    --simdesa-gradient-primary: linear-gradient(135deg, var(--simdesa-primary) 0%, var(--simdesa-primary-dark) 100%);
+    --simdesa-gradient-brand: linear-gradient(150deg, #0a3478 0%, #0d47a1 38%, #1565c0 72%, #1e88e5 100%);
+
+    /* ---------- Neutral / surface ---------- */
+    --simdesa-background: #f5f9fe;       /* Very Light Blue */
+    --simdesa-surface: #ffffff;          /* White: card, modal, input */
+    --simdesa-surface-muted: #f8fafc;    /* table header, zebra, hover */
+    --simdesa-text: #0f1f3d;             /* Dark Navy */
+    --simdesa-text-muted: #5b6b85;
+    --simdesa-text-subtle: #8a98ae;      /* placeholder, hint */
+    --simdesa-border: #dbe4f0;
+    --simdesa-border-strong: #c3d0e2;
+
+    /* ---------- Status ---------- */
+    --simdesa-success: #2e7d32;
+    --simdesa-success-light: #e8f5e9;
+    --simdesa-warning: #ef6c00;
+    --simdesa-warning-light: #fff3e0;
+    --simdesa-danger: #c62828;
+    --simdesa-danger-light: #fdecea;
+    --simdesa-info: var(--simdesa-primary);
+    --simdesa-info-light: var(--simdesa-primary-light);
+
+    /* ---------- Data visualization ----------
+       Hanya untuk grafik, progress, status, dan kategori data.
+       Maksimal 2-4 warna per grafik. */
+    --simdesa-chart-blue: #1565c0;
+    --simdesa-chart-cyan: #22a6c9;
+    --simdesa-chart-green: #2e9d6a;
+    --simdesa-chart-purple: #7c5cc4;
+    --simdesa-chart-amber: #f0a030;
+    --simdesa-chart-soft: #a9cdf5;
+
+    /* ---------- Typography ---------- */
+    --simdesa-font-sans: "Inter", "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+    --simdesa-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --simdesa-font-size-xs: 12px;
+    --simdesa-font-size-sm: 13px;
+    --simdesa-font-size-base: 14px;
+    --simdesa-font-size-md: 16px;
+    --simdesa-font-size-lg: 18px;
+    --simdesa-font-size-xl: 22px;
+    --simdesa-font-size-2xl: 28px;
+    --simdesa-font-weight-regular: 400;
+    --simdesa-font-weight-medium: 500;
+    --simdesa-font-weight-semibold: 600;
+    --simdesa-font-weight-bold: 700;
+    --simdesa-line-height: 1.5;
+    --simdesa-line-height-tight: 1.25;
+
+    /* ---------- Spacing (skala 4px) ---------- */
+    --simdesa-space-1: 4px;
+    --simdesa-space-2: 8px;
+    --simdesa-space-3: 12px;
+    --simdesa-space-4: 16px;
+    --simdesa-space-5: 20px;
+    --simdesa-space-6: 24px;
+    --simdesa-space-8: 32px;
+    --simdesa-space-10: 40px;
+    --simdesa-space-12: 48px;
+
+    /* ---------- Radius ---------- */
+    --simdesa-radius-sm: 6px;    /* badge, checkbox */
+    --simdesa-radius: 8px;       /* button, input, dropdown */
+    --simdesa-radius-lg: 12px;   /* card, modal, alert */
+    --simdesa-radius-xl: 16px;   /* feature card, info card */
+    --simdesa-radius-2xl: 24px;  /* card utama (login) */
+    --simdesa-radius-pill: 999px;
+
+    /* ---------- Shadow ---------- */
+    --simdesa-shadow-sm: 0 1px 2px rgba(15, 31, 61, 0.06);
+    --simdesa-shadow: 0 2px 8px rgba(15, 31, 61, 0.08);
+    --simdesa-shadow-md: 0 8px 24px rgba(15, 31, 61, 0.10);
+    --simdesa-shadow-lg: 0 20px 48px rgba(15, 31, 61, 0.16);
+    --simdesa-focus-ring: 0 0 0 3px rgba(21, 101, 192, 0.25);
+
+    /* ---------- Control sizes ---------- */
+    --simdesa-control-height-sm: 32px;
+    --simdesa-control-height: 40px;
+    --simdesa-control-height-lg: 48px;
+    --simdesa-control-height-xl: 54px; /* form auth */
+
+    /* ---------- Motion ---------- */
+    --simdesa-transition: 150ms ease;
+
+    /* ---------- Layout ---------- */
+    --simdesa-z-dropdown: 1000;
+    --simdesa-z-modal: 1050;
+}

@@ -52,7 +52,7 @@ class NewPinMail extends Mailable
 
     public function build()
     {
-        return $this->from(config('mail.from.address'), 'OpenSID')
+        return $this->from(config('mail.from.address'), 'SIMDESA')
             ->subject('PIN Baru')
             ->view('email.kirim-pin', ['pin' => $this->pin, 'nama' => $this->name]);
     }

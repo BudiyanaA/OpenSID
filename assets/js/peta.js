@@ -350,12 +350,12 @@ function getBaseLayers(peta, access_token, jenis_peta) {
 
   var defaultLayer = L.tileLayer.provider("OpenStreetMap.Mapnik", {
     attribution:
-      '<a href="https://openstreetmap.org/copyright">© OpenStreetMap</a> | <a href="https://github.com/OpenSID/OpenSID">OpenSID</a>',
+      '<a href="https://openstreetmap.org/copyright">© OpenStreetMap</a> | SIMDESA',
   });
 
   var OpenStreetMap = L.tileLayer.provider("OpenStreetMap.HOT", {
     attribution:
-      '<a href="https://openstreetmap.org/copyright">© OpenStreetMap</a> | <a href="https://github.com/OpenSID/OpenSID">OpenSID</a>',
+      '<a href="https://openstreetmap.org/copyright">© OpenStreetMap</a> | SIMDESA',
   });
 
   let mbGLstr, mbGLsat, mbGLstrsat;
@@ -366,21 +366,21 @@ function getBaseLayers(peta, access_token, jenis_peta) {
       accessToken: access_token,
       style: "mapbox://styles/mapbox/streets-v11",
       attribution:
-        '<a href="https://www.mapbox.com/about/maps">© Mapbox</a> | <a href="https://github.com/OpenSID/OpenSID">OpenSID</a>',
+        '<a href="https://www.mapbox.com/about/maps">© Mapbox</a> | SIMDESA',
     });
 
     mbGLsat = L.mapboxGL({
       accessToken: access_token,
       style: "mapbox://styles/mapbox/satellite-v9",
       attribution:
-        '<a href="https://www.mapbox.com/about/maps">© Mapbox</a> | <a href="https://github.com/OpenSID/OpenSID">OpenSID</a>',
+        '<a href="https://www.mapbox.com/about/maps">© Mapbox</a> | SIMDESA',
     });
 
     mbGLstrsat = L.mapboxGL({
       accessToken: access_token,
       style: "mapbox://styles/mapbox/satellite-streets-v11",
       attribution:
-        '<a href="https://www.mapbox.com/about/maps">© Mapbox</a> | <a href="https://github.com/OpenSID/OpenSID">OpenSID</a>',
+        '<a href="https://www.mapbox.com/about/maps">© Mapbox</a> | SIMDESA',
     });
 
     baseLayers = {
@@ -406,15 +406,15 @@ function getBaseLayers(peta, access_token, jenis_peta) {
 
     mbGLstr = L.tileLayer.provider("OpenStreetMap.Mapnik", {
       attribution:
-        '<a href="https://openstreetmap.org/copyright">© OpenStreetMap</a> | <a href="https://github.com/OpenSID/OpenSID">OpenSID</a>',
+        '<a href="https://openstreetmap.org/copyright">© OpenStreetMap</a> | SIMDESA',
     });
     mbGLsat = L.tileLayer.provider("OpenStreetMap.Mapnik", {
       attribution:
-        '<a href="https://openstreetmap.org/copyright">© OpenStreetMap</a> | <a href="https://github.com/OpenSID/OpenSID">OpenSID</a>',
+        '<a href="https://openstreetmap.org/copyright">© OpenStreetMap</a> | SIMDESA',
     });
     mbGLstrsat = L.tileLayer.provider("OpenStreetMap.Mapnik", {
       attribution:
-        '<a href="https://openstreetmap.org/copyright">© OpenStreetMap</a> | <a href="https://github.com/OpenSID/OpenSID">OpenSID</a>',
+        '<a href="https://openstreetmap.org/copyright">© OpenStreetMap</a> | SIMDESA',
     });
 
     baseLayers = {
