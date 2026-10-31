@@ -9,63 +9,83 @@
 @section('content')
     <form id="validasi" class="login-form" action="{{ $form_action }}" method="post">
         <div class="form-group">
-            <input
-                name="username"
-                type="text"
-                autocomplete="off"
-                placeholder="Nama pengguna"
-                @disabled($second)
-                class="form-username form-control required"
-                maxlength="100"
-            >
+            <div class="sd-input-icon">
+                <i class="fa fa-user" aria-hidden="true"></i>
+                <input
+                    id="username"
+                    name="username"
+                    type="text"
+                    autocomplete="off"
+                    placeholder="Nama pengguna"
+                    aria-label="Nama pengguna"
+                    @disabled($second)
+                    class="form-username form-control required"
+                    maxlength="100"
+                >
+            </div>
         </div>
         <div class="form-group">
-            <input
-                id="password"
-                name="password"
-                type="password"
-                autocomplete="off"
-                placeholder="Kata sandi"
-                @disabled($second)
-                class="form-username form-control required"
-                maxlength="100"
-            >
+            <div class="sd-input-icon">
+                <i class="fa fa-lock" aria-hidden="true"></i>
+                <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    autocomplete="off"
+                    placeholder="Kata sandi"
+                    aria-label="Kata sandi"
+                    @disabled($second)
+                    class="form-username form-control required"
+                    maxlength="100"
+                >
+            </div>
         </div>
 
         @if ($isProduction && setting('google_recaptcha'))
-            {!! app('captcha')->display() !!}
+            <div class="form-group">
+                {!! app('captcha')->display() !!}
+            </div>
         @elseif ($isProduction)
             <div class="form-group">
-                <a href="#" id="b-captcha" onclick="event.preventDefault(); document.getElementById('captcha').src = '{{ site_url('captcha') }}?' + Math.random();" style="color: #000000;">
-                    <img id="captcha" src="{{ site_url('captcha') }}" alt="CAPTCHA Image" />
-                </a>
-            </div>
-            <div class="form-group captcha">
-                <input
-                    name="captcha_code"
-                    type="text"
-                    class="form-control required"
-                    maxlength="6"
-                    placeholder="Masukkan kode di atas"
-                    @disabled($second)
-                    autocomplete="off"
-                />
+                <div class="sd-auth-captcha">
+                    <a href="#" id="b-captcha" title="Muat ulang kode" onclick="event.preventDefault(); document.getElementById('captcha').src = '{{ site_url('captcha') }}?' + Math.random();">
+                        <img id="captcha" src="{{ site_url('captcha') }}" alt="CAPTCHA Image" />
+                        <i class="fa fa-refresh" aria-hidden="true"></i>
+                    </a>
+                    <div class="sd-input-icon captcha">
+                        <i class="fa fa-shield" aria-hidden="true"></i>
+                        <input
+                            id="captcha_code"
+                            name="captcha_code"
+                            type="text"
+                            class="form-control required"
+                            maxlength="6"
+                            placeholder="Ketik kode"
+                            aria-label="Kode keamanan"
+                            @disabled($second)
+                            autocomplete="off"
+                        />
+                    </div>
+                </div>
             </div>
         @endif
 
-        <div class="form-group">
-            <input @disabled($second) type="checkbox" id="checkbox" class="form-checkbox">
-            <label for="checkbox" style="font-weight: unset">Tampilkan kata sandi</label>
-            <a href="{{ site_url('siteman/lupa_sandi') }}" class="btn" role="button" aria-pressed="true">Lupa kata sandi?</a>
+        <div class="sd-auth-row">
+            <label for="checkbox" class="sd-check">
+                <input @disabled($second) type="checkbox" id="checkbox" class="form-checkbox">
+                Tampilkan kata sandi
+            </label>
+            <a href="{{ site_url('siteman/lupa_sandi') }}" class="sd-link">Lupa kata sandi?</a>
         </div>
         <div class="form-group">
-            <button type="submit" class="btn" @disabled($second)>Masuk</button>
+            <button type="submit" class="btn sd-btn sd-btn-primary sd-btn-block sd-auth-submit" @disabled($second)>Masuk</button>
         </div>
 
         @if (setting('login_otp'))
-            <div class="form-group text-center">
-                <a href="{{ ci_route('siteman.otp.form_login_otp') }}" class="btn" role="button" aria-pressed="true">Masuk dengan OTP</a>
-            </div>
+            <div class="sd-auth-divider">atau</div>
+            <a href="{{ ci_route('siteman.otp.form_login_otp') }}" class="btn sd-btn sd-btn-outline sd-btn-block sd-auth-alt" role="button">
+                <i class="fa fa-mobile"></i> Masuk dengan OTP
+            </a>
         @endif
     </form>
 @endsection

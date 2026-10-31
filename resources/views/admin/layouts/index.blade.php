@@ -25,6 +25,10 @@
     <link rel="stylesheet" href="{{ asset('js/sweetalert2/sweetalert2.min.css') }}">
     <!-- Modifikasi -->
     <link rel="stylesheet" href="{{ asset('css/admin-style.css') }}" />
+    <!-- SIMDESA design system: lihat assets/css/simdesa/README.md -->
+    <link rel="stylesheet" href="{{ asset('css/simdesa/tokens.css') }}" />
+    <link rel="stylesheet" href="{{ asset('css/simdesa/components.css') }}" />
+    <link rel="stylesheet" href="{{ asset('css/simdesa/admin-theme.css') }}" />
     <!-- Loading Lazy -->
     <link rel="stylesheet" href="<?= asset('js/progressive-image/progressive-image.css') ?>">
     @stack('css')
@@ -45,7 +49,7 @@
     </style>
 </head>
 
-<body id="sidebar_collapse" class="{{ setting('warna_tema_admin') }} fixed sidebar-mini">
+<body id="sidebar_collapse" class="{{ setting('warna_tema_admin') }} sd-admin fixed sidebar-mini">
     <div class="wrapper">
 
         @include('admin.layouts.partials.header')

@@ -101,7 +101,7 @@
                             @yield('content')
 
                             <div class="login-footer-bottom">
-                                <a href="https://github.com/OpenSID/OpenSID" class="content-color-secondary" rel="noopener noreferrer" target="_blank">OpenSID v<?= AmbilVersi() ?></a>
+                                <span class="content-color-secondary">SIMDESA v<?= AmbilVersi() ?></span>
                             </div>
                         </div>
                     </div>

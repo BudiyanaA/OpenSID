@@ -4,8 +4,8 @@
             <div class="pull-left image">
                 <img src="<?= gambar_desa($desa['logo']) ?>" class="img-circle" alt="User Image">
             </div>
-            <div class="pull-left info">
-                <strong><?= ucwords(setting('sebutan_desa') . ' ' . $desa['nama_desa']) ?></strong>
+            <div class="pull-left info" style="color: #E2EAF5;">
+                <strong style="color: #FFFFFF;"><?= ucwords(setting('sebutan_desa') . ' ' . $desa['nama_desa']) ?></strong>
                 </br>
 
                 <?php
@@ -38,7 +38,7 @@
         </div>
 
         <ul class="sidebar-menu" data-widget="tree">
-            <li class="header">MENU UTAMA</li>
+            <li class="header" style="color: #E2EAF5;">MENU UTAMA</li>
             <?php $modul = admin_menu(); ?>
             <?php foreach ($modul as $mod): ?>
             <?php if (is_array($mod['childrens']) && count($mod['childrens']) > 0): ?>

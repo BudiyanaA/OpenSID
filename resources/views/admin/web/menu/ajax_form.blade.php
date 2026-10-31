@@ -109,7 +109,7 @@
             </select>
             <span id="eksternal" class="jenis_link" style="@if (!in_array($menu['link_tipe'], [88, 99])) display:none; @endif">
                 <input name="{{ jecho(in_array($menu['link_tipe'], [88, 99]), true, 'link') }}" class="form-control input-sm" type="text" value="{{ $menu['link'] }}" />
-                <span class="text-sm text-red">(misalnya: https://opendesa.id)</span>
+                <span class="text-sm text-red">(misalnya: https://desa.example.id)</span>
             </span>
         </div>
         <div class="form-group">

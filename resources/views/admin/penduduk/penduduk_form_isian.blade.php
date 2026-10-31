@@ -2,6 +2,9 @@
     @if (!$kk_baru)
         <input name="no_kk" type="hidden" value="{{ $penduduk['no_kk'] }}">
     @endif
+    @if ($controller == 'penduduk' && empty($penduduk['id']) && $jenis_peristiwa != 1)
+        @include('admin.penduduk.smart_ocr.ktp')
+    @endif
     @include('admin.layouts.components.ambil_foto', ['id_sex' => $penduduk['id_sex'], 'foto' => $penduduk['foto']])
 </div>
 <div class="col-md-9">

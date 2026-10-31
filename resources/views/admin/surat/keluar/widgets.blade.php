@@ -2,8 +2,8 @@
     <div class="alert alert-warning alert-dismissible">
         <h4><i class="icon fa fa-warning"></i> Info Penting!</h4>
         Fitur Sinkronisasi Surat TTE ke {{ setting('sebutan_kecamatan') }} saat ini masih berupa demo menunggu proses penyempurnaan dan terdapat {{ setting('sebutan_kecamatan') }} yang sudah mengimplentasikan TTE.
-        Kami juga menghimbau kepada seluruh pengguna memberikan masukan terkait penyempurnaan fitur ini baik dari sisi OpenSID maupun OpenDK.
-        Masukan dapat disampaikan di grup telegram, forum opendesa maupun issue di github.
+        Kami juga menghimbau kepada seluruh pengguna memberikan masukan terkait penyempurnaan fitur ini baik dari sisi SIMDESA maupun OpenDK.
+        Masukan dapat disampaikan kepada penyedia layanan SIMDESA.
     </div>
 @endif
 <div class="row">

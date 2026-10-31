@@ -11,9 +11,9 @@
                 <div id="collapse1" class="panel-collapse collapse in">
                     <div class="box-body">
                         <p align="justify"><?= config_item('nama_aplikasi') ?> adalah aplikasi Sistem Informasi Desa
-                            (SID) yang dikembangkan sejak Mei 2016. <?= config_item('nama_aplikasi') ?> dirancang dan
-                            dikelola supaya terbuka dan dapat dikembangkan bersama-sama oleh komunitas peduli SID.
-                            Informasi lebih lanjut dapat dilihat di <a href="<?= config_item('github') ?>"><?= config_item('github') ?></a>.</p>
+                            (SID) yang dikembangkan dan disediakan untuk mendukung kebutuhan administrasi pemerintahan
+                            desa. Informasi hak cipta dan lisensi dapat dilihat pada bagian Hak Cipta, Syarat, Dan
+                            Ketentuan.</p>
                     </div>
                 </div>
             </div>
@@ -132,8 +132,8 @@
                             <li align="justify">Bentuk tim kerja bersama pemerintah desa</li>
                             <li align="justify">Diskusikan basis data apa saja yang diperlukan untuk warga</li>
                             <li align="justify">Himpun data kependudukan warga dari Kartu Keluarga (KK)</li>
-                            <li align="justify">Dapatkan aplikasi SID di <a href="<?= config_item('github') ?>/releases"><?= config_item('github') ?>/releases</a>
-                            </li>
+                            <li align="justify">Hubungi penyedia layanan <?= config_item('nama_aplikasi') ?> untuk
+                                mendapatkan aplikasi SID</li>
                             <li align="justify">Pasang aplikasi SID di komputer desa</li>
                             <li align="justify">Masukkan data penduduk ke SID</li>
                             <li align="justify">Basis data kependudukan sudah bisa dimanfaatkan</li>
@@ -155,16 +155,11 @@
                         <p align="justify">Aplikasi Sistem Informasi Desa (SID) dibangun dan dikembangkan pada awalnya
                             oleh COMBINE Resource Institution sejak tahun 2009. Sistem ini dikelola dengan merujuk pada
                             lisensi GNU General Public License Version 3.</p>
-                        <p align="justify">Dengan lisensi GPL v3, semua ubahan <?= config_item('nama_aplikasi') ?> juga
-                            berlisensi GPL v3, yaitu
-                            bersifat sumber terbuka.
-                        <p align="justify">
-                        <p align="justify"><?= config_item('nama_aplikasi') ?> dikembangkan sejak Mei 2016, dan bebas
-                            untuk dimanfaatkan dan
-                            dikembangkan oleh semua desa.</p>
-                        <p align="justify">Sejak Januari 2019, <?= config_item('nama_aplikasi') ?> dikelola oleh
-                            Perkumpulan Desa Digital Terbuka
-                            (OpenDesa). OpenDesa adalah pemegang hak cipta utama <?= config_item('nama_aplikasi') ?>.
+                        <p align="justify"><?= config_item('nama_aplikasi') ?> dikembangkan berdasarkan OpenSID, aplikasi
+                            sumber terbuka yang dikembangkan sejak Mei 2016 dan sejak Januari 2019 dikelola oleh
+                            Perkumpulan Desa Digital Terbuka (OpenDesa) selaku pemegang hak cipta utama OpenSID.</p>
+                        <p align="justify">Sesuai lisensi GPL v3, kode sumber <?= config_item('nama_aplikasi') ?>
+                            sebagai ubahan dari OpenSID juga berlisensi GPL v3.</p>
                     </div>
                 </div>
             </div>
@@ -176,74 +171,8 @@
                 </div>
                 <div id="collapse6" class="panel-collapse collapse">
                     <div class="box-body">
-                        <ol>
-                            <li align="justify">Panduan <?= config_item('nama_aplikasi') ?>:</li>
-                            <a href="https://panduan.opendesa.id" target="_blank">https://panduan.opendesa.id </a>
-                            <li align="justify">Website Resmi OpenDesa, pengelola <?= config_item('nama_aplikasi') ?>:
-                            </li>
-                            <a href="<?= config_item('website') ?>" target="_blank"><?= config_item('website') ?> </a>
-                            <li align="justify">Website Resmi <?= config_item('nama_aplikasi') ?>: </li>
-                            <a href="<?= config_item('website') ?>/opensid" target="_blank">Website Resmi
-                                <?= config_item('nama_aplikasi') ?></a>
-                            <li align="justify">Grup Facebook, tempat mendapatkan bantuan dan berbagi pengalaman: </li>
-                            <a href="<?= config_item('fb_opendesa') ?>" target="_blank">Forum Komunitas OpenDesa</a>
-                            <li align="justify">Tempat mengunduh rilis <?= config_item('nama_aplikasi') ?>:</li>
-                            <a href="<?= config_item('github') ?>/releases" target="_blank"><?= config_item('github') ?>/releases</a>
-                            <li align="justify">Channel Youtube Komunitas OpenDesa: </li>
-                            <a href="<?= config_item('youtube') ?>" target="_blank">Kumpulan video OpenDesa, termasuk tutorial OpenSID</a>
-                            <li align="justify">Forum OpenDesa:</li>
-                            <a href="<?= config_item('forum') ?> " target="_blank"><?= config_item('forum') ?> </a>
-                            <li align="justify">Tempat mendaftarkan masalah dan usulan fitur:</li>
-                            <a href="<?= config_item('github') ?>/issues" target="_blank" sclass="text-green"><?= config_item('github') ?>/issues</a>
-                            <li align="justify">Forum diskusi teknis pengembangan <?= config_item('nama_aplikasi') ?>:
-                            </li>
-                            <a href="<?= config_item('tg_kontributor') ?>" target="_blank">Kontributor Teknis OpenDesa</a>
-                        </ol>
-                    </div>
-                </div>
-            </div>
-            <div class="panel box box-default">
-                <div class="box-header with-border">
-                    <h4 class="box-title">
-                        <a data-toggle="collapse" data-parent="#accordion" href="#donasi">Donasi</a>
-                    </h4>
-                </div>
-                <div id="donasi" class="panel-collapse collapse">
-                    <div class="box-body">
-                        <h4><?= config_item('nama_aplikasi') ?> SELALU GRATIS</h4>
-                        <div>
-                            <p align="justify"><?= config_item('nama_aplikasi') ?> selalu gratis dan bebas digunakan
-                                dan dikembangkan desa. <?= config_item('nama_aplikasi') ?>
-                                berlisensi GNU General Public License Version 3, yaitu Open Source, di mana scriptnya
-                                selalu bebas diperoleh dan disesuaikan desa.</p>
-                        </div>
-                        <h4><?= config_item('nama_aplikasi') ?> DIKEMBANGKAN KOMUNITAS</h4>
-                        <div>
-                            <p align="justify"><?= config_item('nama_aplikasi') ?> dikembangkan oleh komunitas relawan
-                                yang peduli dan meluangkan
-                                waktu dan keahlian mereka secara sukarela untuk terus mengembangkan
-                                <?= config_item('nama_aplikasi') ?>.</p>
-                            <p align="justify">Selain menyumbangkan waktu mereka, ada kalanya relawan
-                                <?= config_item('nama_aplikasi') ?> juga
-                                mengeluarkan dana pribadi untuk mendukung kegiatan <?= config_item('nama_aplikasi') ?>.
-                            </p>
-                        </div>
-                        <h4>OpenSID MEMERLUKAN BANTUAN</h4>
-                        <div>
-                            <p align="justify">Untuk terus berkembang, <?= config_item('nama_aplikasi') ?> memerlukan
-                                bantuan komunitas SID,
-                                termasuk donasi. Semua donasi bersifat sukarela dan sama sekali tidak ada keharusan.
-                            </p>
-                            <p align="justify">Donasi Anda akan memungkinkan <?= config_item('nama_aplikasi') ?>
-                                dikembangkan terus secara
-                                berkesinambungan, supaya bisa terus disempurnakan dan bisa dimanfaatkan oleh sebanyak
-                                mungkin desa di seluruh Nusantara. </p>
-                            <p align="justify">
-                                Cara mengirimkan donasi dan informasi lebih lanjut ada di:
-                            </p>
-                            <a href="<?= config_item('website') ?>/donasi" class="btn btn-social btn-primary btn-sm visible-xs-block visible-sm-inline-block visible-md-inline-block visible-lg-inline-block" title="Donasi Pengembangan <?= config_item('nama_aplikasi') ?>"><i
-                                    class="fa fa-heart"></i> Donasi Pengembangan <?= config_item('nama_aplikasi') ?></a>
-                        </div>
+                        <p align="justify">Untuk panduan penggunaan, bantuan teknis, pelaporan masalah, dan
+                            pembaruan aplikasi, silakan hubungi penyedia layanan <?= config_item('nama_aplikasi') ?>.</p>
                     </div>
                 </div>
             </div>

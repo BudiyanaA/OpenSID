@@ -47,6 +47,7 @@
                                     </div>
                                 </div>
                             </div>
+                            @include('admin.penduduk.smart_ocr.kk')
                         </div>
                     </div>
                     <div class="row">

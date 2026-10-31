@@ -30,7 +30,7 @@
                     <div class="form-group">
                         <label class="col-sm-3 control-label">Nama</label>
                         <div class="col-sm-8">
-                            <input type="text" class="form-control input-sm nama required" name="nama" placeholder="OpenDesa" value="{{ $daftarKontak->nama }}" />
+                            <input type="text" class="form-control input-sm nama required" name="nama" placeholder="Nama Kontak" value="{{ $daftarKontak->nama }}" />
                         </div>
                     </div>
                     <div class="form-group">
@@ -58,7 +58,7 @@
                     <div class="form-group">
                         <label class="col-sm-3 control-label">Email</label>
                         <div class="col-sm-8">
-                            <input type="text" class="form-control input-sm email" id="email" name="email" placeholder="opendesa@mail.com" value="{{ $daftarKontak->email }}" />
+                            <input type="text" class="form-control input-sm email" id="email" name="email" placeholder="nama@email.com" value="{{ $daftarKontak->email }}" />
                         </div>
                     </div>
                     <div class="form-group">

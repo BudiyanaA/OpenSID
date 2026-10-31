@@ -8,7 +8,7 @@
             <div class='modal-body bg-info'>
                 <h3>Privasi Anda</h3>
                 <div>
-                    Dengan mengklik "Terima semua cookie", Anda setuju bahwa OpenSID dapat menyimpan cookie di perangkat Anda dan mengungkapkan informasi sesuai dengan Kebijakan Cookie kami.
+                    Dengan mengklik "Terima semua cookie", Anda setuju bahwa SIMDESA dapat menyimpan cookie di perangkat Anda dan mengungkapkan informasi sesuai dengan Kebijakan Cookie kami.
                 </div>
             </div>
             <div class='modal-footer'>

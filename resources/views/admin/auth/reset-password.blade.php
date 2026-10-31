@@ -1,5 +1,8 @@
 @extends('admin.auth.index')
 
+@section('auth_title', 'Atur ulang kata sandi')
+@section('auth_subtitle', 'Buat kata sandi baru untuk akun Anda.')
+
 @section('content')
     <form id="validasi" class="login-form" action="<?= site_url('siteman/verifikasi_sandi') ?>" method="post">
         <div class="form-group">

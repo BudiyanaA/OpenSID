@@ -2,7 +2,7 @@
 
 @section('step')
     <p class="pb-2 text-gray-800">
-        Selamat datang di instalasi OpenSID.
+        Selamat datang di instalasi SIMDESA.
     </p>
     <p class="pb-3 text-gray-800">
         Sebelum memulai, kami memerlukan beberapa informasi tentang database.

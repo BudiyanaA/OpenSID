@@ -85,7 +85,7 @@
                                 <div class="col-sm-12 col-md-4">
                                     <input id="api_opendk_server" name="api_opendk_server" class="form-control input-sm" type="text" value="{{ $list_setting->firstWhere('key', 'api_opendk_server')?->value }}" />
                                 </div>
-                                <label class="col-sm-12 col-md-5 pull-left" for="nama">Alamat Server OpenDK <code>(contoh: https://demodk.opendesa.id)</code></label>
+                                <label class="col-sm-12 col-md-5 pull-left" for="nama">Alamat Server OpenDK <code>(contoh: https://opendk.example.id)</code></label>
                             </div>
                             <div class="form-group">
                                 <label class="col-sm-12 col-md-3" for="nama">Api OpenDK Key</label>
@@ -209,95 +209,8 @@
             });
         });
 
-        kirim_opendk = async (modul) => {
-            $('#sinkronisasi').modal({
-                backdrop: 'static',
-                keyboard: false
-            }).show();
-            // $('#status .modal-content')
-            for (var i = 0; i < modul.length; i++) {
-
-                var val = modul[i];
-                // cek pagination
-                let page = await $.ajax({
-                        'url': "{{ site_url($controller . '/total') }}",
-                        data: {
-                            'modul': val.modul,
-                            'model': val.model
-                        },
-                        type: 'Post',
-                    })
-                    .fail(function(err) {
-                        alert(error);
-                        return 0;
-                    })
-
-
-
-                var status = new Array();
-                var akhir = false;
-                for (var j = 0; j < page; j++) {
-                    akhir = (j + 1 == page) ? true : false;
-                    status = await $.ajax({
-                        url: "{{ site_url($controller) }}" + `/${val.path}`,
-                        data: {
-                            p: j,
-                            akhir: akhir
-                        },
-                    })
-                    // tampilkan bar success
-                    $('#sinkronisasi .message').html(`
-                    Harap tunggu sampai proses sinkronisasi selesai. Proses ini bisa memakan waktu beberapa menit tergantung data yang dikirimkan.
-                    <p><strong>Jalankan Sinkronisasi ${val.modul}</strong></p>
-                    <div class="progress">
-                        <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar" aria-valuenow="${((j+1)/modul.length)*100}" aria-valuemin="0" aria-valuemax="100" style="width: ${((j+1)/page)*100}%">
-                            <span class="sr-only">${((j+1)/page)*100}% Complete (success)</span>
-                        </div>
-                    </div>
-                `);
-
-                    if (status == 'danger') {
-                        $('#sinkronisasi').modal('hide');
-                        $('#status').modal().show();
-
-                        var title_msg = status.pesan.message;
-                        var invalid_data = status.pesan.errors;
-                        var error_msg = `<h4>${title_msg}</h4>`;
-
-                        if (invalid_data.length > 0) {
-                            error_msg += `<ul>`;
-                            for (var key in invalid_data) {
-                                if (test.errors.hasOwnProperty(key)) {
-                                    var errorMessages = status.pesan.errors[key];
-                                    for (var i = 0; i < errorMessages.length; i++) {
-                                        error_msg += '<li>' + errorMessages[i] + '</li>';
-                                    }
-                                }
-                            }
-                            error_msg += `</ul>`;
-                        }
-
-                        $('#status .modal-content').html(`
-                        <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                            <h4 class="modal-title">Response</h4>
-                        </div>
-                        <div class="modal-body btn-${status.status}">
-                                                    ${error_msg}
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-social btn-danger btn-sm" data-dismiss="modal"><i class='fa fa-sign-out'></i> Tutup</button>
-                        </div>
-                    `);
-                        return; // paksa loop berhenti
-                    }
-
-                }
-
-
-            }
-
-            // sinkronisasi success
+        // Tampilkan hasil sinkronisasi di modal #status dan tutup dialog proses.
+        tampilkan_status = (jenis, pesan) => {
             $('#sinkronisasi').modal('hide');
             $('#status').modal().show();
             $('#status .modal-content').html(`
@@ -305,14 +218,28 @@
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h4 class="modal-title">Response</h4>
             </div>
-            <div class="modal-body btn-${status.status}">
-                                        ${status.pesan}
+            <div class="modal-body btn-${jenis}">
+                ${pesan}
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-social btn-danger btn-sm" data-dismiss="modal"><i class='fa fa-sign-out'></i> Tutup</button>
             </div>
         `);
+        }
 
+        // Pesan yang bisa dibaca dari request AJAX yang gagal (403 CSRF, 500, timeout, dll).
+        pesan_gagal = (xhr, langkah) => {
+            let rinci;
+            if (xhr.status === 403) {
+                rinci = 'Sesi atau token keamanan kedaluwarsa. Muat ulang halaman (atau login ulang) lalu coba lagi.';
+            } else if (xhr.status === 0) {
+                rinci = 'Tidak ada respons dari server. Periksa koneksi internet, lalu coba lagi.';
+            } else {
+                let ringkas = (xhr.responseJSON && xhr.responseJSON.message) || $('<div>').html(xhr.responseText || '').text().replace(/\s+/g, ' ').trim().substring(0, 200) || xhr.statusText;
+                rinci = `Gagal mengirim data (HTTP ${xhr.status}): ${$('<div>').text(ringkas).html()}`;
+            }
+
+            return `<h5>Sinkronisasi gagal saat ${langkah}.</h5><p>${rinci}</p>`;
         }
 
         kirim_opendk = async (modul) => {
@@ -320,105 +247,64 @@
                 backdrop: 'static',
                 keyboard: false
             }).show();
-            // $('#status .modal-content')
+
+            var status = {};
             for (var i = 0; i < modul.length; i++) {
                 var val = modul[i];
+                var page;
+
                 // cek pagination
-                let page = await $.ajax({
-                        'url': "<?= site_url($controller . '/total') ?>",
+                try {
+                    page = await $.ajax({
+                        'url': "{{ site_url($controller . '/total') }}",
                         data: {
                             'modul': val.modul,
                             'model': val.model,
                             'inkremental': val.inkremental
                         },
                         type: 'Post',
-                    })
-                    .fail(function(err) {
-                        alert(error);
-                        return 0;
-                    })
+                    });
+                } catch (xhr) {
+                    tampilkan_status('danger', pesan_gagal(xhr, `menyiapkan ${val.modul}`));
+                    return;
+                }
 
-
-
-                var status = new Array();
-                var akhir = false;
                 for (var j = 0; j < page; j++) {
-                    akhir = (j + 1 == page) ? true : false;
-                    status = await $.ajax({
-                        url: "<?= site_url($controller) ?>" + `/${val.path}`,
-                        data: {
-                            p: j,
-                            akhir: akhir
-                        },
-                    })
+                    var akhir = (j + 1 == page);
+                    try {
+                        status = await $.ajax({
+                            url: "{{ site_url($controller) }}" + `/${val.path}`,
+                            data: {
+                                p: j,
+                                akhir: akhir
+                            },
+                        });
+                    } catch (xhr) {
+                        tampilkan_status('danger', pesan_gagal(xhr, `mengirim ${val.modul}`));
+                        return;
+                    }
+
                     // tampilkan bar success
                     $('#sinkronisasi .message').html(`
                     Harap tunggu sampai proses sinkronisasi selesai. Proses ini bisa memakan waktu beberapa menit tergantung data yang dikirimkan.
                     <p><strong>Jalankan Sinkronisasi ${val.modul}</strong></p>
                     <div class="progress">
-                      <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar" aria-valuenow="${((j+1)/modul.length)*100}" aria-valuemin="0" aria-valuemax="100" style="width: ${((j+1)/page)*100}%">
+                      <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar" aria-valuenow="${((j+1)/page)*100}" aria-valuemin="0" aria-valuemax="100" style="width: ${((j+1)/page)*100}%">
                         <span class="sr-only">${((j+1)/page)*100}% Complete (success)</span>
                       </div>
                     </div>
                 `);
-                    if (status == 'danger') {
-                        $('#sinkronisasi').modal('hide');
-                        $('#status').modal().show();
 
-                        var title_msg = status.pesan.message;
-                        var invalid_data = status.pesan.errors;
-                        var error_msg = `<h4>${title_msg}</h4>`;
-
-                        if (invalid_data.length > 0) {
-                            error_msg += `<ul>`;
-                            for (var key in invalid_data) {
-                                if (test.errors.hasOwnProperty(key)) {
-                                    var errorMessages = status.pesan.errors[key];
-                                    for (var i = 0; i < errorMessages.length; i++) {
-                                        error_msg += '<li>' + errorMessages[i] + '</li>';
-                                    }
-                                }
-                            }
-                            error_msg += `</ul>`;
-                        }
-
-                        $('#status .modal-content').html(`
-                        <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                            <h4 class="modal-title">Response</h4>
-                        </div>
-                        <div class="modal-body btn-${status.status}">
-                                                    ${error_msg}
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-social btn-danger btn-sm" data-dismiss="modal"><i class='fa fa-sign-out'></i> Tutup</button>
-                        </div>
-                    `);
-
+                    // opendk_api() mengembalikan {status: 'danger', pesan: '<html pesan error>'} bila server menolak.
+                    if (!status || status.status == 'danger') {
+                        tampilkan_status('danger', (status && status.pesan) || `<h5>Sinkronisasi ${val.modul} gagal.</h5>`);
                         return; // paksa loop berhenti
                     }
-
                 }
-
-
             }
 
             // sinkronisasi success
-            $('#sinkronisasi').modal('hide');
-            $('#status').modal().show();
-            $('#status .modal-content').html(`
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title">Response</h4>
-            </div>
-            <div class="modal-body btn-${status.status}">
-                                        ${status.pesan}
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-social btn-danger btn-sm" data-dismiss="modal"><i class='fa fa-sign-out'></i> Tutup</button>
-            </div>
-        `);
-
+            tampilkan_status(status.status || 'success', status.pesan || 'Sinkronisasi selesai.');
         }
 
         $('#ok-delete').on('click', function() {

@@ -93,7 +93,7 @@
                             @if (empty($masalah))
                             <div class="panel panel-default">
                                 <div class="panel-body">
-                                    <p>Masalah ini belum diketahui sebabnya. Harap laporkan kepada OpenDesa untuk
+                                    <p>Masalah ini belum diketahui sebabnya. Harap laporkan kepada penyedia layanan SIMDESA untuk
                                         dibantu lebih lanjut. Harap periksa berkas logs dan laporkan juga isinya.
                                     </p>
                                     <p>Sementara bisa masuk kembali.</p>

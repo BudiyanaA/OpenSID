@@ -33,7 +33,7 @@
                     // Gunakan cached data jika tersedia, untuk fallback
                     let displayName = packageData.name || '-'
                     let displayVersion = packageData.version || '-'
-                    let displayDescription = packageData.description || 'Paket tambahan untuk OpenSID'
+                    let displayDescription = packageData.description || 'Paket tambahan untuk SIMDESA'
                     let displayThumbnail = packageData.thumbnail || defaultThumbnail
                     let displayPrice = packageData.price || 'Gratis'
                     let displayTotalInstall = packageData.totalInstall || '-'
@@ -95,7 +95,7 @@
                             cachedPackages.push({
                                 name: packageName,
                                 version: '-',
-                                description: 'Paket tambahan untuk OpenSID',
+                                description: 'Paket tambahan untuk SIMDESA',
                                 thumbnail: defaultThumbnail,
                                 price: 'Gratis',
                                 totalInstall: '-'
@@ -129,7 +129,7 @@
                                 cachedPackages.push({
                                     name: packageName,
                                     version: '-',
-                                    description: 'Paket tambahan untuk OpenSID',
+                                    description: 'Paket tambahan untuk SIMDESA',
                                     thumbnail: defaultThumbnail,
                                     price: 'Gratis',
                                     totalInstall: '-'

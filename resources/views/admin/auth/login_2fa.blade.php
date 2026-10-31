@@ -1,5 +1,8 @@
 @extends('admin.auth.index')
 
+@section('auth_title', 'Verifikasi dua langkah')
+@section('auth_subtitle', 'Masukkan kode verifikasi 6 digit yang telah dikirimkan kepada Anda.')
+
 @section('content')
     <form id="validasi" class="login-form" action="{{ $form_action }}" method="post">
         <div class="form-group">

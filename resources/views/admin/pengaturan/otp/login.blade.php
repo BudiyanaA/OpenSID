@@ -1,13 +1,9 @@
 @extends('admin.auth.index')
 
-@section('content')
-        <div class="callout callout-info" style="margin-bottom: 15px;">
-            <p style="margin: 0; font-size: 20px;">
-                Login dengan OTP
-            </p>
-            <p class="text-muted">Masukkan email atau username Anda</p>
-        </div>
+@section('auth_title', 'Masuk dengan OTP')
+@section('auth_subtitle', 'Masukkan email atau username Anda. Kode sekali pakai akan dikirim ke email atau Telegram akun Anda.')
 
+@section('content')
         <form id="validasi" class="login-form" action="{{ $form_action }}" method="POST">
             <div class="form-group">
                 <input

@@ -23,15 +23,7 @@
                                                                         </small>
                                                                     </p>
                                                                     <p>Apabila sesudah melakukan konversi ini, masih
-                                                                        ditemukan masalah, laporkan di :</P>
-                                                                    <div class="table-responsive">
-                                                                        <ul>
-                                                                            <li> <a href="https://github.com/OpenSID/OpenSID/issues">https://github.com/OpenSID/OpenSID/issues</a>
-                                                                            </li>
-                                                                            <li> <a href="{{ config_item('fb_opendesa') }}">{{ config_item('fb_opendesa') }}</a>
-                                                                            </li>
-                                                                        </ul>
-                                                                    </div>
+                                                                        ditemukan masalah, laporkan kepada penyedia layanan SIMDESA.</P>
                                                                     <table class="table table-bordered">
                                                                         <tbody>
                                                                             <tr>

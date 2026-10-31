@@ -1,5 +1,8 @@
 @extends('admin.auth.index')
 
+@section('auth_title', 'Masukkan kode OTP')
+@section('auth_subtitle', 'Periksa email atau Telegram Anda untuk kode verifikasi.')
+
 @section('content')
         <div class="callout callout-info" style="margin-bottom: 15px;">
             <p style="margin: 0; font-size: 12px;">

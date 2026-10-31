@@ -30,7 +30,7 @@
                     <div class="form-group">
                         <label class="col-sm-3 control-label">Nama Grup</label>
                         <div class="col-sm-8">
-                            <input type="text" class="form-control input-sm nama required" name="nama_grup" placeholder="OpenDesa" value="{{ $grupKontak->nama_grup }}" />
+                            <input type="text" class="form-control input-sm nama required" name="nama_grup" placeholder="Nama Grup" value="{{ $grupKontak->nama_grup }}" />
                         </div>
                     </div>
                     <div class="form-group">

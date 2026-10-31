@@ -1,13 +1,14 @@
 @extends('admin.auth.index')
 
+@section('auth_title', 'Lupa kata sandi')
+@section('auth_subtitle', 'Masukkan email akun Anda untuk menerima tautan atur ulang kata sandi.')
+
 @section('content')
     @if (empty(setting('email_notifikasi')) && empty(setting('telegram_notifikasi')))
-        <br>
         <div class="alert alert-warning mt-4 text-left">
             <h5 class="mb-3"><strong>Tautan lupa password tidak dapat digunakan karena email atau telegram belum diatur di sistem.</strong></h5>
             <p>
-                Jika Anda mempunyai akses ke server, ikuti petunjuk <a href="https://panduan.opendesa.id/opensid/halaman-administrasi#siteman" target="_blank">Panduan Lupa Sandi</a>.
-                <br><br>Jika tidak mempunyai akses ke server, Anda perlu menghubungi pihak yang mengelola server. Apabila pelanggan SiapPakai atau Pengguna Diskomino yang PKS dengan OpenDesa, dapat menghubungi DevOps OpenDesa untuk dibantu.
+                Silakan hubungi administrator atau penyedia layanan {{ config_item('nama_aplikasi') }} untuk mengatur ulang kata sandi Anda.
             </p>
         </div>
     @else
